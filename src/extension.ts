@@ -54,7 +54,7 @@ const objectFunctions : SpecialArray = {
 	"DrawRoundedRectangle" : makeArgs("function DrawRoundedRectangle(left : number, top : number, right : number, bottom : number, radiusX : number, radiusY : number, brush : Brush, strokeWidth? : number, strokeStyle? : number) : void", "draws the outline of a rounded rectangle with the corners rounded by the `radiusX` and `radiusY` properties"),
 	"FillRoundedRectangle" : makeArgs("function FillRoundedRectangle(left : number, top : number, right : number, bottom : number, radiusX : number, radiusY : number, brush : Brush) : void", "fills a rounded rectangle with a brush (the corners are rounded by the `radiusX` and `radiusY` properties)"),
 	"FillGradientRoundedRectangle" : makeArgs("function FillGradientRoundedRectangle(left : number, top : number, right : number, bottom : number, radiusX : number, radiusY : number, gradientBrush : GradientBrush, gradientAngle : number | float) : void", "convenience method to center the gradient with the rectangle  \nfills a rounded rectangle with the `gradientBrush` (the corners are rounded by the `radiusX` and `radiusY` properties)"),
-	"GetSize" : makeArgs("function GetSize(void) : SizeF | {width : number, height : number}", "returns an object with `width` and `height` properties related to the size of the render target"),
+	"GetSize" : makeArgs("function GetSize(void) : SizeF | {width : number, height : number}", "returns an object with `width` and `height` properties related to the size of this object"),
 	"DrawLine" : makeArgs("function DrawLine(fromX : number, fromY : number, toX : number, toY : number, brush : Brush, strokeWidth? : number, strokeStyle? : number) : void", "draws a line starting from (`fromX`, `fromY`) to (`toX`, `toY`)"),
 	"DrawGradientLine" : makeArgs("function DrawGradientLine(fromX : number, fromY : number, toX : number, toY : number, brush : GradientBrush, gradientRotation? : float, strokeWidth? : number, strokeStyle? : number) : void", ""),
 	"Clear" : makeArgs("function Clear(r : float, g : float, b : float, alphah? : float) : void", "Clears the render target screen with the set color  \ni had to make alpha work in some cases behind the scenes"),
@@ -63,6 +63,15 @@ const objectFunctions : SpecialArray = {
     //"loop" : makeArgs("function loop(void) : void", "this is called when the window is not handling any events"),
     "SetOpacity" : makeArgs("function SetOpacity(opacity : float) : void", "sets the opacity of the brush"),
     "GetOpacity" : makeArgs("function GetOpacity(void) : float", "gets the opacity of the brush"),
+    "GetDpi" : makeArgs("function GetDpi(void) : number[2]", "returns an array with the first element being the xDpi and the second being the yDpi"),
+    "GetPixelFormat" : makeArgs("function PixelFormat(void) : {format : number, alphaMode : number}", "`format` is any `DXGI_FORMAT_` const  \n`alphaMode` is any `D2D1_ALPHA_MODE_` const"),
+
+    //default brush funcs
+    "GetPixelSize" : makeArgs("function GetPixelSize(void) : {width : number, height : number}", "returns an object with pixelWidth and pixelHeight fields/properties ig about this brush"),
+    //"GetSize" : makeArgs("function GetSize(void) : {width : number, height : number}", "returns an object with width and height fields/properties ig about this brush"),
+    "CopyFromBitmap" : makeArgs("function CopyFromBitmap(startX : number, startY : number, bmp : ID2D1Bitmap, srcLeft : number, srcTop : number, srcRight : number, srcBottom : number) : number", "copies the supplied `bmp` into this bmp  \nreturns 0 or an HRESULT code if failed"),
+    "CopyFromRenderTarget" : makeArgs("function CopyFromRenderTarget(startX : number, startY : number, renderTarget : ID2D1RenderTarget | number, srcLeft : number, srcTop : number, srcRight : number, srcBottom : number) : void", "copied the supplied `renderTarget` into this bmp"),
+
 };
 
 function registerFunc(name : string, info : string, desc : string = "") {//, args: string[]) {
@@ -95,7 +104,7 @@ registerFunc("Inputbox", "function Inputbox(description : string, title : string
 //registerFunc("CreateWindowClass", "function CreateWindowClass(className : string, init : function, windowProc : function, loop : function) : wndclass | {className : string, windowProc : function, loop : function}", "returns an object with these 3 properties/methods for use with `CreateWindow`");
 registerFunc("CreateWindowClass", "function CreateWindowClass(className? : string, init? : function, windowProc? : function, loop? : function) : WNDCLASSEXA", "returns an object for use with `CreateWindow`  \nyou can use this object like it's c++ `WNDCLASSEX` counterpart");
 //registerFunc("CreateWindow", "function CreateWindow(wndclass : {className : string, windowProc : function, loop : function}, title : string, x : number, y : number, width : number, height : number) : Promise", "returns a promise that is resolved when the window closes");
-registerFunc("CreateWindow", "function CreateWindow(wndclass : WNDCLASSEXA, title : string, windowStyles : number, x : number, y : number, width : number, height : number) : HWND | number", "windowStyles can be any `WS_` const  \nreturns the pointer to the newly created window (`HWND`)");
+registerFunc("CreateWindow", "function CreateWindow(wndclass : WNDCLASSEXA, title : string, windowStyles : number, x : number, y : number, width : number, height : number) : HWND | number", "the windowProc will NOT call WM_CREATE because IDK DAWG just use init  \nwindowStyles can be any `WS_` const  \nreturns the pointer to the newly created window (`HWND`)");
 registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
 registerFunc("ShowWindow", "function ShowWindow(hwnd : HWND | number, nCmdShow : number) : number", "returns 0 if failed");
@@ -110,8 +119,16 @@ registerFunc("GetDC", "function GetDC(window? : HWND | number) : HDC | number", 
 registerFunc("GetWindowDC", "function GetWindowDC(window : HWND | number) : HDC | number", "calls the `windows.h` `GetWindowDC` function which gets the ENTIRE window's device context including the titlebar (well that was a lie but it does include scrollbars)  \nreturns the pointer (integer in js) to the HDC in c++");
 registerFunc("SaveDC", "function SaveDC(dc : HDC | number) : number", "calls the `windows.h` `SaveDC` function  \nreturns saved state's position for use with `RestoreDC`");
 registerFunc("RestoreDC", "function RestoreDC(dc : HDC | number, savedState : number) : number", "calls the `windows.h` `RestoreDC` function  \nreturns 0 if failed");
+registerFunc("DeleteDC", "function DeleteDC(dc : HDC | number) : number", "calls the `windows.h` `usually used on compatible DCs  \nDeleteDC` function  \nreturns 0 if failed");
+registerFunc("CreateCompatibleDC", "function CreateCompatibleDC(dc : HDC | number) : HDC | number", "calls the `windows.h` `CreateCompatibleDC` function  \nreturns the pointer to the HDC in c++");
+registerFunc("CreateCompatibleBitmap", "function CreateCompatibleBitmap(dc : HDC | number, width : number, height : number) : HBITMAP | number", "calls the `windows.h` `CreateCompatibleBitmap` function (apparently draws faster than bitmaps created with `CreateBitmap`)  \nreturns the pointer to the HBITMAP in c++");
 registerFunc("ReleaseDC", "function ReleaseDC(window? : HWND | number, dc : HDC | number) : any | number", "calls the `windows.h` `ReleaseDC` function  \nreturns what ever the native c++ function returns idk probably 0");
 registerFunc("TextOut", "function TextOut(dc : HDC | number, x : number, y : number, text : string) : any | number", "calls the `windows.h` `TextOutA` function  \nreturns what ever the native c++ function returns");
+registerFunc("DrawText", "function DrawText(dc : HDC | number, text : string, left : number, top : number, right : number, bottom : number, format : number) : number", "the format can be any `DT_` const (can be OR'd together)  \nreturns 0 if failed");
+registerFunc("CreateFont", "function CreateFont(cHeight : number, cWidth : number, cEscapement : number, cOrientation : number, cWeight : number, bItalic : boolean, bUnderline : boolean, bStrikeOut : boolean, iCharSet : number, iOutPrecision : number, iClipPrecision : number, iQuality : number, iPitchAndFamily : number, pszFaceName? : string) : number", "`cWeight` can be any `FW_` const  \n`iCharSet` can be any ...`_CHARSET` const  \niOutPrecision can be any `OUT_` const  \niClipPrecision can be any `CLIP_` const  \niQuality can be any ...`_QUALITY` const  \niPitchAndFamily can be any ...`_PITCH` | `FF_` consts");
+registerFunc("EnumFontFamilies", "function EnumFontFamilies(dc : HDC | number, func : Function(font : LOGFONT, textMetric : TEXTMETRIC, FontType : number)) : void", "takes a function with 3 parameters  \ncalls the native `EnumFontFamiliesExA` function");
+registerFunc("CreateFontIndirect", "function CreateFontIndirect(logFont : LOGFONTA) : HFONT | number", "logFont is an object with the `LOGFONTA`'s properties (find it on microsoft docs)  \nreturns an HFONT or 0 if failed probably");
+registerFunc("CreateFontSimple", "function CreateFontSimple(fontName : string, width : number, height : number) : HFONT | number", "a convenience function because `CreateFont` takes like 30 arguments");
 
 registerFunc("BitBlt", "function BitBlt(dc : HDC | number, x : number, y : number, cx : number, cy : number, memdc : HDC | number, x1 : number, y1 : number, rop : number)", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
 registerFunc("StretchBlt", "function StretchBlt(dc : HDC | number, x : number, y : number, cx : number, cy : number, memdc : HDC | number, x1 : number, y1 : number, cx1 : number, cy1 : number, rop : number)", "calls the `window.h` `StretchBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
@@ -120,6 +137,8 @@ registerFunc("AlphaBlend", "function AlphaBlend(hdcDest : HDC | number, xoriginD
 registerFunc("SelectObject", "function SelectObject(dc : HDC | number, object : HGDIOBJ | number) : number", "returns a pointer to the last object selected");
 registerFunc("CreatePen", "function CreatePen(style : number, width : number, rgb : RGB | number) : HPEN | number", "the style is any `PS_` constant  \nreturns a pointer to the newly created `HPEN`");
 registerFunc("DeleteObject", "function DeleteObject(object : HGDIOBJ | number) : void", "deletes the `HGDIOBJ` supplied");
+registerFunc("DestroyCursor", "function DestroyCursor(object : HCURSOR | number) : void", "don't use if the cursor was created with `LoadCursor/LoadCursorFromFile/LoadImage (with LR_SHARED flag)/CopyImage`  \ndestroys the `HCURSOR` supplied");
+registerFunc("DestroyIcon", "function DestroyIcon(object : HICON | number) : void", "don't use if the icon was made with `LoadIcon/LoadImage (with LR_SHARED flag)/CopyImage/CreateIconFromResource`  \ndestroys the `HICON` supplied");
 registerFunc("SetDCPenColor", "function SetDCPenColor(dc : HDC | number, rgb : RGB | number) : void", "sets the color of the selected pen");
 registerFunc("SetDCBrushColor", "function SetDCBrushColor(dc : HDC | number, rgb : RGB | number) : void", "sets the color of the selected brush");
 registerFunc("CreateSolidBrush", "function CreateSolidBrush(rgb : RGB | number) : void", "`rgb` can be made with the `RGB` function  \nreturns the pointer to the `HBRUSH`");
@@ -138,7 +157,6 @@ registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number",
 registerFunc("GetStretchBltMode", "function GetStretchBltMode(dc : HDC | number) : number", "returns the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)");
 registerFunc("SetStretchBltMode", "function SetStretchBltMode(dc : HDC | number, mode : number) : number", "sets the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)  \nreturns 0 if failed");
 registerFunc("PrintWindow", "function PrintWindow(hwnd : HWND | number, dc : HDC | number, flags : number) : boolean", "copies a visual window into the specified device context (DC), typically a printer DC. (MSN)  \ni ain't never seen this function in my life  \nreturns 0 if failed");
-registerFunc("DrawText", "function DrawText(dc : HDC | number, text : string, left : number, top : number, right : number, bottom : number, format : number) : number", "the format can be any `DT_` const (can be OR'd together)  \nreturns 0 if failed");
 
 registerFunc("FindWindow", "function FindWindow(className? : string, windowTitle : string) : number", "className isn't required and usually is not needed  \nreturns a pointer to the window (`HWND`)");
 
@@ -157,13 +175,15 @@ registerFunc("GetMousePos", "function GetMousePos(void) : {x: number, y: number}
 registerFunc("GetCursorPos", "function GetCursorPos(void) : {x: number, y: number}", "calls the native `GetCursorPos()` and returns the RECT's values");
 registerFunc("SetMousePos", "function SetMousePos(x : number, y : number) : void", "alias for `SetCursorPos`  \ncalls the native `SetCursorPos(x, y)` and returns 0 if failed");
 registerFunc("SetCursorPos", "function SetCursorPos(x : number, y : number) : void", "calls the native `SetCursorPos(x, y)` and returns 0 if failed");
-registerFunc("LoadCursor", "function LoadCursor(hInstance? : number | null, lpCursorName : number) : HCURSOR | number", "lpCursorName can be any `IDC_` const  \ncalls the native `LoadCursorA(hInstance, lpCursorName)` and returns a pointer to the cursor");
-registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, cx : number, cy : number, fuLoad : number) : HANDLE | number", "calls the native `LoadImageA(hInstance, name, type, cx, cy, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const  \nreturns 0 if failed");
+registerFunc("LoadCursor", "function LoadCursor(hInstance? : number | null, lpCursorName : number) : HCURSOR | number", "lpCursorName can be any `IDC_` const  \nif it isn't working pass hInstance as NULL  \ncalls the native `LoadCursorA(hInstance, lpCursorName)` and returns a pointer to the cursor");
+registerFunc("LoadCursorFromFile", "function LoadCursorFromFile(lpCursorName : string) : HCURSOR | number", "lpCursorName must be in the `.CUR` or `.ANI` format  \ncalls the native `LoadCursorFromFile(lpCursorName)` and returns a pointer to the cursor");
+registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, width? : number, height? : number, fuLoad : number) : HANDLE | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadImageA(hInstance, name, type, width, height, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const (can be OR'd together)  \nif width or height are 0 and you don't use the `LR_DEFAULTSIZE` flag then it will use the icon's actual width/height  \nreturns 0 if failed");
 registerFunc("MAKEINTRESOURCE", "function MAKEINTRESOURCE(i : number)", "uses the native `MAKEINTRESOURCEA(i)` macro");// for use with `LoadCursor`");
 registerFunc("SetCursor", "function SetCursor(cursor : HCURSOR | number) : HCURSOR | number", "calls the native `SetCursor(cursor)` function and if cursor is NULL the cursor is removed  \nreturns the last cursor or 0 if failed`");
 registerFunc("DrawIconEx", "function DrawIconEx(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number, cxWidth? : number, cyWidth? : number, istepIfAniCur? : number, hbrFlickerFreeDraw? : HBRUSH | number, diFlags? : number) : number", "calls the native `DrawIconEx(...)` function  \ndiFlags can be any `DI_` const  \nreturns 0 if failed`");
 registerFunc("DrawIcon", "function DrawIcon(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number) : number", "calls the native `DrawIcon(...)` function  \nreturns 0 if failed`");
-registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIconName : number) : HICON | number", "calls the native `LoadIconA(hInstance, lpIconName)` function");
+registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIconName : number) : HICON | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadIconA(hInstance, lpIconName)` function");
+registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works");
 
 registerFunc("createCanvas", "function createCanvas(context : string, type : number, window? : HWND | number) : object<type>", "valid args are `d2d`/`direct2d` and `ID2D1RenderTarget`/`ID2D1DCRenderTarget`  \n`direct3d`/`d3d` not yet implemented  \nreturns an object for the specified type");
 
@@ -192,18 +212,18 @@ registerFunc("SetActiveWindow", "function SetActiveWindow(hwnd : HWND | number) 
 registerFunc("WindowFromDC", "function WindowFromDC(dc : HDC | number) : HWND | number", "i mean this function explains itself");
 registerFunc("WindowFromPoint", "function WindowFromPoint(x : number, y : number) : HWND | number", "yeah this function does that");
 
-registerFunc("EnumWindows", "function EnumWindows(func : Function(hwnd : HWND | number)) : void", "loops through all the windows running on your computer");
+registerFunc("EnumWindows", "function EnumWindows(func : Function(hwnd : HWND | number)) : void", "takes a function with 1 parameter  \nloops through all the windows running on your computer");
 
-registerFunc("keybd_event", "function keybd_event(keyCode : number, flags : number) : void", "the `keyCode` can be any char or `VK_` const  \nthe flags can be any `KEYEVENTF_` const but normally is just `KEYEVENTF_EXTENDEDKEY` or/and `KEYEVENTF_KEYUP` flags can be OR'd together");
+registerFunc("keybd_event", "function keybd_event(keyCode : number : string, flags : number) : void", "the `keyCode` can be any char or `VK_` const  \nthe flags can be any `KEYEVENTF_` const but normally is just `KEYEVENTF_EXTENDEDKEY` or/and `KEYEVENTF_KEYUP` flags can be OR'd together");
 registerFunc("mouse_event", "function mouse_event(dwFlags : number, dx : number, dy : number, dwData : number) : void", "the `dwFlags` can be any `MOUSEEVENTF` const  \nfor wheel events the dwData can be the amount to scroll");
 registerFunc("SendInput", "function SendInput(...inputs : {type : number, wVk : number, dwFlags : number}) : void", "successor to the `keybd_event` and `mouse_event` functions  \ntakes any amount of objects that have a `type`, `wVk`, and `dwFlags` property");
 registerFunc("MakeKeyboardInput", "function MakeKeyboardInput(keyCode : string | number, keyUp : boolean) : {type : number, wVk : number, dwFlags : number}", "helper function for use with `SendInput`  \nused to include the time property but it actually doesn't do anything");
-registerFunc("MakeMouseInput", "function MakeMouseInput(x : number, y : number, mouseData : number | undefined, dwFlags : number) : {type : number, dx : number, dy : number, mouseData : number, dwFlags : number}", "helper function for use with `SendInput`  \nif dwFlags is MOUSEEVENTF_WHEEL then mousedata should be the amount you scroll  \ndwFlags (any `MOUSEEVENTF_` const) can be OR'd together  \nthe `dx` and `dy` params do not have to be 0-65535 because it does the math for you");//  \nWARNING: if you use `MOUSEEVENTF_ABSOLUTE` the `dx` and `dy` parameters have to be between 0-65535 for some reason so the math is `65535/(screenwidth/x)` and `65535/(screenheight/y)`"); //https://www.desmos.com/calculator/ndgevnyews
+registerFunc("MakeMouseInput", "function MakeMouseInput(x : number, y : number, mouseData : number | undefined, dwFlags : number) : {type : number, dx : number, dy : number, mouseData : number, dwFlags : number}", "helper function for use with `SendInput`  \nif dwFlags is MOUSEEVENTF_WHEEL then mousedata should be the amount you scroll  \ndwFlags (any `MOUSEEVENTF_` const) can be OR'd together  \nthe `dx` and `dy` params do not have to be 0-65535 because I do the math for you");//  \nWARNING: if you use `MOUSEEVENTF_ABSOLUTE` the `dx` and `dy` parameters have to be between 0-65535 for some reason so the math is `65535/(screenwidth/x)` and `65535/(screenheight/y)`"); //https://www.desmos.com/calculator/ndgevnyews
 
 registerFunc("GetLastError", "function GetLastError(void) : number", "calls the native `GetLastError()` function  \nreturns the last error code`");
 
 registerFunc("IsIconic", "function IsIconic(hwnd : HWND | number) : boolean", "checks if the window is minimized");
-
+registerFunc("SendMessage", "function SendMessage(hwnd : HWND | number, msg : number, wp : number, lp : number) : LRESULT | number", "sends the `msg` to the `hwnd`  \na message can be any `WM_` const");
 registerFunc("SetClassLongPtr", "function SetClassLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "can be used to change window icons AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("SetWindowLongPtr", "function SetWindowLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "can set some data in a window  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("GetClassLongPtr", "function GetClassLongPtr(hwnd : HWND | number, nIndex : number) : number", "can be used to get a window's icon AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const");
@@ -218,6 +238,10 @@ registerFunc("ClipCursor", "function ClipCursor(left : number, top : number, rig
 registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x : number, y : number}", "takes an lparam and converts it to an object with `x` and `y` properties  \nuses the native MAKEPOINTS macro");
 
 registerFunc("GetSystemMetrics", "function GetSystemMetrics(metric : number) : number", "the metric parameter can be any `SM_` const");
+
+registerFunc("_com_error", "function _com_error(HRESULT : number) : {}", "used for helping with errors for objects (like `createCanvas(\"direct2d\")` or `createCanvas(\"direct3d\")`)");
+
+registerFunc("Beep", "function Beep(frequency : number, durationMs : number) : number", "plays a sound on your onboard speaker (if you have one) OR plays a sound through your headphones/realtek yk yk yk  \nalso this blocks the thread for `durationMs`");
 
 function emptyD2DObject() : Array<[string, vscode.CompletionItemKind?]> {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]];//{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
@@ -1323,4 +1347,201 @@ const macros:string[] = [
     "ARW_LEFT",
     "ARW_RIGHT",
     "ARW_UP",
+    "FW_DONTCARE",
+    "FW_THIN",
+    "FW_EXTRALIGHT",
+    "FW_ULTRALIGHT",
+    "FW_LIGHT",
+    "FW_NORMAL",
+    "FW_REGULAR",
+    "FW_MEDIUM",
+    "FW_SEMIBOLD",
+    "FW_DEMIBOLD",
+    "FW_BOLD",
+    "FW_EXTRABOLD",
+    "FW_ULTRABOLD",
+    "FW_HEAVY",
+    "FW_BLACK",
+    "ANSI_CHARSET",
+    "BALTIC_CHARSET",
+    "CHINESEBIG5_CHARSET",
+    "DEFAULT_CHARSET",
+    "EASTEUROPE_CHARSET",
+    "GB2312_CHARSET",
+    "GREEK_CHARSET",
+    "HANGUL_CHARSET",
+    "MAC_CHARSET",
+    "OEM_CHARSET",
+    "RUSSIAN_CHARSET",
+    "SHIFTJIS_CHARSET",
+    "SYMBOL_CHARSET",
+    "TURKISH_CHARSET",
+    "VIETNAMESE_CHARSET",
+    "JOHAB_CHARSET",
+    "ARABIC_CHARSET",
+    "HEBREW_CHARSET",
+    "THAI_CHARSET",
+    "OUT_CHARACTER_PRECIS",
+    "OUT_DEFAULT_PRECIS",
+    "OUT_DEVICE_PRECIS",
+    "OUT_OUTLINE_PRECIS",
+    "OUT_PS_ONLY_PRECIS",
+    "OUT_RASTER_PRECIS",
+    "OUT_STRING_PRECIS",
+    "OUT_STROKE_PRECIS",
+    "OUT_TT_ONLY_PRECIS",
+    "OUT_TT_PRECIS",
+    "CLIP_CHARACTER_PRECIS",
+    "CLIP_DEFAULT_PRECIS",
+    "CLIP_DFA_DISABLE",
+    "CLIP_EMBEDDED",
+    "CLIP_LH_ANGLES",
+    "CLIP_MASK",
+    //"CLIP_DFA_OVERRIDE",
+    "CLIP_STROKE_PRECIS",
+    "CLIP_TT_ALWAYS",
+    "ANTIALIASED_QUALITY",
+    "CLEARTYPE_QUALITY",
+    "DEFAULT_QUALITY",
+    "DRAFT_QUALITY",
+    "NONANTIALIASED_QUALITY",
+    "PROOF_QUALITY",
+    "DEFAULT_PITCH",
+    "FIXED_PITCH",
+    "VARIABLE_PITCH",
+    "FF_DECORATIVE",
+    "FF_DONTCARE",
+    "FF_MODERN",
+    "FF_ROMAN",
+    "FF_SCRIPT",
+    "FF_SWISS",
+    "D2D1_ALPHA_MODE_FORCE_DWORD",
+    "D2D1_ALPHA_MODE_IGNORE",
+    "D2D1_ALPHA_MODE_PREMULTIPLIED",
+    "D2D1_ALPHA_MODE_STRAIGHT",
+    "D2D1_ALPHA_MODE_UNKNOWN",
+    "DXGI_FORMAT_UNKNOWN",
+    "DXGI_FORMAT_R32G32B32A32_TYPELESS",
+    "DXGI_FORMAT_R32G32B32A32_FLOAT",
+    "DXGI_FORMAT_R32G32B32A32_UINT",
+    "DXGI_FORMAT_R32G32B32A32_SINT",
+    "DXGI_FORMAT_R32G32B32_TYPELESS",
+    "DXGI_FORMAT_R32G32B32_FLOAT",
+    "DXGI_FORMAT_R32G32B32_UINT",
+    "DXGI_FORMAT_R32G32B32_SINT",
+    "DXGI_FORMAT_R16G16B16A16_TYPELESS",
+    "DXGI_FORMAT_R16G16B16A16_FLOAT",
+    "DXGI_FORMAT_R16G16B16A16_UNORM",
+    "DXGI_FORMAT_R16G16B16A16_UINT",
+    "DXGI_FORMAT_R16G16B16A16_SNORM",
+    "DXGI_FORMAT_R16G16B16A16_SINT",
+    "DXGI_FORMAT_R32G32_TYPELESS",
+    "DXGI_FORMAT_R32G32_FLOAT",
+    "DXGI_FORMAT_R32G32_UINT",
+    "DXGI_FORMAT_R32G32_SINT",
+    "DXGI_FORMAT_R32G8X24_TYPELESS",
+    "DXGI_FORMAT_D32_FLOAT_S8X24_UINT",
+    "DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS",
+    "DXGI_FORMAT_X32_TYPELESS_G8X24_UINT",
+    "DXGI_FORMAT_R10G10B10A2_TYPELESS",
+    "DXGI_FORMAT_R10G10B10A2_UNORM",
+    "DXGI_FORMAT_R10G10B10A2_UINT",
+    "DXGI_FORMAT_R11G11B10_FLOAT",
+    "DXGI_FORMAT_R8G8B8A8_TYPELESS",
+    "DXGI_FORMAT_R8G8B8A8_UNORM",
+    "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+    "DXGI_FORMAT_R8G8B8A8_UINT",
+    "DXGI_FORMAT_R8G8B8A8_SNORM",
+    "DXGI_FORMAT_R8G8B8A8_SINT",
+    "DXGI_FORMAT_R16G16_TYPELESS",
+    "DXGI_FORMAT_R16G16_FLOAT",
+    "DXGI_FORMAT_R16G16_UNORM",
+    "DXGI_FORMAT_R16G16_UINT",
+    "DXGI_FORMAT_R16G16_SNORM",
+    "DXGI_FORMAT_R16G16_SINT",
+    "DXGI_FORMAT_R32_TYPELESS",
+    "DXGI_FORMAT_D32_FLOAT",
+    "DXGI_FORMAT_R32_FLOAT",
+    "DXGI_FORMAT_R32_UINT",
+    "DXGI_FORMAT_R32_SINT",
+    "DXGI_FORMAT_R24G8_TYPELESS",
+    "DXGI_FORMAT_D24_UNORM_S8_UINT",
+    "DXGI_FORMAT_R24_UNORM_X8_TYPELESS",
+    "DXGI_FORMAT_X24_TYPELESS_G8_UINT",
+    "DXGI_FORMAT_R8G8_TYPELESS",
+    "DXGI_FORMAT_R8G8_UNORM",
+    "DXGI_FORMAT_R8G8_UINT",
+    "DXGI_FORMAT_R8G8_SNORM",
+    "DXGI_FORMAT_R8G8_SINT",
+    "DXGI_FORMAT_R16_TYPELESS",
+    "DXGI_FORMAT_R16_FLOAT",
+    "DXGI_FORMAT_D16_UNORM",
+    "DXGI_FORMAT_R16_UNORM",
+    "DXGI_FORMAT_R16_UINT",
+    "DXGI_FORMAT_R16_SNORM",
+    "DXGI_FORMAT_R16_SINT",
+    "DXGI_FORMAT_R8_TYPELESS",
+    "DXGI_FORMAT_R8_UNORM",
+    "DXGI_FORMAT_R8_UINT",
+    "DXGI_FORMAT_R8_SNORM",
+    "DXGI_FORMAT_R8_SINT",
+    "DXGI_FORMAT_A8_UNORM",
+    "DXGI_FORMAT_R1_UNORM",
+    "DXGI_FORMAT_R9G9B9E5_SHAREDEXP",
+    "DXGI_FORMAT_R8G8_B8G8_UNORM",
+    "DXGI_FORMAT_G8R8_G8B8_UNORM",
+    "DXGI_FORMAT_BC1_TYPELESS",
+    "DXGI_FORMAT_BC1_UNORM",
+    "DXGI_FORMAT_BC1_UNORM_SRGB",
+    "DXGI_FORMAT_BC2_TYPELESS",
+    "DXGI_FORMAT_BC2_UNORM",
+    "DXGI_FORMAT_BC2_UNORM_SRGB",
+    "DXGI_FORMAT_BC3_TYPELESS",
+    "DXGI_FORMAT_BC3_UNORM",
+    "DXGI_FORMAT_BC3_UNORM_SRGB",
+    "DXGI_FORMAT_BC4_TYPELESS",
+    "DXGI_FORMAT_BC4_UNORM",
+    "DXGI_FORMAT_BC4_SNORM",
+    "DXGI_FORMAT_BC5_TYPELESS",
+    "DXGI_FORMAT_BC5_UNORM",
+    "DXGI_FORMAT_BC5_SNORM",
+    "DXGI_FORMAT_B5G6R5_UNORM",
+    "DXGI_FORMAT_B5G5R5A1_UNORM",
+    "DXGI_FORMAT_B8G8R8A8_UNORM",
+    "DXGI_FORMAT_B8G8R8X8_UNORM",
+    "DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM",
+    "DXGI_FORMAT_B8G8R8A8_TYPELESS",
+    "DXGI_FORMAT_B8G8R8A8_UNORM_SRGB",
+    "DXGI_FORMAT_B8G8R8X8_TYPELESS",
+    "DXGI_FORMAT_B8G8R8X8_UNORM_SRGB",
+    "DXGI_FORMAT_BC6H_TYPELESS",
+    "DXGI_FORMAT_BC6H_UF16",
+    "DXGI_FORMAT_BC6H_SF16",
+    "DXGI_FORMAT_BC7_TYPELESS",
+    "DXGI_FORMAT_BC7_UNORM",
+    "DXGI_FORMAT_BC7_UNORM_SRGB",
+    "DXGI_FORMAT_AYUV",
+    "DXGI_FORMAT_Y410",
+    "DXGI_FORMAT_Y416",
+    "DXGI_FORMAT_NV12",
+    "DXGI_FORMAT_P010",
+    "DXGI_FORMAT_P016",
+    "DXGI_FORMAT_420_OPAQUE",
+    "DXGI_FORMAT_YUY2",
+    "DXGI_FORMAT_Y210",
+    "DXGI_FORMAT_Y216",
+    "DXGI_FORMAT_NV11",
+    "DXGI_FORMAT_AI44",
+    "DXGI_FORMAT_IA44",
+    "DXGI_FORMAT_P8",
+    "DXGI_FORMAT_A8P8",
+    "DXGI_FORMAT_B4G4R4A4_UNORM",
+    "DXGI_FORMAT_P208",
+    "DXGI_FORMAT_V208",
+    "DXGI_FORMAT_V408",
+    "DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE",
+    "DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE",
+    "DXGI_FORMAT_FORCE_UINT",
+    "ICON_BIG",
+    "ICON_SMALL",
 ];
