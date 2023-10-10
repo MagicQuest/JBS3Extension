@@ -129,6 +129,7 @@ registerFunc("CreateFont", "function CreateFont(cHeight : number, cWidth : numbe
 registerFunc("EnumFontFamilies", "function EnumFontFamilies(dc : HDC | number, func : Function(font : LOGFONT, textMetric : TEXTMETRIC, FontType : number)) : void", "takes a function with 3 parameters  \ncalls the native `EnumFontFamiliesExA` function");
 registerFunc("CreateFontIndirect", "function CreateFontIndirect(logFont : LOGFONTA) : HFONT | number", "logFont is an object with the `LOGFONTA`'s properties (find it on microsoft docs)  \nreturns an HFONT or 0 if failed probably");
 registerFunc("CreateFontSimple", "function CreateFontSimple(fontName : string, width : number, height : number) : HFONT | number", "a convenience function because `CreateFont` takes like 30 arguments");
+registerFunc("StretchDIBits", "function StretchDIBits(dc : HDC | number, xDest : number, yDest : number, DestWidth : number, DestHeight : number, xSrc : number, ySrc : number, SrcWidth : number, SrcHeight : number, data : number[], imageWidth : number, imageHeight : number, compression : number, rop : number) : number", "data can be any png or jpeg file read with `fs.readBinary`  \ncompression can be any `BI_` const  \nrop can be any `SRC` const (or `NOTSRC` consts lol)  \nreturns 0 if failed");
 
 registerFunc("BitBlt", "function BitBlt(dc : HDC | number, x : number, y : number, cx : number, cy : number, memdc : HDC | number, x1 : number, y1 : number, rop : number)", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
 registerFunc("StretchBlt", "function StretchBlt(dc : HDC | number, x : number, y : number, cx : number, cy : number, memdc : HDC | number, x1 : number, y1 : number, cx1 : number, cy1 : number, rop : number)", "calls the `window.h` `StretchBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
@@ -1544,4 +1545,10 @@ const macros:string[] = [
     "DXGI_FORMAT_FORCE_UINT",
     "ICON_BIG",
     "ICON_SMALL",
+    "BI_RGB",
+    "BI_RLE8",
+    "BI_RLE4",
+    "BI_BITFIELDS",
+    "BI_JPEG",
+    "BI_PNG",
 ];
