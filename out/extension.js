@@ -319,7 +319,7 @@ function activate(context) {
             for (const object of definedObjects) {
                 if (line.includes(object.varName)) {
                     for (const method of object.object.props) {
-                        if (line.includes(method[0])) {
+                        if (line.includes(method[0] + "(")) {
                             const func = objectFunctions[method[0]];
                             const param = (line.slice(0, position.character).match(/,/g) || []).length;
                             const sig = new vscode.SignatureInformation("", new vscode.MarkdownString(func.desc)); //func.info, "typescript"));
