@@ -1,6 +1,6 @@
 "use strict";
 /*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
+ * Copyright (C) Microsoft Corporation. All rights reserved. //im not gonna lie i didn't even know this was here
  *--------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
@@ -85,7 +85,7 @@ registerFunc("Inputbox", "function Inputbox(description : string, title : string
 registerFunc("CreateWindowClass", "function CreateWindowClass(className? : string, init? : function, windowProc? : function, loop? : function) : WNDCLASSEXA", "returns an object for use with `CreateWindow`  \nyou can use this object like it's c++ `WNDCLASSEX` counterpart");
 //registerFunc("CreateWindow", "function CreateWindow(wndclass : {className : string, windowProc : function, loop : function}, title : string, x : number, y : number, width : number, height : number) : Promise", "returns a promise that is resolved when the window closes");
 registerFunc("CreateWindow", "function CreateWindow(wndclass : WNDCLASSEXA | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number) : HWND | number", "the `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL`  \nthe windowProc will NOT call WM_CREATE because IDK DAWG just use init  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \nreturns the pointer to the newly created window (`HWND`)");
-registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
+registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const (can be OR'd together)  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
 registerFunc("ShowWindow", "function ShowWindow(hwnd : HWND | number, nCmdShow : number) : number", "returns 0 if failed");
 registerFunc("UpdateWindow", "function UpdateWindow(hwnd : HWND | number) : number", "immediately redraws the window  \nreturns 0 if failed");
@@ -119,7 +119,7 @@ registerFunc("TransparentBlt", "function TransparentBlt(hdcDest : HDC | number, 
 registerFunc("PatBlt", "function PatBlt(dc : HDC | number, x : number, y : number, width : number, height : number, rop : number) : number", "draws the selected HBRUSH onto the `dc`\nthe HBRUSH must be already selected with `SelectObject()`  \nrop can be any `PAT...` const or `DSTINVERT`,`BLACKNESS`,`WHITENESS`  \nreturns 0 if failed");
 registerFunc("AlphaBlend", "function AlphaBlend(hdcDest : HDC | number, xoriginDest : number, yoriginDest : number, wDest : number, hDest : number, hdcSrc : HDC | number, xoriginSrc : number, yoriginSrc : number, wSrc : number, hSrc : number, SourceConstantAlpha : number)", "calls the `window.h` `AlphaBlend` function  \nthe `SourceConstantAlpha` parameter replaces the native BLENDFUNCTION param. This param can be from 0-255  \nreturns 1 if success");
 registerFunc("SelectObject", "function SelectObject(dc : HDC | number, object : HGDIOBJ | number) : number", "returns a pointer to the last object selected");
-registerFunc("CreatePen", "function CreatePen(style : number, width : number, rgb : RGB | number) : HPEN | number", "the style is any `PS_` constant  \nreturns a pointer to the newly created `HPEN`");
+registerFunc("CreatePen", "function CreatePen(style : number, width : number, rgb : RGB | number) : HPEN | number", "the style is any `PS_` constant  \nthe style will automatically be set to PS_SOLID if the width is greater than one (windows controls this, sorry!)  \nreturns a pointer to the newly created `HPEN`");
 registerFunc("DeleteObject", "function DeleteObject(object : HGDIOBJ | number) : void", "deletes the `HGDIOBJ` supplied");
 registerFunc("DestroyCursor", "function DestroyCursor(object : HCURSOR | number) : void", "don't use if the cursor was created with `LoadCursor/LoadCursorFromFile/LoadImage (with LR_SHARED flag)/CopyImage`  \ndestroys the `HCURSOR` supplied");
 registerFunc("DestroyIcon", "function DestroyIcon(object : HICON | number) : void", "don't use if the icon was made with `LoadIcon/LoadImage (with LR_SHARED flag)/CopyImage/CreateIconFromResource`  \ndestroys the `HICON` supplied");
@@ -159,7 +159,7 @@ registerFunc("LoadCursorFromFile", "function LoadCursorFromFile(lpCursorName : s
 registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, width? : number, height? : number, fuLoad : number) : HANDLE | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadImageA(hInstance, name, type, width, height, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const (can be OR'd together)  \nif width or height are 0 and you don't use the `LR_DEFAULTSIZE` flag then it will use the icon's actual width/height  \nreturns 0 if failed");
 registerFunc("MAKEINTRESOURCE", "function MAKEINTRESOURCE(i : number)", "uses the native `MAKEINTRESOURCEA(i)` macro"); // for use with `LoadCursor`");
 registerFunc("SetCursor", "function SetCursor(cursor : HCURSOR | number) : HCURSOR | number", "calls the native `SetCursor(cursor)` function and if cursor is NULL the cursor is removed  \nreturns the last cursor or 0 if failed`");
-registerFunc("DrawIconEx", "function DrawIconEx(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number, cxWidth? : number, cyWidth? : number, istepIfAniCur? : number, hbrFlickerFreeDraw? : HBRUSH | number, diFlags? : number) : number", "calls the native `DrawIconEx(...)` function  \ndiFlags can be any `DI_` const  \nreturns 0 if failed`");
+registerFunc("DrawIconEx", "function DrawIconEx(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number, cxWidth? : number, cyWidth? : number, istepIfAniCur? : number, hbrFlickerFreeDraw? : HBRUSH | number, diFlags? : number) : number", "calls the native `DrawIconEx(...)` function  \ndiFlags can be any `DI_` const (can be OR'd together `|` )  \nreturns 0 if failed`");
 registerFunc("DrawIcon", "function DrawIcon(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number) : number", "calls the native `DrawIcon(...)` function  \nreturns 0 if failed`");
 registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIconName : number) : HICON | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadIconA(hInstance, lpIconName)` function");
 registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works  \nuses CreateIconIndirect to create an icon with the bitmap");
@@ -198,14 +198,27 @@ registerFunc("SetWindowLongPtr", "function SetWindowLongPtr(hwnd : HWND | number
 registerFunc("GetClassLongPtr", "function GetClassLongPtr(hwnd : HWND | number, nIndex : number) : number", "can be used to get a window's icon AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const");
 registerFunc("GetWindowLongPtr", "function GetWindowLongPtr(hwnd : HWND | number, nIndex : number) : number", "can get some data from a window (like it's `HINSTANCE` with `GWLP_HINSTANCE`)  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)");
 registerFunc("GetIconDimensions", "function GetIconDimensions(hIcon : HICON | number) : {width : number, height : number}", "msn example function on how to get the size from an HICON lol  \nreturns an object with `width` and `height` properties"); //\nreturns an object with `cx` and `cy` properties");
-registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBITMAP | number) : {width : number, height : number}", "helper function to get the size of a loaded bitmap  \nreturns an object with `width` and `height` properties");
+registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBITMAP | number) : {width : number, height : number}", "helper function to get the size of a loaded bitmap  \nyou don't have to use this anymore because `GetObjectHBITMAP(hBitmap).bmWidth/bmHeight` is now a thing  \nreturns an object with `width` and `height` properties");
 registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | number", "sets the mouse capture to the `hwnd`  \nallows your window to still get mouse events even if you aren't hovering over the window  \nreturns the last window that had the mouse or 0");
 registerFunc("ReleaseCapture", "function ReleaseCapture() : boolean", "releases the mouse capture from a window  \nreturns 0 if failed");
 registerFunc("ClipCursor", "function ClipCursor(left : number, top : number, right : number, bottom : number) : boolean", "restricts the mouse to the supplied rect  \nreturns 0 if failed");
 registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x : number, y : number}", "takes an lparam and converts it to an object with `x` and `y` properties  \nuses the native MAKEPOINTS macro");
 registerFunc("GetSystemMetrics", "function GetSystemMetrics(metric : number) : number", "the metric parameter can be any `SM_` const");
-registerFunc("_com_error", "function _com_error(HRESULT : number) : {}", "used for helping with errors for objects (like `createCanvas(\"direct2d\")` or `createCanvas(\"direct3d\")`)");
+registerFunc("_com_error", "function _com_error(HRESULT : number) : string", "used for helping with errors for objects (like `createCanvas(\"direct2d\")` or `createCanvas(\"direct3d\")`)  \nalso apparently can be used like `_com_error(GetLastError())` to get the error in text (which i didn't know worked with get last error)");
 registerFunc("Beep", "function Beep(frequency : number, durationMs : number) : number", "plays a sound on your onboard speaker (if you have one) OR plays a sound through your headphones/realtek yk yk yk  \nalso this blocks the thread for `durationMs`");
+registerFunc("GetObjectHBITMAP", "function GetObjectHBITMAP(hBitmap : HBITMAP | number) : BITMAP", "returns an object with properties relating to `hBitmap` like it's width or height");
+registerFunc("GetObjectDIBITMAP", "function GetObjectDIBITMAP(hBitmap : HBITMAP | number) : DIBSECTION", "`hBitmap` must be a bitmap created with `CreateDIBSection`  \nreturns a large object (so large in fact my extension can't handle that rn so you have to `print` to see it's properties)");
+registerFunc("GetObjectHPALETTE", "function GetObjectHPALETTE(hPalette : HPALLETE) : number", "returns the number of color entries in said palette");
+registerFunc("GetObjectExtHPEN", "function GetObjectExtHPEN(hPen : HPEN | number) : EXTLOGPEN", "`hPen` must be an object created with `ExtCreatePen`  \nreturns an object with details about the pen like it's width and color");
+registerFunc("GetObjectHPEN", "function GetObjectHPEN(hPen : HPEN | number) : LOGPEN", "returns an object with details about this pen like it's style, width, and color");
+registerFunc("GetObjectHBRUSH", "function GetObjectHBRUSH(hBrush : HBRUSH | number) : LOGBRUSH", "returns an object with details about this brush like it's style, color, and hatch");
+registerFunc("GetObjectHFONT", "function GetObjectHFONT(hFont : HFONT | number) : LOGFONT", "returns an object with details about this font like it's `lfFaceName` or `lfHeight` and `lfWidth`");
+//kinda funny to think about how all these functions are related to peter.js
+registerFunc("PlaySound", "function PlaySound(sound : string, hInstance? : number, soundFlags : number) : number", "if using `SND_FILENAME` then `sound` must be the path to a .WAV file **use `PlaySoundSpecial` to play mp3**  \nset `hInstance` to null or undefined unless you are using the flag `SND_RESOURCE`  \nsoundFlags can be any `SND_` const (can be OR'd together) SND_SYNC by default is already applied  \nreturns 0 if failed i think");
+registerFunc("PlaySoundSpecial", "function PlaySoundSpecial(soundFileName : string, soundId? : string, hwnd? : HWND | number, sync? : boolean) : number", "soundFileName is a path to the file  \nsoundId a name of the sound for use with `StopSoundSpecial(soundId)`  \ninternally uses windows.h `mciSendString`  \nthe optional `hwnd` should recieve the `MM_MCINOTIFY` event when the sound is done playing (lowkey not working)  \nreturns 0 if success for some reason"); //https://stackoverflow.com/questions/22253074/how-to-play-or-open-mp3-or-wav-sound-file-in-c-program
+registerFunc("StopSoundSpecial", "function StopSoundSpecial(soundId : string) : number", "stops and closes the currently playing sound by it's `soundId`  \ninternally uses windows.h `mciSendString`  \nreturns 0 if success for some reason");
+registerFunc("InitiateSystemShutdown", "function InitiateSystemShutdown(machineName? : string, message : string, timeout : number, forceAppsClosed : boolean, rebootAfterShutdown : boolean, reason : number) : number", "obviously probably don't use this  \nmachineName can be NULL (which will shutdown the local computer)  \nreturns 0 if failed");
+registerFunc("AbortSystemShutdown", "function AbortSystemShutdown(machineName? : string) : number", "if machineName is null then it aborts the shutdown of the local computer  \nobviously i felt obligated to add this one  \nreturns 0 if failed and if it does, godspeed **o7**");
 function emptyD2DObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -228,11 +241,47 @@ function activate(context) {
     const BitmapObject = { props: [...emptyD2DObject(), ["GetDpi", vscode.CompletionItemKind.Method], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["CopyFromBitmap", vscode.CompletionItemKind.Method], ["CopyFromRenderTarget", vscode.CompletionItemKind.Method]] };
     const BitmapBrushObject = { props: [...defaultBrushObject(), ["GetExtendModeX", vscode.CompletionItemKind.Method], ["GetExtendModeY", vscode.CompletionItemKind.Method], ["GetExtendMode", vscode.CompletionItemKind.Method], ["GetInterpolationMode", vscode.CompletionItemKind.Method], ["SetExtendModeX", vscode.CompletionItemKind.Method], ["SetExtendModeY", vscode.CompletionItemKind.Method], ["SetExtendMode", vscode.CompletionItemKind.Method], ["SetInterpolationMode", vscode.CompletionItemKind.Method], ["SetBitmap", vscode.CompletionItemKind.Method], ["GetBitmap", vscode.CompletionItemKind.Method]] };
     // genius regex -> /"(.+)"/g regexr.com/7l8cl
+    // the regex tips and tricks are WAY too handy
+    //`...`.match(/".+"/g).join(" ").replaceAll(/".+?"/g, "[$&], ")
     const LineSpacingObject = { props: [["lineSpacingMethod"], ["lineSpacing"], ["baseline"]] };
     const TrimmingObject = { props: [["granularity"], ["delimiter"], ["delimiterCount"]] };
     const RGBObject = { props: [["r"], ["g"], ["b"]] };
     const SIZEObject = { props: [["width"], ["height"]] }; //[["cx"], ["cy"]]};
-    const objectReturningFunctions = [["createCanvas", CanvasObject], ["GetWindowRect", RectObject], ["GetClientRect", RectObject], ["CreateWindowClass", WindowClassObject], ["GetMousePos", PointObject], ["require", RequireObject], ["BeginPaint", PaintStruct], ["CreateSolidColorBrush", SolidColorBrushObject], ["CreateGradientStopCollection", IUnknownObject], ["CreateLinearGradientBrush", LinearGradientBrushObject], ["CreateRadialGradientBrush", RadialGradientBrushObject], ["CreateFont", FontObject], ["CreateBitmap", BitmapObject], ["CreateBitmapFromFilename", BitmapObject], ["CreateBitmapBrush", BitmapBrushObject], ["GetLineSpacing", LineSpacingObject], ["GetTrimming", TrimmingObject], ["GetPixel", RGBObject], ["SetPixel", RGBObject], ["GetIconDimensions", SIZEObject], ["MAKEPOINTS", PointObject], ["GetBitmapDimensions", SIZEObject],];
+    const GDIHBITMAP = { props: [["bmType"], ["bmWidth"], ["bmHeight"], ["bmWidthBytes"], ["bmPlanes"], ["bmBitsPixel"], ["bmBits"]] };
+    const GDIDIBHBITMAP = { props: [["dsBm", vscode.CompletionItemKind.Class], ["dsBmih", vscode.CompletionItemKind.Class], ["dsBitfields"], ["dshSection"], ["dsOffset"]] }; //yeah you just gonna have to find out what the props are
+    const GDIExtLPEN = { props: [["elpPenStyle"], ["elpWidth"], ["elpBrushStyle"], ["elpColor"], ["elpHatch"], ["elpNumEntries"]] };
+    const GDILPEN = { props: [["lopnStyle"], ["lopnWidth"], ["lopnColor"]] };
+    const GDILBRUSH = { props: [["lbStyle"], ["lbColor"], ["lbHatch"]] };
+    const GDILFONT = { props: [["lfHeight"], ["lfWidth"], ["lfEscapement"], ["lfOrientation"], ["lfWeight"], ["lfItalic"], ["lfUnderline"], ["lfStrikeOut"], ["lfCharSet"], ["lfOutPrecision"], ["lfClipPrecision"], ["lfQuality"], ["lfPitchAndFamily"], ["lfFaceName"]] };
+    const objectReturningFunctions = [
+        ["createCanvas", CanvasObject],
+        ["GetWindowRect", RectObject],
+        ["GetClientRect", RectObject],
+        ["CreateWindowClass", WindowClassObject],
+        ["GetMousePos", PointObject],
+        ["require", RequireObject],
+        ["BeginPaint", PaintStruct],
+        ["CreateSolidColorBrush", SolidColorBrushObject],
+        ["CreateGradientStopCollection", IUnknownObject],
+        ["CreateLinearGradientBrush", LinearGradientBrushObject],
+        ["CreateRadialGradientBrush", RadialGradientBrushObject],
+        ["CreateFont", FontObject], ["CreateBitmap", BitmapObject],
+        ["CreateBitmapFromFilename", BitmapObject],
+        ["CreateBitmapBrush", BitmapBrushObject],
+        ["GetLineSpacing", LineSpacingObject],
+        ["GetTrimming", TrimmingObject],
+        ["GetPixel", RGBObject],
+        ["SetPixel", RGBObject],
+        ["GetIconDimensions", SIZEObject],
+        ["MAKEPOINTS", PointObject],
+        ["GetBitmapDimensions", SIZEObject],
+        ["GetObjectHBITMAP", GDIHBITMAP],
+        ["GetObjectDIBITMAP", GDIHBITMAP],
+        ["GetObjectExtHPEN", GDIExtLPEN],
+        ["GetObjectHPEN", GDILPEN],
+        ["GetObjectHBRUSH", GDILBRUSH],
+        ["GetObjectHFONT", GDILFONT],
+    ];
     let definedObjects = [];
     //class BrushObject implements JBSObjects {
     //    props: [["shit", vscode.CompletionItemKind.Method]];
@@ -288,7 +337,7 @@ function activate(context) {
                 }
             }
             for (const func of funcs) {
-                if (line.includes(func.name)) {
+                if (line.includes(func.name + "(")) { //finally getting the correct func LOL!
                     const param = (line.slice(0, position.character).match(/,/g) || []).length;
                     const sig = new vscode.SignatureInformation("", new vscode.MarkdownString(func.desc)); //func.info, "typescript"));
                     sig.parameters = [
@@ -325,13 +374,15 @@ function activate(context) {
                 const markdown = new vscode.MarkdownString();
                 //const addmarkdown = new vscode.MarkdownString();
                 //const defs = [];
-                console.log(line[shit.end.character]);
+                console.log(object, line[shit.end.character]);
                 if (line[shit.end.character] == "(") {
                     let quit = false;
-                    for (const object of definedObjects) {
-                        if (line.includes(object.varName) && !quit) {
-                            for (const method of object.object.props) {
-                                if (line.includes(method[0])) {
+                    for (const dObject of definedObjects) {
+                        if (line.includes(dObject.varName) && !quit) {
+                            console.log(line, dObject.varName);
+                            for (const method of dObject.object.props) {
+                                if (object == method[0] && line.includes(method[0])) { //lets go EndPaint(hwnd, ps) has hover AND signature
+                                    console.log("quitting", method[0]);
                                     const func = objectFunctions[method[0]];
                                     string = func.info;
                                     additional += func.desc;
@@ -344,7 +395,7 @@ function activate(context) {
                     }
                     if (!quit) {
                         for (const func of funcs) {
-                            if (object.includes(func.name)) { //func.name.includes(object)) {
+                            if (object.includes(func.name) && line.includes(func.name + "(")) { //func.name.includes(object)) {
                                 string = func.info;
                                 additional += func.desc;
                                 break;
@@ -1541,5 +1592,21 @@ const macros = [
     "BN_SETFOCUS",
     "BN_UNPUSHED",
     "BN_UNHILITE",
+    "SND_APPLICATION",
+    "SND_ALIAS",
+    "SND_ALIAS_ID",
+    "SND_ASYNC",
+    "SND_FILENAME",
+    "SND_LOOP",
+    "SND_MEMORY",
+    "SND_NODEFAULT",
+    "SND_NOSTOP",
+    "SND_NOWAIT",
+    "SND_PURGE",
+    "SND_RESOURCE",
+    "SND_SENTRY",
+    "SND_SYNC",
+    "SND_SYSTEM",
+    "MM_MCINOTIFY",
 ];
 //# sourceMappingURL=extension.js.map
