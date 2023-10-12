@@ -84,7 +84,7 @@ registerFunc("Inputbox", "function Inputbox(description : string, title : string
 //registerFunc("CreateWindowClass", "function CreateWindowClass(className : string, init : function, windowProc : function, loop : function) : wndclass | {className : string, windowProc : function, loop : function}", "returns an object with these 3 properties/methods for use with `CreateWindow`");
 registerFunc("CreateWindowClass", "function CreateWindowClass(className? : string, init? : function, windowProc? : function, loop? : function) : WNDCLASSEXA", "returns an object for use with `CreateWindow`  \nyou can use this object like it's c++ `WNDCLASSEX` counterpart");
 //registerFunc("CreateWindow", "function CreateWindow(wndclass : {className : string, windowProc : function, loop : function}, title : string, x : number, y : number, width : number, height : number) : Promise", "returns a promise that is resolved when the window closes");
-registerFunc("CreateWindow", "function CreateWindow(wndclass : WNDCLASSEXA, title : string, windowStyles : number, x : number, y : number, width : number, height : number) : HWND | number", "the windowProc will NOT call WM_CREATE because IDK DAWG just use init  \nwindowStyles can be any `WS_` const  \nreturns the pointer to the newly created window (`HWND`)");
+registerFunc("CreateWindow", "function CreateWindow(wndclass : WNDCLASSEXA | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number) : HWND | number", "the `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL`  \nthe windowProc will NOT call WM_CREATE because IDK DAWG just use init  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \nreturns the pointer to the newly created window (`HWND`)");
 registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
 registerFunc("ShowWindow", "function ShowWindow(hwnd : HWND | number, nCmdShow : number) : number", "returns 0 if failed");
@@ -92,6 +92,7 @@ registerFunc("UpdateWindow", "function UpdateWindow(hwnd : HWND | number) : numb
 registerFunc("EnableWindow", "function EnableWindow(hwnd : HWND | number, bEnable : boolean) : number", "usually used for edit windows or combo boxes i think  \nreturns 0 if failed");
 registerFunc("ClientToScreen", "function ClientToScreen(hwnd : HWND | number, rect : {left : number, top : number, right : number, bottom : number}) : void", "uhhhh something idk");
 registerFunc("SetROP2", "function SetROP2(dc : HDC | number, rop2 : number) : number", "`rop2` can be any `R2_` const  \nreturns 0 if failed");
+registerFunc("MAKEROP4", "function MAKEROP4(fore : number, back : number) : number", "`fore` and `back` can be any `SRC...` const  \nonly used for MaskBlt  \n[heres a doc describing more ROP codes](https://learn.microsoft.com/en-us/windows/win32/gdi/ternary-raster-operations?redirectedfrom=MSDN)");
 registerFunc("BeginPaint", "function BeginPaint(window? : HWND | number) : PaintStruct | object", "calls the `windows.h` `BeginPaint` function  \nreturns a newly created custom object with the original c++ `PAINTSTRUCT` object's methods");
 registerFunc("EndPaint", "function EndPaint(window? : HWND | number, paintstruct : PaintStruct | object) : void", "calls the `windows.h` `EndPaint` function  \ndeletes the paintstruct object");
 registerFunc("GetDC", "function GetDC(window? : HWND | number) : HDC | number", "calls the `windows.h` `GetDC` function  \nreturns the pointer (integer in js) to the HDC in c++");
@@ -99,7 +100,7 @@ registerFunc("GetWindowDC", "function GetWindowDC(window : HWND | number) : HDC 
 registerFunc("SaveDC", "function SaveDC(dc : HDC | number) : number", "calls the `windows.h` `SaveDC` function  \nreturns saved state's position for use with `RestoreDC`");
 registerFunc("RestoreDC", "function RestoreDC(dc : HDC | number, savedState : number) : number", "calls the `windows.h` `RestoreDC` function  \nreturns 0 if failed");
 registerFunc("DeleteDC", "function DeleteDC(dc : HDC | number) : number", "calls the `windows.h` `usually used on compatible DCs  \nDeleteDC` function  \nreturns 0 if failed");
-registerFunc("CreateCompatibleDC", "function CreateCompatibleDC(dc : HDC | number) : HDC | number", "calls the `windows.h` `CreateCompatibleDC` function  \nreturns the pointer to the HDC in c++");
+registerFunc("CreateCompatibleDC", "function CreateCompatibleDC(dc : HDC | number) : HDC | number", "calls the `windows.h` `CreateCompatibleDC` function  \nusually used to draw/manipulate a bitmap (but you can draw TO a bitmap as well)  \nreturns the pointer to the HDC in c++");
 registerFunc("CreateCompatibleBitmap", "function CreateCompatibleBitmap(dc : HDC | number, width : number, height : number) : HBITMAP | number", "calls the `windows.h` `CreateCompatibleBitmap` function (apparently draws faster than bitmaps created with `CreateBitmap`)  \nreturns the pointer to the HBITMAP in c++");
 registerFunc("ReleaseDC", "function ReleaseDC(window? : HWND | number, dc : HDC | number) : any | number", "calls the `windows.h` `ReleaseDC` function  \nreturns what ever the native c++ function returns idk probably 0");
 registerFunc("TextOut", "function TextOut(dc : HDC | number, x : number, y : number, text : string) : any | number", "calls the `windows.h` `TextOutA` function  \nreturns what ever the native c++ function returns");
@@ -113,6 +114,7 @@ registerFunc("CreatePatternBrush", "function CreatePatternBrush(bitmap : HBITMAP
 registerFunc("CreateHatchBrush", "function CreateHatchBrush(hatchMode : number, color : RGB | number) : HBRUSH | number", "hatchMode can be any `HS_`  \nuse SetBkMode to make it `TRANSPARENT` or `OPAQUE`  \ncolor must be an `RGB()` value  \nreturns 0 if failed");
 registerFunc("BitBlt", "function BitBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, rop : number)", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
 registerFunc("StretchBlt", "function StretchBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, cx1 : number, cy1 : number, rop : number)", "calls the `window.h` `StretchBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
+registerFunc("MaskBlt", "function MaskBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, bmpMask : HBITMAP, maskX : number, maskY : number, rop : number)", "calls the `window.h` `MaskBlt` function  \nthe `bmpMask` must be a monochrome bitmap -> (`CreateBitmap(width, height, 1);`)  \nrop can be made by using `MAKEROP4(foregroundrop : number, backgroundrop : number)`  \nthis function will fail if `bmpMask` is not a monochromic bitmap  \nreturns 0 if failed");
 registerFunc("TransparentBlt", "function TransparentBlt(hdcDest : HDC | number, xoriginDest : number, yoriginDest : number, wDest : number, hDest : number, hdcSrc : HDC | number, xoriginSrc : number, yoriginSrc : number, wSrc : number, hSrc : number, crTransparent : number)", "calls the `window.h` `TransparentBlt` function  \nthe `crTransparent` parameter is the color to set as transparent `RGB(...)` color  \nreturns 1 if success");
 registerFunc("PatBlt", "function PatBlt(dc : HDC | number, x : number, y : number, width : number, height : number, rop : number) : number", "draws the selected HBRUSH onto the `dc`\nthe HBRUSH must be already selected with `SelectObject()`  \nrop can be any `PAT...` const or `DSTINVERT`,`BLACKNESS`,`WHITENESS`  \nreturns 0 if failed");
 registerFunc("AlphaBlend", "function AlphaBlend(hdcDest : HDC | number, xoriginDest : number, yoriginDest : number, wDest : number, hDest : number, hdcSrc : HDC | number, xoriginSrc : number, yoriginSrc : number, wSrc : number, hSrc : number, SourceConstantAlpha : number)", "calls the `window.h` `AlphaBlend` function  \nthe `SourceConstantAlpha` parameter replaces the native BLENDFUNCTION param. This param can be from 0-255  \nreturns 1 if success");
@@ -134,16 +136,17 @@ registerFunc("SetBkMode", "function SetBkMode(dc : HDC | number, mode : number) 
 registerFunc("SetTextColor", "function SetTextColor(dc : HDC | number, rgb : RGB | number) : void", "calls the native `SetTextColor()` which sets the text color for the `TextOut` drawing function");
 registerFunc("GetPixel", "function GetPixel(dc : HDC | number, x : number, y : number) : RGB | {r : number, g : number, b : number}", "gets the color of the pixel in the `dc` at the points (`x`,`y`)");
 registerFunc("SetPixel", "function SetPixel(dc : HDC | number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
-registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSN)  \nreturns 0 if failed");
+registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
 registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values  \nonly used for the GDI functions like `SetDCPenColor` or `SetTextColor`");
 registerFunc("GetStretchBltMode", "function GetStretchBltMode(dc : HDC | number) : number", "returns the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)");
 registerFunc("SetStretchBltMode", "function SetStretchBltMode(dc : HDC | number, mode : number) : number", "sets the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)  \nreturns 0 if failed");
 registerFunc("PrintWindow", "function PrintWindow(hwnd : HWND | number, dc : HDC | number, flags : number) : boolean", "copies a visual window into the specified device context (DC), typically a printer DC. (MSN)  \ni ain't never seen this function in my life  \nreturns 0 if failed");
+registerFunc("CreateBitmap", "function CreateBitmap(width : number, height : number, bitCount? : number) : HBITMAP | number", "creates an empty bitmap with the specified width and height  \nsetting the bitCount to 1 gives a monochromic bitmap (the default value is 32)  \nreturns 0 if failed");
 registerFunc("FindWindow", "function FindWindow(className? : string, windowTitle : string) : number", "className isn't required and usually is not needed  \nreturns a pointer to the window (`HWND`)");
 //registerFunc("GetDesktopWindow", "function GetDesktopWindow(void) : HWND | number", "calls the native `GetDesktopWindow` function and returns the screen's `HWND`");
 //registerFunc("GetKeyboardState", "function GetKeyboardState(void) : Array", "calls the native `GetKeyboardState` function and returns an array of length 255");
 registerFunc("GetAsyncKeyboardState", "function GetAsyncKeyboardState(void) : Array", "instead of calling `GetKeyboardState` (because it wasn't working) it uses `GetAsyncKeyState` and returns an array of length 255");
-registerFunc("GetDefaultFont", "function GetDefaultFont(void) : number", "returns a pointer to the default windows `HFONT`");
+registerFunc("GetDefaultFont", "function GetDefaultFont(void) : number", "returns a pointer to the default windows `HFONT` using GetSystemMetrics");
 registerFunc("GetKey", "function GetKey(keyCode : number) : bool", "calls the native `GetAsyncKeyState(keyCode) & 0x8000`");
 registerFunc("GetKeyDown", "function GetKeyDown(keyCode : number) : bool", "calls the native `GetAsyncKeyState(keyCode) & 0x1` to tell when the key has just been hit");
 registerFunc("PostQuitMessage", "function PostQuitMessage(void) : void", "calls the native `PostQuitMessage(0);` to terminate a windows `window`");
@@ -152,14 +155,14 @@ registerFunc("GetCursorPos", "function GetCursorPos(void) : {x: number, y: numbe
 registerFunc("SetMousePos", "function SetMousePos(x : number, y : number) : void", "alias for `SetCursorPos`  \ncalls the native `SetCursorPos(x, y)` and returns 0 if failed");
 registerFunc("SetCursorPos", "function SetCursorPos(x : number, y : number) : void", "calls the native `SetCursorPos(x, y)` and returns 0 if failed");
 registerFunc("LoadCursor", "function LoadCursor(hInstance? : number | null, lpCursorName : number) : HCURSOR | number", "lpCursorName can be any `IDC_` const  \nif it isn't working pass hInstance as NULL  \ncalls the native `LoadCursorA(hInstance, lpCursorName)` and returns a pointer to the cursor");
-registerFunc("LoadCursorFromFile", "function LoadCursorFromFile(lpCursorName : string) : HCURSOR | number", "lpCursorName must be in the `.CUR` or `.ANI` format  \ncalls the native `LoadCursorFromFile(lpCursorName)` and returns a pointer to the cursor");
+registerFunc("LoadCursorFromFile", "function LoadCursorFromFile(lpCursorName : string) : HCURSOR | number", "lpCursorName must be in the `.CUR` or `.ANI` format  \ncalls the native `LoadCursorFromFile(lpCursorName)` and returns a pointer to the cursor  \nsuperseded by LoadImage(NULL, filelocation, ..., IMAGE_CURSOR, ..., LR_SHARED | LR_LOADFROMFILE)");
 registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, width? : number, height? : number, fuLoad : number) : HANDLE | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadImageA(hInstance, name, type, width, height, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const (can be OR'd together)  \nif width or height are 0 and you don't use the `LR_DEFAULTSIZE` flag then it will use the icon's actual width/height  \nreturns 0 if failed");
 registerFunc("MAKEINTRESOURCE", "function MAKEINTRESOURCE(i : number)", "uses the native `MAKEINTRESOURCEA(i)` macro"); // for use with `LoadCursor`");
 registerFunc("SetCursor", "function SetCursor(cursor : HCURSOR | number) : HCURSOR | number", "calls the native `SetCursor(cursor)` function and if cursor is NULL the cursor is removed  \nreturns the last cursor or 0 if failed`");
 registerFunc("DrawIconEx", "function DrawIconEx(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number, cxWidth? : number, cyWidth? : number, istepIfAniCur? : number, hbrFlickerFreeDraw? : HBRUSH | number, diFlags? : number) : number", "calls the native `DrawIconEx(...)` function  \ndiFlags can be any `DI_` const  \nreturns 0 if failed`");
 registerFunc("DrawIcon", "function DrawIcon(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number) : number", "calls the native `DrawIcon(...)` function  \nreturns 0 if failed`");
 registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIconName : number) : HICON | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadIconA(hInstance, lpIconName)` function");
-registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works");
+registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works  \nuses CreateIconIndirect to create an icon with the bitmap");
 registerFunc("createCanvas", "function createCanvas(context : string, type : number, window? : HWND | number) : object<type>", "valid args are `d2d`/`direct2d` and `ID2D1RenderTarget`/`ID2D1DCRenderTarget`  \n`direct3d`/`d3d` not yet implemented  \nreturns an object for the specified type");
 registerFunc("Sleep", "function Sleep(ms : number) : void", "calls the native `Sleep(ms)` function to pause the current thread for x milliseconds");
 registerFunc("GetClientRect", "function GetClientRect(hwnd : HWND | number) : RECT | {left : number, top : number, right : number, bottom : number}", "calls the native `GetClientRect()` function and returns a `RECT` object with the properties  \n`left`,`right`,`top`,`bottom`");
@@ -194,8 +197,9 @@ registerFunc("SetClassLongPtr", "function SetClassLongPtr(hwnd : HWND | number, 
 registerFunc("SetWindowLongPtr", "function SetWindowLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "can set some data in a window  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("GetClassLongPtr", "function GetClassLongPtr(hwnd : HWND | number, nIndex : number) : number", "can be used to get a window's icon AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const");
 registerFunc("GetWindowLongPtr", "function GetWindowLongPtr(hwnd : HWND | number, nIndex : number) : number", "can get some data from a window (like it's `HINSTANCE` with `GWLP_HINSTANCE`)  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)");
-registerFunc("GetIconDimensions", "function GetIconDimensions(hIcon : HICON | number) : SIZE | {cx : number, cy : number}", "msn example function on how to get the size from an HICON lol  \nreturns an object with `cx` and `cy` properties");
-registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | number", "sets the mouse capture to the `hwnd` (im not sure what this does)  \nreturns the last window that had the mouse or 0");
+registerFunc("GetIconDimensions", "function GetIconDimensions(hIcon : HICON | number) : {width : number, height : number}", "msn example function on how to get the size from an HICON lol  \nreturns an object with `width` and `height` properties"); //\nreturns an object with `cx` and `cy` properties");
+registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBITMAP | number) : {width : number, height : number}", "helper function to get the size of a loaded bitmap  \nreturns an object with `width` and `height` properties");
+registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | number", "sets the mouse capture to the `hwnd`  \nallows your window to still get mouse events even if you aren't hovering over the window  \nreturns the last window that had the mouse or 0");
 registerFunc("ReleaseCapture", "function ReleaseCapture() : boolean", "releases the mouse capture from a window  \nreturns 0 if failed");
 registerFunc("ClipCursor", "function ClipCursor(left : number, top : number, right : number, bottom : number) : boolean", "restricts the mouse to the supplied rect  \nreturns 0 if failed");
 registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x : number, y : number}", "takes an lparam and converts it to an object with `x` and `y` properties  \nuses the native MAKEPOINTS macro");
@@ -227,8 +231,8 @@ function activate(context) {
     const LineSpacingObject = { props: [["lineSpacingMethod"], ["lineSpacing"], ["baseline"]] };
     const TrimmingObject = { props: [["granularity"], ["delimiter"], ["delimiterCount"]] };
     const RGBObject = { props: [["r"], ["g"], ["b"]] };
-    const SIZEObject = { props: [["cx"], ["cy"]] };
-    const objectReturningFunctions = [["createCanvas", CanvasObject], ["GetWindowRect", RectObject], ["GetClientRect", RectObject], ["CreateWindowClass", WindowClassObject], ["GetMousePos", PointObject], ["require", RequireObject], ["BeginPaint", PaintStruct], ["CreateSolidColorBrush", SolidColorBrushObject], ["CreateGradientStopCollection", IUnknownObject], ["CreateLinearGradientBrush", LinearGradientBrushObject], ["CreateRadialGradientBrush", RadialGradientBrushObject], ["CreateFont", FontObject], ["CreateBitmap", BitmapObject], ["CreateBitmapFromFilename", BitmapObject], ["CreateBitmapBrush", BitmapBrushObject], ["GetLineSpacing", LineSpacingObject], ["GetTrimming", TrimmingObject], ["GetPixel", RGBObject], ["SetPixel", RGBObject], ["GetIconDimensions", SIZEObject], ["MAKEPOINTS", PointObject]];
+    const SIZEObject = { props: [["width"], ["height"]] }; //[["cx"], ["cy"]]};
+    const objectReturningFunctions = [["createCanvas", CanvasObject], ["GetWindowRect", RectObject], ["GetClientRect", RectObject], ["CreateWindowClass", WindowClassObject], ["GetMousePos", PointObject], ["require", RequireObject], ["BeginPaint", PaintStruct], ["CreateSolidColorBrush", SolidColorBrushObject], ["CreateGradientStopCollection", IUnknownObject], ["CreateLinearGradientBrush", LinearGradientBrushObject], ["CreateRadialGradientBrush", RadialGradientBrushObject], ["CreateFont", FontObject], ["CreateBitmap", BitmapObject], ["CreateBitmapFromFilename", BitmapObject], ["CreateBitmapBrush", BitmapBrushObject], ["GetLineSpacing", LineSpacingObject], ["GetTrimming", TrimmingObject], ["GetPixel", RGBObject], ["SetPixel", RGBObject], ["GetIconDimensions", SIZEObject], ["MAKEPOINTS", PointObject], ["GetBitmapDimensions", SIZEObject],];
     let definedObjects = [];
     //class BrushObject implements JBSObjects {
     //    props: [["shit", vscode.CompletionItemKind.Method]];
@@ -1477,5 +1481,65 @@ const macros = [
     "DSTINVERT",
     "BLACKNESS",
     "WHITENESS",
+    "PATPAINT",
+    "MERGEPAINT",
+    "MERGECOPY",
+    "ES_LEFT",
+    "ES_CENTER",
+    "ES_RIGHT",
+    "ES_MULTILINE",
+    "ES_UPPERCASE",
+    "ES_LOWERCASE",
+    "ES_PASSWORD",
+    "ES_AUTOVSCROLL",
+    "ES_AUTOHSCROLL",
+    "ES_NOHIDESEL",
+    "ES_OEMCONVERT",
+    "ES_READONLY",
+    "ES_WANTRETURN",
+    "ES_NUMBER",
+    "BS_3STATE",
+    "BS_AUTO3STATE",
+    "BS_AUTOCHECKBOX",
+    "BS_AUTORADIOBUTTON",
+    "BS_BITMAP",
+    "BS_BOTTOM",
+    "BS_CENTER",
+    "BS_CHECKBOX",
+    //"BS_COMMANDLINK",
+    //"BS_DEFCOMMANDLINK",
+    "BS_DEFPUSHBUTTON",
+    //"BS_DEFSPLITBUTTON",
+    "BS_GROUPBOX",
+    "BS_ICON",
+    "BS_FLAT",
+    "BS_LEFT",
+    "BS_LEFTTEXT",
+    "BS_MULTILINE",
+    "BS_NOTIFY",
+    "BS_OWNERDRAW",
+    "BS_PUSHBUTTON",
+    "BS_PUSHLIKE",
+    "BS_RADIOBUTTON",
+    "BS_RIGHT",
+    "BS_RIGHTBUTTON",
+    //"BS_SPLITBUTTON",
+    "BS_TEXT",
+    "BS_TOP",
+    "BS_TYPEMASK",
+    "BS_USERBUTTON",
+    "BS_VCENTER",
+    //"BCN_HOTITEMCHANGE",
+    "BN_CLICKED",
+    "BN_DBLCLK",
+    "BN_DOUBLECLICKED",
+    "BN_DISABLE",
+    "BN_PUSHED",
+    "BN_HILITE",
+    "BN_KILLFOCUS",
+    "BN_PAINT",
+    "BN_SETFOCUS",
+    "BN_UNPUSHED",
+    "BN_UNHILITE",
 ];
 //# sourceMappingURL=extension.js.map
