@@ -1817,4 +1817,6 @@ const macros:string[] = [
     "ULW_COLORKEY",
     "ULW_OPAQUE",
     "ULW_EX_NORESIZE",
+    "AC_SRC_ALPHA",
+    "AC_SRC_OVER",
 ];
