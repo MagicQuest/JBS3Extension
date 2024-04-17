@@ -104,6 +104,8 @@ registerFunc("SetROP2", "function SetROP2(dc : HDC | number, rop2 : number) : nu
 registerFunc("MAKEROP4", "function MAKEROP4(fore : number, back : number) : number", "`fore` and `back` can be any `SRC...` const  \nonly used for MaskBlt  \n[heres a doc describing more ROP codes](https://learn.microsoft.com/en-us/windows/win32/gdi/ternary-raster-operations?redirectedfrom=MSDN)");
 registerFunc("BeginPaint", "function BeginPaint(window? : HWND | number) : PaintStruct | object", "calls the `windows.h` `BeginPaint` function  \nreturns a newly created custom object with the original c++ `PAINTSTRUCT` object's methods  \n**don't forget to call EndPaint or else memory leak :3**"); //meant to write :) but whatever
 registerFunc("EndPaint", "function EndPaint(window? : HWND | number, paintstruct : PaintStruct | object) : void", "calls the `windows.h` `EndPaint` function  \ndeletes the paintstruct object");
+registerFunc("CreateRectRgn", "function CreateRectRgn(x1 : number, y1 : number, x2 : number, y2 : number) : HRGN | number", "creates an HRGN object behind the scenes and returns a pointer to it  \nused in functions like `GetDCEx`");
+registerFunc("GetDCEx", "function GetDCEx(window? : HWND | number, hrgnClip : HRGN | number, flags : number) : HDC | number", "calls the `windows.h` `GetDCEx` function  \nhrgnClip can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam  \nflags are any `DCX_` const (can be OR'd together)  \nreturns the pointer (integer in js) to the HDC in c++");
 registerFunc("GetDC", "function GetDC(window? : HWND | number) : HDC | number", "calls the `windows.h` `GetDC` function  \nreturns the pointer (integer in js) to the HDC in c++");
 registerFunc("GetWindowDC", "function GetWindowDC(window : HWND | number) : HDC | number", "calls the `windows.h` `GetWindowDC` function which gets the ENTIRE window's device context including the titlebar (well that was a lie but it does include scrollbars)  \nreturns the pointer (integer in js) to the HDC in c++");
 registerFunc("SaveDC", "function SaveDC(dc : HDC | number) : number", "calls the `windows.h` `SaveDC` function  \nreturns saved state's position for use with `RestoreDC`");
@@ -148,7 +150,7 @@ registerFunc("SetTextColor", "function SetTextColor(dc : HDC | number, rgb : RGB
 registerFunc("GetPixel", "function GetPixel(dc : HDC | number, x : number, y : number) : RGB | {r : number, g : number, b : number}", "gets the color of the pixel in the `dc` at the points (`x`,`y`)");
 registerFunc("SetPixel", "function SetPixel(dc : HDC | number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
 registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
-registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values  \nonly used for the GDI functions like `SetDCPenColor` or `SetTextColor`");
+registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values  \nused for GDI functions like `SetDCPenColor` or `SetTextColor` and sometimes `DwmSetWindowAttribute`");
 registerFunc("GetStretchBltMode", "function GetStretchBltMode(dc : HDC | number) : number", "returns the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)");
 registerFunc("SetStretchBltMode", "function SetStretchBltMode(dc : HDC | number, mode : number) : number", "sets the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)  \nreturns 0 if failed");
 registerFunc("PrintWindow", "function PrintWindow(hwnd : HWND | number, dc : HDC | number, flags : number) : boolean", "copies a visual window into the specified device context (DC), typically a printer DC. (MSDN)  \ni ain't never seen this function in my life  \nreturns 0 if failed");
@@ -213,7 +215,7 @@ registerFunc("SendMessage", "function SendMessage(hwnd : HWND | number, msg : nu
 registerFunc("SetClassLongPtr", "function SetClassLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "can be used to change window icons AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("SetWindowLongPtr", "function SetWindowLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "if the `hwnd` is a REGULAR (not a button type window or anything like that) window created with `CreateWindow` then you may not use GWLP_USERDATA because JBS3 uses it internally (sorry)  \ncan set some data in a window  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("GetClassLongPtr", "function GetClassLongPtr(hwnd : HWND | number, nIndex : number) : number", "can be used to get a window's icon AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const");
-registerFunc("GetWindowLongPtr", "function GetWindowLongPtr(hwnd : HWND | number, nIndex : number) : number", "can get some data from a window (like its `HINSTANCE` with `GWLP_HINSTANCE`)  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)");
+registerFunc("GetWindowLongPtr", "function GetWindowLongPtr(hwnd : HWND | number, nIndex : number) : number", "can get some data from a window (like its `HINSTANCE` with `GWLP_HINSTANCE`)  \nnIndex is any `GWL_`, `GWLP_`, or `DWLP_` const (if hwnd is a dialogbox)");
 registerFunc("GetIconDimensions", "function GetIconDimensions(hIcon : HICON | number) : {width : number, height : number}", "msn example function on how to get the size from an HICON lol  \nreturns an object with `width` and `height` properties"); //\nreturns an object with `cx` and `cy` properties");
 registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBITMAP | number) : {width : number, height : number}", "helper function to get the size of a loaded bitmap  \nyou don't have to use this anymore because `GetObjectHBITMAP(hBitmap).bmWidth/bmHeight` is now a thing  \nreturns an object with `width` and `height` properties");
 registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | number", "sets the mouse capture to the `hwnd`  \nallows your window to still get mouse events even if you aren't hovering over the window  \nreturns the last window that had the mouse or 0");
@@ -259,6 +261,8 @@ registerFunc("AnimateWindow", "function AnimateWindow(hwnd : HWND | number, time
 registerFunc("DwmExtendFrameIntoClientArea", "function DwmExtendFrameIntoClientArea(hwnd : HWND | number, left : number, top : number, right : number, bottom : number) : number", "if `left`,`top`,`right`, and `bottom` are -1 then [something special happens](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmextendframeintoclientarea?redirectedfrom=MSDN#examples)  \nreturns 0 if success");
 registerFunc("DwmEnableBlurBehindWindow", "function DwmEnableBlurBehindWindow(hwnd : HWND | number, enable : boolean, dwFlags : number, left? : number, top? : number, right? : number, bottom? : number) : HRESULT", "returns 0 if success");
 registerFunc("DwmDefWindowProc", "function DwmDefWindowProc(hwnd : HWND | number, msg : number, wp : number, lp : number) : boolean", "uhhh im using [this example](https://learn.microsoft.com/en-us/windows/win32/dwm/blur-ovw) check my `customwindowframe.js`  \nreturns 1 if dwm handled the message");
+registerFunc("DwmSetWindowAttribute", "function DwmSetWindowAttribute(hwnd : HWND | number, dwAttribute : DWMWINDOWATTRIBUTE | number, pvAttribute : any) : HRESULT", "`dwAttribute` can be any `DWMWA_` const  \n`pvAttribute` is the value associated with dwAttribute ([more info here](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute))  \nreturns 0 if succeeded");
+registerFunc("DwmGetWindowAttribute", "function DwmGetWindowAttribute(hwnd : HWND | number, dwAttribute : DWMWINDOWATTRIBUTE | number) : any", "`dwAttribute` can be any `DWMWA_` const  \nreturns the value associated with dwAttribute ([more info here](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute))  \nerrors if failed");
 //registerFunc("NCCALCSIZE_PARAMS", "function NCCALCSIZE_PARAMS(lParam : LPARAM | number) : Object", "returns an object... for use with WM_NCCALCSIZE");
 registerFunc("DefWindowProc", "function DefWindowProc(hwnd : HWND | number, msg : number, wp : WPARAM | number, lp : LPARAM | number) : LRESULT", "calls the default window proc");
 registerFunc("SwitchToThisWindow", "function SwitchToThisWindow(hwnd : HWND | number, fUnknown : boolean) : void", "A TRUE value for fUknown indicates that the window is being switched to using the Alt/Ctl+Tab key sequence. ([MSDN](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-switchtothiswindow))");
@@ -1731,5 +1735,61 @@ const macros = [
     "DWM_BB_BLURREGION",
     "DWM_BB_ENABLE",
     "DWM_BB_TRANSITIONONMAXIMIZED",
+    "DWMWA_NCRENDERING_ENABLED",
+    "DWMWA_NCRENDERING_POLICY",
+    "DWMWA_TRANSITIONS_FORCEDISABLED",
+    "DWMWA_ALLOW_NCPAINT",
+    "DWMWA_CAPTION_BUTTON_BOUNDS",
+    "DWMWA_NONCLIENT_RTL_LAYOUT",
+    "DWMWA_FORCE_ICONIC_REPRESENTATION",
+    "DWMWA_FLIP3D_POLICY",
+    "DWMWA_EXTENDED_FRAME_BOUNDS",
+    "DWMWA_HAS_ICONIC_BITMAP",
+    "DWMWA_DISALLOW_PEEK",
+    "DWMWA_EXCLUDED_FROM_PEEK",
+    "DWMWA_CLOAK",
+    "DWMWA_CLOAKED",
+    "DWMWA_FREEZE_REPRESENTATION",
+    "DWMWA_PASSIVE_UPDATE_MODE",
+    "DWMWA_USE_HOSTBACKDROPBRUSH",
+    "DWMWA_USE_IMMERSIVE_DARK_MODE",
+    "DWMWA_WINDOW_CORNER_PREFERENCE",
+    "DWMWA_BORDER_COLOR",
+    "DWMWA_CAPTION_COLOR",
+    "DWMWA_TEXT_COLOR",
+    "DWMWA_VISIBLE_FRAME_BORDER_THICKNESS",
+    "DWMWA_SYSTEMBACKDROP_TYPE",
+    //"DWMWA_LAST",
+    "DWMFLIP3D_DEFAULT",
+    "DWMFLIP3D_EXCLUDEBELOW",
+    "DWMFLIP3D_EXCLUDEABOVE",
+    //"DWMFLIP3D_LAST",
+    "DWMWCP_DEFAULT",
+    "DWMWCP_DONOTROUND",
+    "DWMWCP_ROUND",
+    "DWMWCP_ROUNDSMALL",
+    "DWMWA_COLOR_NONE",
+    "DWMWA_COLOR_DEFAULT",
+    "DWMNCRP_USEWINDOWSTYLE",
+    "DWMNCRP_DISABLED",
+    "DWMNCRP_ENABLED",
+    //"DWMNCRP_LAST",
+    "DWMSBT_AUTO",
+    "DWMSBT_NONE",
+    "DWMSBT_MAINWINDOW",
+    "DWMSBT_TRANSIENTWINDOW",
+    "DWMSBT_TABBEDWINDOW",
+    "DCX_WINDOW",
+    "DCX_CACHE",
+    "DCX_NORESETATTRS",
+    "DCX_CLIPCHILDREN",
+    "DCX_CLIPSIBLINGS",
+    "DCX_PARENTCLIP",
+    "DCX_EXCLUDERGN",
+    "DCX_INTERSECTRGN",
+    "DCX_EXCLUDEUPDATE",
+    "DCX_INTERSECTUPDATE",
+    "DCX_LOCKWINDOWUPDATE",
+    "DCX_VALIDATE",
 ];
 //# sourceMappingURL=extension.js.map
