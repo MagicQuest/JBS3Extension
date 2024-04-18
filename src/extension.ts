@@ -298,6 +298,7 @@ registerFunc("InitiateSystemShutdown", "function InitiateSystemShutdown(machineN
 registerFunc("AbortSystemShutdown", "function AbortSystemShutdown(machineName? : string) : number", "if machineName is null then it aborts the shutdown of the local computer  \nobviously i felt obligated to add this one  \nreturns 0 if failed and if it does, godspeed **o7**");
 
 registerFunc("CreateDIBSection", "function CreateDIBSection(dc : HDC | number, dibBitmap : BITMAP, usageFlags : number) : HBITMAP", "`dibBitmap` must be a BITMAP object created with `GetObjectDIBITMAP`  \nusageFlags can be any `DIB_` const");
+registerFunc("CreateDIBitmapSimple", "function CreateDIBitmapSimple(biWidth : number, biHeight : number, biBitCount : number, biPlanes : number, biSizeImage : number) : Object", "`biBitCount`, `biPlanes`, and `biSizeImage` are all optional  \nreturns an object for use with `CreateDIBSection`");
 
 registerFunc("SetTimer", "function SetTimer(hwnd : HWND | number, timerId? : number, timeMs : number) : number", "sends the `hwnd` a WM_TIMER message every `timeMs` milliseconds  \nif timerId is 0 it will choose a random id and return it  \nreturns the id of the newly created timer");
 registerFunc("KillTimer", "function KillTimer(hwnd : HWND | number, timerId : number) : number", "stops the `hwnd`'s timer by its id  \nreturns 0 if failed");
@@ -313,11 +314,15 @@ registerFunc("ModifyWorldTransform", "function ModifyWorldTransform(dc : HDC | n
 registerFunc("AnimateWindow", "function AnimateWindow(hwnd : HWND | number, timeMs : number, flags : number)", "flags can be any `AW_` const  \nunfortunately it only animates child windows :(  \nalso apparently this blocks the thread?");
 
 //barely any notes on these because i barely know waht they do im just following guide because i want it to work lol
+registerFunc("SetWindowCompositionAttribute", "function SetWindowCompositionAttribute(hwnd : HWND | number, AccentState : number, Flags : number, GradientColor : number, AnimationId : number) : bool", "AccentState can be any `ACCENT_` const  \nidk about any other parameters but im gonna assume that MAYBE `GradientColor` is an `RGB`'ed value  \nreturns true if success (probably)");
 registerFunc("DwmExtendFrameIntoClientArea", "function DwmExtendFrameIntoClientArea(hwnd : HWND | number, left : number, top : number, right : number, bottom : number) : number", "if `left`,`top`,`right`, and `bottom` are -1 then [something special happens](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmextendframeintoclientarea?redirectedfrom=MSDN#examples)  \nreturns 0 if success");
 registerFunc("DwmEnableBlurBehindWindow", "function DwmEnableBlurBehindWindow(hwnd : HWND | number, enable : boolean, dwFlags : number, left? : number, top? : number, right? : number, bottom? : number) : HRESULT", "returns 0 if success");
 registerFunc("DwmDefWindowProc", "function DwmDefWindowProc(hwnd : HWND | number, msg : number, wp : number, lp : number) : boolean", "uhhh im using [this example](https://learn.microsoft.com/en-us/windows/win32/dwm/blur-ovw) check my `customwindowframe.js`  \nreturns 1 if dwm handled the message");
 registerFunc("DwmSetWindowAttribute", "function DwmSetWindowAttribute(hwnd : HWND | number, dwAttribute : DWMWINDOWATTRIBUTE | number, pvAttribute : any) : HRESULT", "`dwAttribute` can be any `DWMWA_` const  \n`pvAttribute` is the value associated with dwAttribute ([more info here](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute))  \nreturns 0 if succeeded");
 registerFunc("DwmGetWindowAttribute", "function DwmGetWindowAttribute(hwnd : HWND | number, dwAttribute : DWMWINDOWATTRIBUTE | number) : any", "`dwAttribute` can be any `DWMWA_` const  \nreturns the value associated with dwAttribute ([more info here](https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute))  \nerrors if failed");
+registerFunc("DwmSetIconicThumbnail", "function DwmSetIconicThumbnail(hwnd : HWND | number, hBmp : HBITMAP | number, dwSITFlags : number) : HRESULT | number", "`hBmp` must be a bitmap created with `CreateDIBSection` for some reason (see newdwmfuncs.js)  \n`dwSITFlags` can either be 0 (for no frame to be displayed around the thumbnail) or 1  \nusually used with the `WM_DWMSENDICONICTHUMBNAIL` message apparently  \nreturns 0 if success");
+registerFunc("DwmSetIconicLivePreviewBitmap", "function DwmSetIconicLivePreviewBitmap(hwnd : HWND | number, hBmp : HBITMAP | number, pClientOffset : POINT | array, dwSITFlags : number) : HRESULT | number", "`hBmp` must be a bitmap created with `CreateDIBSection` for some reason (see newdwmfuncs.js)  \n`dwSITFlags` can either be 0 (for no frame to be displayed around the thumbnail) or 1  \nreturns 0 if success");
+registerFunc("DwmInvalidateIconicBitmaps", "function DwmInvalidateIconicBitmaps(hwnd : HWND | number) : HRESULT | number", "tells DWM to update iconic bitmaps  \nreturns 0 if success");
 //registerFunc("NCCALCSIZE_PARAMS", "function NCCALCSIZE_PARAMS(lParam : LPARAM | number) : Object", "returns an object... for use with WM_NCCALCSIZE");
 registerFunc("DefWindowProc", "function DefWindowProc(hwnd : HWND | number, msg : number, wp : WPARAM | number, lp : LPARAM | number) : LRESULT", "calls the default window proc");
 
@@ -1894,4 +1899,17 @@ const macros:string[] = [
     "DCX_INTERSECTUPDATE",
     "DCX_LOCKWINDOWUPDATE",
     "DCX_VALIDATE",
+    "ACCENT_DISABLED",
+    "ACCENT_ENABLE_GRADIENT",
+    "ACCENT_ENABLE_TRANSPARENTGRADIENT",
+    "ACCENT_ENABLE_BLURBEHIND",
+    "ACCENT_INVALID_STATE",
+    "WM_CLIPBOARDUPDATE",
+    "WM_DWMCOMPOSITIONCHANGED",
+    "WM_DWMNCRENDERINGCHANGED",
+    "WM_DWMCOLORIZATIONCOLORCHANGED",
+    "WM_DWMWINDOWMAXIMIZEDCHANGE",
+    "WM_DWMSENDICONICTHUMBNAIL",
+    "WM_DWMSENDICONICLIVEPREVIEWBITMAP",
+    "WM_GETTITLEBARINFOEX",
 ];
