@@ -77,6 +77,8 @@ const objectFunctions : SpecialArray = {
     "SetColor" : makeArgs("function SetColor(r : float, g : float, b : float, a : float) : void", "sets the color of this brush  \nunlike the GDI drawing function `r`,`g`,`b`,and `a` must be from 0-1 as decimals"),
     "GetBit" : makeArgs("function GetBit(i : number) : RGBA", "`i` is the index  \nreturns an `RGBA` value which is basically RGB (and you can use the `GetRValue`... functions on it) but see `updatelayeredwindow(dibits).js` for a definition of RGBA"),
     "SetBit" : makeArgs("function SetBit(i : number, color : RGBA) : void", "`i` is the index  \n`color` is an `RGBA` value which is defined in `updatelayeredwindow(dibits).js`"),
+    "GetBits" : makeArgs("function GetBits() : Uint32Array", "returns the DIB as an Uint32Array for use with `StretchDIBits` or `SetDIBitsToDevice`"),
+    "SetBits" : makeArgs("function SetBits(bits : Uint32Array) : void", "bits can be a Uint32Array gained from `dib.GetBits` or `GetDIBits`"),
 };
 
 function registerFunc(name : string, info : string, desc : string = "") {//, args: string[]) {
@@ -116,7 +118,7 @@ registerFunc("CreateWindowClass", "function CreateWindowClass(className? : strin
 registerFunc("CreateWindow", "function CreateWindow(extendedStyle : number, wndclass : WNDCLASSEXW | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number, hwndParent? : HWND | number, hMenu? : HMENU | number, hInstance? : HINSTANCE | number) : HWND | number", "the extendedStyles can be any `WS_EX_` const (can be OR'd together)  \nthe `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL` ((MSDN link for all special classes)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw#remarks])  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \nreturns the pointer to the newly created window (`HWND`)");
 registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const (can be OR'd together)  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
-registerFunc("ShowWindow", "function ShowWindow(hwnd : HWND | number, nCmdShow : number) : number", "returns 0 if failed");
+registerFunc("ShowWindow", "function ShowWindow(hwnd : HWND | number, nCmdShow : number) : number", "nCmdShow can be any `SW_` const  \nreturns 0 if failed");
 registerFunc("UpdateWindow", "function UpdateWindow(hwnd : HWND | number) : number", "immediately redraws the window  \nreturns 0 if failed");
 registerFunc("EnableWindow", "function EnableWindow(hwnd : HWND | number, bEnable : boolean) : number", "usually used for edit windows or combo boxes i think  \nreturns 0 if failed");
 registerFunc("SetRect", "function SetRect(rect : RECT, left : number, top : number, right : number, bottom : number) : void", "the `left`,`top`,`right`,`bottom` parameters are copied into `rect` and this function returns nothing  \nthere isn't really a point in using this one and i only made it for `msnexample.js`");
@@ -174,7 +176,7 @@ registerFunc("SetTextColor", "function SetTextColor(dc : HDC | number, rgb : RGB
 registerFunc("GetPixel", "function GetPixel(dc : HDC | number, x : number, y : number) : RGB | {r : number, g : number, b : number}", "gets the color of the pixel in the `dc` at the points (`x`,`y`)");
 registerFunc("SetPixel", "function SetPixel(dc : HDC | number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
 registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
-registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values  \nused for GDI functions like `SetDCPenColor` or `SetTextColor` and sometimes `DwmSetWindowAttribute`");
+registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values (r | g << 8 | b << 16)  \nused for GDI functions like `SetDCPenColor` or `SetTextColor` and sometimes `DwmSetWindowAttribute`");
 registerFunc("GetRValue", "function GetRValue(color : RGB | number) : number", "gets the r value back from a color created with `RGB`");
 registerFunc("GetGValue", "function GetGValue(color : RGB | number) : number", "gets the g value back from a color created with `RGB`");
 registerFunc("GetBValue", "function GetBValue(color : RGB | number) : number", "gets the b value back from a color created with `RGB`");
@@ -305,7 +307,7 @@ registerFunc("AbortSystemShutdown", "function AbortSystemShutdown(machineName? :
 
 registerFunc("CreateDIBSection", "function CreateDIBSection(dc : HDC | number, dibBitmap : BITMAP, usageFlags : number) : Object", "`dibBitmap` must be a BITMAP object created with `GetObjectDIBITMAP` or `CreateDIBitmapSimple`  \nusageFlags can be any `DIB_` const  \nreturns an object with properties for editing the bitmap, to actually get the bitmap use `.bitmap`");
 registerFunc("CreateDIBitmapSimple", "function CreateDIBitmapSimple(biWidth : number, biHeight : number, biBitCount : number, biPlanes : number, biSizeImage : number) : Object", "`biBitCount`, `biPlanes`, and `biSizeImage` are all optional  \nreturns an object for use with `CreateDIBSection`");
-registerFunc("GetDIBits", "function GetDIBits(dc : HDC | number, hBmp : HBITMAP | number, start : number, cLines : number, width : number, height : number, bitCount : number, compression : number) : Uint32Array", "for some reason `hBmp` must be a compatible bitmap (DDB)  \ncompression can be any `BI_` const  \nthrows an error if failed");
+registerFunc("GetDIBits", "function GetDIBits(dc : HDC | number, hBmp : HBITMAP | number, start : number, scanLines : number, width : number, height : number, bitCount : number, compression : number) : Uint32Array", "for some reason `hBmp` must be a compatible bitmap (DDB)  \nscanLines can just be the height of the bitmap  \ncompression can be any `BI_` const  \nthrows an error if failed");
 
 registerFunc("SetTimer", "function SetTimer(hwnd : HWND | number, timerId? : number, timeMs : number) : number", "sends the `hwnd` a WM_TIMER message every `timeMs` milliseconds  \nif timerId is 0 it will choose a random id and return it  \nreturns the id of the newly created timer");
 registerFunc("KillTimer", "function KillTimer(hwnd : HWND | number, timerId : number) : number", "stops the `hwnd`'s timer by its id  \nreturns 0 if failed");
@@ -331,7 +333,10 @@ registerFunc("DwmSetIconicThumbnail", "function DwmSetIconicThumbnail(hwnd : HWN
 registerFunc("DwmSetIconicLivePreviewBitmap", "function DwmSetIconicLivePreviewBitmap(hwnd : HWND | number, hBmp : HBITMAP | number, pClientOffset : POINT | array, dwSITFlags : number) : HRESULT | number", "`hBmp` must be a bitmap created with `CreateDIBSection` for some reason (see `newdwmfuncs.js`)  \n`dwSITFlags` can either be 0 (for no frame to be displayed around the thumbnail) or 1  \nreturns 0 if success");
 registerFunc("DwmInvalidateIconicBitmaps", "function DwmInvalidateIconicBitmaps(hwnd : HWND | number) : HRESULT | number", "tells DWM to update iconic bitmaps  \nreturns 0 if success");
 //registerFunc("NCCALCSIZE_PARAMS", "function NCCALCSIZE_PARAMS(lParam : LPARAM | number) : Object", "returns an object... for use with WM_NCCALCSIZE");
+registerFunc("SetWindowDisplayAffinity", "function SetWindowDisplayAffinity(hwnd : HWND | number, affinityFlags : number) : boolean", "apparently Specifies where the content of the window can be displayed.  \naffinityFlags can be any `WDA_` const  \nreturns true if success (if not use `GetLastError`)");
+registerFunc("GetWindowDisplayAffinity", "function GetWindowDisplayAffinity(hwnd : HWND | number) : number", "if success returns a `WDA_` const, if not returns garbage or something");
 registerFunc("DefWindowProc", "function DefWindowProc(hwnd : HWND | number, msg : number, wp : WPARAM | number, lp : LPARAM | number) : LRESULT", "calls the default window proc");
+
 
 registerFunc("SwitchToThisWindow", "function SwitchToThisWindow(hwnd : HWND | number, fUnknown : boolean) : void", "A TRUE value for fUknown indicates that the window is being switched to using the Alt/Ctl+Tab key sequence. ([MSDN](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-switchtothiswindow))");
 registerFunc("showOpenFilePicker", "function showOpenFilePicker(options : Object) : String", "details about the options parameter can be found [here](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples) BUT check `showOpenFilePicker.js` for example usage (**the options are slightly different**)  \nreturns a list of the file(s) picked");
@@ -389,7 +394,7 @@ export function activate(context: vscode.ExtensionContext) {
     const LayeredWindowAttribObj : JBSObjects = {props: [["transparencyColor"], ["alpha"], ["dwFlags"]]};
     const TransformObject : JBSObjects = {props: [["eM11"],  ["eM12"],  ["eM21"],  ["eM22"],  ["eDx"],  ["eDy"]]};
 
-    const DIBSection : JBSObjects = {props : [["bitmap"], ["bits"], ["SetBit", vscode.CompletionItemKind.Method], ["GetBit", vscode.CompletionItemKind.Method]]};
+    const DIBSection : JBSObjects = {props : [["bitmap"], ["_bits"], ["SetBit", vscode.CompletionItemKind.Method], ["GetBit", vscode.CompletionItemKind.Method], ["GetBits", vscode.CompletionItemKind.Method], ["SetBits", vscode.CompletionItemKind.Method], ["bitCount"], ["width"], ["height"]]};
 
 	const objectReturningFunctions:Array<[string, JBSObjects]> = [
         ["createCanvas", CanvasObject],
@@ -1922,4 +1927,22 @@ const macros:string[] = [
     "WM_DWMSENDICONICTHUMBNAIL",
     "WM_DWMSENDICONICLIVEPREVIEWBITMAP",
     "WM_GETTITLEBARINFOEX",
+    "WDA_NONE",
+    "WDA_MONITOR",
+    "WDA_EXCLUDEFROMCAPTURE",
+    "SW_HIDE",
+    "SW_SHOWNORMAL",
+    "SW_NORMAL",
+    "SW_SHOWMINIMIZED",
+    "SW_SHOWMAXIMIZED",
+    "SW_MAXIMIZE",
+    "SW_SHOWNOACTIVATE",
+    "SW_SHOW",
+    "SW_MINIMIZE",
+    "SW_SHOWMINNOACTIVE",
+    "SW_SHOWNA",
+    "SW_RESTORE",
+    "SW_SHOWDEFAULT",
+    "SW_FORCEMINIMIZE",
+    "SW_MAX",
 ];
