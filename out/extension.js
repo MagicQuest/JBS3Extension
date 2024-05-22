@@ -30,7 +30,8 @@ const objectFunctions = {
     "DrawText": makeArgs("function DrawText(text : string, textFormat : TextFormat | Font, left : number, top : number, right : number, bottom : number, brush : Brush) : void", "draws the string `text` with the specified size and brush"),
     "DrawGradientText": makeArgs("function DrawGradientText(text : string, textFormat : TextFormat | Font, left : number, top : number, right : number, bottom : number, brush : GradientBrush, gradientRotation? : number | float) : void", "convenience method for drawing text with a gradient brush (don't work as good)"),
     "CreateBitmap": makeArgs("function CreateBitmap(width : number, height : number) : Bitmap", "creates an empty bitmap with the specified `width` and `height`  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
-    "CreateBitmapFromFilename": makeArgs("function CreateBitmapFromFilename(filename : string) : Bitmap", "creates a bitmap with the specified image inside (can be .png/.jpg/.bmp/.whatever)  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
+    "CreateBitmapFromFilename": makeArgs("function CreateBitmapFromFilename(filename : string, frame : number) : Bitmap", "**ONLY WORKS IF YOU CREATED `D2D` AND PASSED A `WIC` OBJECT AS THE LAST PARAMETER**  \ncreates a bitmap with the specified image inside (can be .png/.jpg/.bmp/.whatever)  \nif the file specified with filename is a gif `frame` lets you choose which frame of the gif to load   \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
+    "CreateBitmapFromWicBitmap": makeArgs("function CreateBitmapFromWicBitmap(wicBitmap : wicBitmap, release : boolean) : Bitmap", "creates a d2d bitmap from a wic bitmap  \nset release to true if you want to `.Release` the wicBitmap  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
     "DrawBitmap": makeArgs("function DrawBitmap(bitmap : Bitmap, destLeft : number, destTop : number, destRight : number, destBottom : number, opacity : float, bitmapInterpolationMode? : enum D2D1_BITMAP_INTERPOLATION_MODE, srcLeft? : number, srcTop? : number, srcRight? : number, srcBottom? : number) : void", "the `dest` args are where the bitmap will be drawn  \nthe `src` args are how much of the bitmap will be drawn (optional because defaults)  \ninterpolationMode can be any `D2D1_BITMAP_INTERPOLATION_MODE` const"),
     "CreateBitmapBrush": makeArgs("function CreateBitmapBrush(bitmap : Bitmap) : BitmapBrush", "returns a bitmap brush with ykykyk look at `direct2d CreateBitmapBrush msn` dawg"),
     //"CreateGradientStopCollection" : makeArgs("function CreateGradientStopCollection(gradientStops : Array<[position : float, r : float, g : float, b : float, alpha? : float]>) : IUnknown", "creates the gradient stop collection for use in the `Create`(`Linear`/`Radial`)`GradientBrush`  \nreturns the basic IUnknown methods/fields (`Release()`, `internalPtr`)  \nnot sure if the alpha works but that ain't my fault"),
@@ -49,12 +50,19 @@ const objectFunctions = {
     "DrawGradientLine": makeArgs("function DrawGradientLine(fromX : number, fromY : number, toX : number, toY : number, brush : GradientBrush, gradientRotation? : float, strokeWidth? : number, strokeStyle? : number) : void", ""),
     "Clear": makeArgs("function Clear(r : float, g : float, b : float, alphah? : float) : void", "Clears the render target screen with the set color  \ni had to make alpha work in some cases behind the scenes"),
     "Release": makeArgs("function Release(void) : void", "calls `Release` on this direct2d object and \"deletes\" it"),
+    "Flush": makeArgs("function Flush(tag1 : ptr, tag2 : ptr) : HRESULT", "Executes all pending drawing commands."),
+    "GetAntialiasMode": makeArgs("function GetAntialiasMode() : D2D1_ANTIALIAS_MODE", "returns a `D2D1_ANTIALIAS_MODE...` const"),
+    "SetAntialiasMode": makeArgs("function SetAntialiasMode(AAmode : D2D1_ANTIALIAS_MODE) : void", "AAmode is any `D2D1_ANTIALIAS_MODE...` const"),
+    "GetMaximumBitmapSize": makeArgs("function GetMaximumBitmapSize(void) : number", "i wonder how big it can be"),
+    "SetDpi": makeArgs("function SetDpi(x : number, y : number) : void", "idk bro"),
     //"windowProc" : makeArgs("function windowProc(hwnd : HWND | number, message : number) : void", "uhhh think of the winProc on regular c++ windows"),
     //"loop" : makeArgs("function loop(void) : void", "this is called when the window is not handling any events"),
     "SetOpacity": makeArgs("function SetOpacity(opacity : float) : void", "sets the opacity of the brush"),
     "GetOpacity": makeArgs("function GetOpacity(void) : float", "gets the opacity of the brush"),
+    "GetTransform": makeArgs("function GetTransform(void) : Matrix3x2", "gets the matrix object"),
+    "SetTransform": makeArgs("function SetTransform(matrix : Matrix3x2) : void", "sets the transform of this brush (only used for bitmap brushes or gradients)  \n`matrix` can be one gained from `GetTransform` or most `d2d.Matrix3x2...` functions"),
     "GetDpi": makeArgs("function GetDpi(void) : number[2]", "returns an array with the first element being the xDpi and the second being the yDpi"),
-    "GetPixelFormat": makeArgs("function PixelFormat(void) : {format : number, alphaMode : number}", "`format` is any `DXGI_FORMAT_` const  \n`alphaMode` is any `D2D1_ALPHA_MODE_` const"),
+    "GetPixelFormat": makeArgs("function GetPixelFormat(void) : {format : number, alphaMode : number}", "`format` is any `DXGI_FORMAT_` const  \n`alphaMode` is any `D2D1_ALPHA_MODE_` const"),
     //default brush funcs
     "GetPixelSize": makeArgs("function GetPixelSize(void) : {width : number, height : number}", "returns an object with pixelWidth and pixelHeight fields/properties ig about this brush"),
     //"GetSize" : makeArgs("function GetSize(void) : {width : number, height : number}", "returns an object with width and height fields/properties ig about this brush"),
@@ -63,8 +71,19 @@ const objectFunctions = {
     "SetColor": makeArgs("function SetColor(r : float, g : float, b : float, a : float) : void", "sets the color of this brush  \nunlike the GDI drawing function `r`,`g`,`b`,and `a` must be from 0-1 as decimals"),
     "GetBit": makeArgs("function GetBit(i : number) : RGBA", "`i` is the index  \nreturns an `RGBA` value which is basically RGB (and you can use the `GetRValue`... functions on it) but see `updatelayeredwindow(dibits).js` for a definition of RGBA"),
     "SetBit": makeArgs("function SetBit(i : number, color : RGBA) : void", "`i` is the index  \n`color` is an `RGBA` value which is defined in `updatelayeredwindow(dibits).js`"),
-    "GetBits": makeArgs("function GetBits() : Uint32Array", "returns the DIB as an Uint32Array for use with `StretchDIBits` or `SetDIBitsToDevice`"),
+    "GetBits": makeArgs("function GetBits(void) : Uint32Array", "returns the DIB as an Uint32Array for use with `StretchDIBits` or `SetDIBitsToDevice`"),
     "SetBits": makeArgs("function SetBits(bits : Uint32Array) : void", "bits can be a Uint32Array gained from `dib.GetBits` or `GetDIBits`"),
+    "LoadBitmapFromFilename": makeArgs("function LoadBitmapFromFilename(filename : wstring | string, format : GUID, frameNumber : number) : wicConverter*", "format can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)  \nreturns a wicConverter object for use with d2d.`CreateBitmapFromWicBitmap`"),
+    "LoadDecoder": makeArgs("function LoadDecoder(filename : wstring | string) : wicDecoder*", "returns a wicDecoder object for use with wicDecoder.`GetBitmapFrame`"),
+    "GetPixels": makeArgs("function GetPixels(wic : any) : Uint32Array", "returns a large Uint32Array (for use with `StretchDIBits` or `CreateBitmap`)  \nwic is an object created with `InitializeWIC()`"),
+    "GetResolution": makeArgs("function GetResolution(void) : {x : float, y : float}", "returns the dpi of this bitmap"),
+    "GetFrameCount": makeArgs("function GetFrameCount(void) : number", "returns the amount of frames in the decoder (i use this in `newwicfuncs.js`)"),
+    "GetBitmapFrame": makeArgs("function GetBitmapFrame(wic : any, frameNumber : number, format : GUID) : number", "wic is an object created with `InitializeWIC()`  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
+    "GetThumbnail": makeArgs("function GetThumbnail(void) : wicBitmap*", "Note: according to MSDN GetThumbnail only works on JPEG, TIFF, and JPEG-XR formats  \nreturns a wicBitmap (which is equal to a wicConverter*) object for use with d2d.`CreateBitmapFromWicBitmap`"),
+    "GetPreview": makeArgs("function GetPreview(void) : wicBitmap*", "ok im not gonna lie this function might not work in 99% of cases  \nreturns a wicBitmap (which is equal to a wicConverter*) object for use with d2d.`CreateBitmapFromWicBitmap`"),
+    //"GetPixelFormat" : makeArgs("function GetPixelFormat(void) : GUID", "returns the GUID used to make this wicBitmap"),
+    "GetContainerFormat": makeArgs("function GetContainerFormat(void) : GUID", "returns the GUID associated with this decoder"),
+    "ConvertBitmapSource": makeArgs("function ConvertBitmapSource(dstFormat : GUID, srcBitmap : wicBitmap) : wicBitmap", "converts the srcBitmap to the dstFormat  \nreturns a bitmap with the specified format"),
 };
 function registerFunc(name, info, desc = "") {
     //const shit : JBSType = ;
@@ -124,7 +143,7 @@ registerFunc("CreateFont", "function CreateFont(cHeight : number, cWidth : numbe
 registerFunc("EnumFontFamilies", "function EnumFontFamilies(dc : HDC | number, func : Function(font : LOGFONT, textMetric : TEXTMETRIC, FontType : number)) : void", "takes a function with 3 parameters  \ncalls the native `EnumFontFamiliesExA` function");
 registerFunc("CreateFontSimple", "function CreateFontSimple(fontName : string, width : number, height : number) : HFONT | number", "a convenience function because `CreateFont` takes like 30 arguments  \n`fontName` is case-insensitive so \"Impact\" or \"impact\" will work");
 //registerFunc("StretchDIBits", "function StretchDIBits(dc : HDC | number, xDest : number, yDest : number, DestWidth : number, DestHeight : number, xSrc : number, ySrc : number, SrcWidth : number, SrcHeight : number, data : number[], imageWidth : number, imageHeight : number, compression : number, rop : number) : number", "data can be any png or jpeg file read with `fs.readBinary`  \ncompression can be any `BI_` const  \nrop can be any `SRC` const (or `NOTSRC` consts lol)  \nreturns 0 if failed");
-registerFunc("StretchDIBits", "function StretchDIBits(dc : HDC | number, xDest : number, yDest : number, DestWidth : number, DestHeight : number, xSrc : number, ySrc : number, SrcWidth : number, SrcHeight : number, data : Uint32Array, imageWidth : number, imageHeight : number, bitCount : number, compression : number, rop : number) : number", "compression can be any `BI_` const  \nrop can be any `SRC` const (or `NOTSRC` consts lol)  \ndata must be an array made with `new Uint32Array([data])` (because it's fast)  \nreturns 0 if failed");
+registerFunc("StretchDIBits", "function StretchDIBits(dc : HDC | number, xDest : number, yDest : number, DestWidth : number, DestHeight : number, xSrc : number, ySrc : number, SrcWidth : number, SrcHeight : number, data : Uint32Array, imageWidth : number, imageHeight : number, bitCount : number, compression : number, rop : number) : number", "compression can be any `BI_` const  \nrop can be any `SRC` const (or `NOTSRC` consts lol)  \ndata must be an array made with `new Uint32Array([data])` (because it's fast) OR can be from `GetDIBits` or wicBitmap.`GetPixels()`  \nreturns 0 if failed");
 registerFunc("CreatePatternBrush", "function CreatePatternBrush(bitmap : HBITMAP | number) : HBRUSH | number", "creates a brush with the bitmap as a pattern  \nreturns 0 if failed");
 registerFunc("CreateHatchBrush", "function CreateHatchBrush(hatchMode : number, color : RGB | number) : HBRUSH | number", "hatchMode can be any `HS_`  \nuse SetBkMode to make it `TRANSPARENT` or `OPAQUE`  \ncolor must be an `RGB()` value  \nreturns 0 if failed");
 registerFunc("BitBlt", "function BitBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, rop : number)", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
@@ -162,7 +181,7 @@ registerFunc("GetBValue", "function GetBValue(color : RGB | number) : number", "
 registerFunc("GetStretchBltMode", "function GetStretchBltMode(dc : HDC | number) : number", "returns the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)");
 registerFunc("SetStretchBltMode", "function SetStretchBltMode(dc : HDC | number, mode : number) : number", "sets the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)  \nreturns 0 if failed");
 registerFunc("PrintWindow", "function PrintWindow(hwnd : HWND | number, dc : HDC | number, flags : number) : boolean", "copies a visual window into the specified device context (DC), typically a printer DC. (MSDN)  \ni ain't never seen this function in my life  \nreturns 0 if failed");
-registerFunc("CreateBitmap", "function CreateBitmap(width : number, height : number, bitCount? : number) : HBITMAP | number", "creates an empty bitmap with the specified width and height  \nsetting the bitCount to 1 gives a monochromic bitmap (the default value is 32)  \nreturns 0 if failed");
+registerFunc("CreateBitmap", "function CreateBitmap(width : number, height : number, bitCount? : number, data : Uint32Array) : HBITMAP | number", "creates an empty bitmap with the specified width and height  \nsetting the bitCount to 1 gives a monochromic bitmap (the default value is 32)  \ndata must be an array made with `new Uint32Array([data])` (because it's fast) OR can be from `GetDIBits` or wicBitmap.`GetPixels()`  \nreturns 0 if failed");
 registerFunc("FindWindow", "function FindWindow(className? : string, windowTitle : string) : number", "className isn't required and usually is not needed  \nreturns a pointer to the window (`HWND`)");
 //registerFunc("GetDesktopWindow", "function GetDesktopWindow(void) : HWND | number", "calls the native `GetDesktopWindow` function and returns the screen's `HWND`");
 //registerFunc("GetKeyboardState", "function GetKeyboardState(void) : Array", "calls the native `GetKeyboardState` function and returns an array of length 255");
@@ -285,11 +304,14 @@ registerFunc("SwitchToThisWindow", "function SwitchToThisWindow(hwnd : HWND | nu
 registerFunc("showOpenFilePicker", "function showOpenFilePicker(options : Object) : String", "details about the options parameter can be found [here](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples) BUT check `showOpenFilePicker.js` for example usage (**the options are slightly different**)  \nreturns a list of the file(s) picked");
 registerFunc("showSaveFilePicker", "function showSaveFilePicker(options : Object) : String", "details about the options parameter can be found [here](https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples) (options are the same as `showOpenFilePicker`)  \nreturns the path of the file picked (can't do multiple)");
 registerFunc("showDirectoryPicker", "function showDirectoryPicker(void) : String", "no options on this one because i lowkey can't be bothered to implement them (they're not that hard to put in but i don't think they're that important to include them)  \nreturns the path of the folder picked (can't do multiple)");
+registerFunc("DllLoad", "function DllLoad(dllpath : String) : function(procName : string, argCount : number, args : array, widestr : boolean, returnvalue : number, returnedwidestr : boolean)", "this function follows the same rules as [LoadLibrary](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw)  \nthis returns a function where if any strings you pass into the dll must be wide (utf16/wchar_t) set widestr to true, if the dll returns a string set returnedwidestr to true if it is wide (utf16/wchar_t)  \npassing `__FREE` as procName will release the dll (internally calls `FreeLibrary`)"); //oh BROTHER how will i write docs for the function this returns
+registerFunc("InitializeWIC", "function InitializeWIC(void) : number | ptr", "used to load bitmaps (for d2d (d2d.`CreateBitmapFromWicBitmap`) or GDI)");
+registerFunc("ScopeGUIDs", "function ScopeGUIDs(scope : this) : void", "for some reason i gotta use this weird function instead of setting these values in the initialization of JBS  \n(**allows you to use any `GUID_`... const**)");
 function emptyD2DObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
 function defaultBrushObject() {
-    return /*{props: */ [["internalPtr"], ["brush"], ["SetOpacity", vscode.CompletionItemKind.Method], ["GetOpacity", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]]; //};
+    return /*{props: */ [["internalPtr"], ["brush"], ["SetOpacity", vscode.CompletionItemKind.Method], ["GetOpacity", vscode.CompletionItemKind.Method], ["GetTransform", vscode.CompletionItemKind.Method], ["SetTransform", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]]; //};
 }
 const vscode = require("vscode");
 function activate(context) {
@@ -298,7 +320,7 @@ function activate(context) {
     const PaintStruct = { props: [["fErase"], ["fIncUpdate"], ["fRestore"], ["hdc"], ["rcPaint", vscode.CompletionItemKind.Class], ["ps"]] };
     const RequireObject = { props: [["read", vscode.CompletionItemKind.Method], ["write", vscode.CompletionItemKind.Method]] };
     const WindowClassObject = { props: [["loop", vscode.CompletionItemKind.Method], ["windowProc", vscode.CompletionItemKind.Method], ["init", vscode.CompletionItemKind.Method], ["hbrBackground"], ["hCursor"], ["hIcon"], ["hIconSm"], ["hInstance"], ["lpszClassName"], ["lpszMenuName"], ["style"], ["DefWindowProc"]] }; //["className"]]};
-    const CanvasObject = { props: [["internalDXPtr"], ["renderTarget"], ["BeginDraw", vscode.CompletionItemKind.Method], ["EndDraw", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method], ["CreateSolidColorBrush", vscode.CompletionItemKind.Method], ["DrawRectangle", vscode.CompletionItemKind.Method], ["DrawGradientRectangle", vscode.CompletionItemKind.Method], ["FillRectangle", vscode.CompletionItemKind.Method], ["FillGradientRectangle", vscode.CompletionItemKind.Method], ["DrawGradientEllipse", vscode.CompletionItemKind.Method], ["DrawEllipse", vscode.CompletionItemKind.Method], ["FillEllipse", vscode.CompletionItemKind.Method], ["FillGradientEllipse", vscode.CompletionItemKind.Method], ["CreateFont", vscode.CompletionItemKind.Method], ["DrawText", vscode.CompletionItemKind.Method], ["DrawGradientText", vscode.CompletionItemKind.Method], ["CreateBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapFromFilename", vscode.CompletionItemKind.Method], ["DrawBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapBrush", vscode.CompletionItemKind.Method], ["CreateGradientStopCollection", vscode.CompletionItemKind.Method], ["CreateLinearGradientBrush", vscode.CompletionItemKind.Method], ["CreateRadialGradientBrush", vscode.CompletionItemKind.Method], ["RestoreDrawingState", vscode.CompletionItemKind.Method], ["CreateDrawingStateBlock", vscode.CompletionItemKind.Method], ["SaveDrawingState", vscode.CompletionItemKind.Method], ["DrawGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["DrawRoundedRectangle", vscode.CompletionItemKind.Method], ["FillRoundedRectangle", vscode.CompletionItemKind.Method], ["FillGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["DrawLine", vscode.CompletionItemKind.Method], ["DrawGradientLine", vscode.CompletionItemKind.Method], ["Clear", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]] };
+    const CanvasObject = { props: [["internalDXPtr"], ["renderTarget"], ["BeginDraw", vscode.CompletionItemKind.Method], ["EndDraw", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method], ["CreateSolidColorBrush", vscode.CompletionItemKind.Method], ["DrawRectangle", vscode.CompletionItemKind.Method], ["DrawGradientRectangle", vscode.CompletionItemKind.Method], ["FillRectangle", vscode.CompletionItemKind.Method], ["FillGradientRectangle", vscode.CompletionItemKind.Method], ["DrawGradientEllipse", vscode.CompletionItemKind.Method], ["DrawEllipse", vscode.CompletionItemKind.Method], ["FillEllipse", vscode.CompletionItemKind.Method], ["FillGradientEllipse", vscode.CompletionItemKind.Method], ["CreateFont", vscode.CompletionItemKind.Method], ["DrawText", vscode.CompletionItemKind.Method], ["DrawGradientText", vscode.CompletionItemKind.Method], ["CreateBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapFromWicBitmap", vscode.CompletionItemKind.Method], ["DrawBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapBrush", vscode.CompletionItemKind.Method], ["CreateGradientStopCollection", vscode.CompletionItemKind.Method], ["CreateLinearGradientBrush", vscode.CompletionItemKind.Method], ["CreateRadialGradientBrush", vscode.CompletionItemKind.Method], ["RestoreDrawingState", vscode.CompletionItemKind.Method], /*["CreateDrawingStateBlock", vscode.CompletionItemKind.Method],*/ ["GetTransform", vscode.CompletionItemKind.Method], ["SetTransform", vscode.CompletionItemKind.Method], ["SaveDrawingState", vscode.CompletionItemKind.Method], ["DrawGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["DrawRoundedRectangle", vscode.CompletionItemKind.Method], ["FillRoundedRectangle", vscode.CompletionItemKind.Method], ["FillGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["Flush", vscode.CompletionItemKind.Method], ["GetAntialiasMode", vscode.CompletionItemKind.Method], ["SetAntialiasMode", vscode.CompletionItemKind.Method], ["SetDpi", vscode.CompletionItemKind.Method], ["GetDpi", vscode.CompletionItemKind.Method], ["GetMaximumBitmapSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["DrawLine", vscode.CompletionItemKind.Method], ["DrawGradientLine", vscode.CompletionItemKind.Method], ["Clear", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]] };
     const IUnknownObject = { props: emptyD2DObject() };
     const SolidColorBrushObject = { props: [...defaultBrushObject(), ["SetColor", vscode.CompletionItemKind.Method], ["GetColor", vscode.CompletionItemKind.Method]] };
     const LinearGradientBrushObject = { props: [...defaultBrushObject(), ["GetStartPoint", vscode.CompletionItemKind.Method], ["GetEndPoint", vscode.CompletionItemKind.Method], ["SetStartPoint", vscode.CompletionItemKind.Method], ["SetEndPoint", vscode.CompletionItemKind.Method], ["SetPoints", vscode.CompletionItemKind.Method]] };
@@ -306,6 +328,9 @@ function activate(context) {
     const FontObject = { props: [...emptyD2DObject(), /*["family"],*/ ["GetFontSize", vscode.CompletionItemKind.Method], ["GetFlowDirection", vscode.CompletionItemKind.Method], ["GetFontFamilyName", vscode.CompletionItemKind.Method], ["GetFontFamilyNameLength", vscode.CompletionItemKind.Method], ["GetFontStretch", vscode.CompletionItemKind.Method], ["GetFontStyle", vscode.CompletionItemKind.Method], ["GetFontWeight", vscode.CompletionItemKind.Method], ["GetIncrementalTabStop", vscode.CompletionItemKind.Method], ["GetLineSpacing", vscode.CompletionItemKind.Method], ["GetParagraphAlignment", vscode.CompletionItemKind.Method], ["GetReadingDirection", vscode.CompletionItemKind.Method], ["GetTextAlignment", vscode.CompletionItemKind.Method], ["GetWordWrapping", vscode.CompletionItemKind.Method], ["GetTrimming", vscode.CompletionItemKind.Method], ["SetFlowDirection", vscode.CompletionItemKind.Method], ["SetIncrementalTabStop", vscode.CompletionItemKind.Method], ["SetLineSpacing", vscode.CompletionItemKind.Method], ["SetParagraphAlignment", vscode.CompletionItemKind.Method], ["SetReadingDirection", vscode.CompletionItemKind.Method], ["SetTextAlignment", vscode.CompletionItemKind.Method], ["SetTrimming", vscode.CompletionItemKind.Method], ["SetWordWrapping", vscode.CompletionItemKind.Method], ["SetFontSize", vscode.CompletionItemKind.Method]] };
     const BitmapObject = { props: [...emptyD2DObject(), ["GetDpi", vscode.CompletionItemKind.Method], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["CopyFromBitmap", vscode.CompletionItemKind.Method], ["CopyFromRenderTarget", vscode.CompletionItemKind.Method]] };
     const BitmapBrushObject = { props: [...defaultBrushObject(), ["GetExtendModeX", vscode.CompletionItemKind.Method], ["GetExtendModeY", vscode.CompletionItemKind.Method], ["GetExtendMode", vscode.CompletionItemKind.Method], ["GetInterpolationMode", vscode.CompletionItemKind.Method], ["SetExtendModeX", vscode.CompletionItemKind.Method], ["SetExtendModeY", vscode.CompletionItemKind.Method], ["SetExtendMode", vscode.CompletionItemKind.Method], ["SetInterpolationMode", vscode.CompletionItemKind.Method], ["SetBitmap", vscode.CompletionItemKind.Method], ["GetBitmap", vscode.CompletionItemKind.Method]] };
+    const WICObject = { props: [...emptyD2DObject(), ["LoadBitmapFromFilename", vscode.CompletionItemKind.Method], ["LoadDecoder", vscode.CompletionItemKind.Method], ["ConvertBitmapSource", vscode.CompletionItemKind.Method]] };
+    const WICBitmap = { props: [...emptyD2DObject(), ["GetPixels", vscode.CompletionItemKind.Method], ["GetResolution", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GUID"], ["GetPixelFormat", vscode.CompletionItemKind.Method]] };
+    const WICDecoder = { props: [...emptyD2DObject(), ["GetFrameCount", vscode.CompletionItemKind.Method], ["GetBitmapFrame", vscode.CompletionItemKind.Method], ["GetThumbnail", vscode.CompletionItemKind.Method], ["GetPreview", vscode.CompletionItemKind.Method], ["GetContainerFormat", vscode.CompletionItemKind.Method]] };
     // genius regex -> /"(.+)"/g regexr.com/7l8cl
     // the regex tips and tricks are WAY too handy
     //`...`.match(/".+"/g).join(" ").replaceAll(/".+?"/g, "[$&], ")
@@ -335,8 +360,9 @@ function activate(context) {
         ["CreateGradientStopCollection", IUnknownObject],
         ["CreateLinearGradientBrush", LinearGradientBrushObject],
         ["CreateRadialGradientBrush", RadialGradientBrushObject],
-        ["CreateFont", FontObject], ["CreateBitmap", BitmapObject],
-        ["CreateBitmapFromFilename", BitmapObject],
+        ["CreateFont", FontObject],
+        ["CreateBitmap", BitmapObject],
+        ["CreateBitmapFromWicBitmap", BitmapObject],
         ["CreateBitmapBrush", BitmapBrushObject],
         ["GetLineSpacing", LineSpacingObject],
         ["GetTrimming", TrimmingObject],
@@ -354,6 +380,12 @@ function activate(context) {
         ["GetLayeredWindowAttributes", LayeredWindowAttribObj],
         ["GetWorldTransform", TransformObject],
         ["CreateDIBSection", DIBSection],
+        ["InitializeWIC", WICObject],
+        ["LoadBitmapFromFilename", WICBitmap],
+        ["GetThumbnail", WICBitmap],
+        ["GetPreview", WICBitmap],
+        ["GetBitmapFrame", WICBitmap],
+        ["LoadDecoder", WICDecoder],
     ];
     let definedObjects = [];
     //class BrushObject implements JBSObjects {
@@ -1840,5 +1872,107 @@ const macros = [
     "SW_SHOWDEFAULT",
     "SW_FORCEMINIMIZE",
     "SW_MAX",
+    "RETURN_STRING",
+    "RETURN_NUMBER",
+    "VAR_INT",
+    "VAR_BOOLEAN",
+    "VAR_CSTRING",
+    "VAR_WSTRING",
+    //"VAR_FLOAT", //(sorry bruh)
+    "CW_USEDEFAULT",
+    "D2D1_ANTIALIAS_MODE_PER_PRIMITIVE",
+    "D2D1_ANTIALIAS_MODE_ALIASED",
+    "D2D1_ANTIALIAS_MODE_FORCE_DWORD",
+    "GUID_WICPixelFormatDontCare",
+    "GUID_WICPixelFormat1bppIndexed",
+    "GUID_WICPixelFormat2bppIndexed",
+    "GUID_WICPixelFormat4bppIndexed",
+    "GUID_WICPixelFormat8bppIndexed",
+    "GUID_WICPixelFormatBlackWhite",
+    "GUID_WICPixelFormat2bppGray",
+    "GUID_WICPixelFormat4bppGray",
+    "GUID_WICPixelFormat8bppGray",
+    "GUID_WICPixelFormat8bppAlpha",
+    "GUID_WICPixelFormat16bppBGR555",
+    "GUID_WICPixelFormat16bppBGR565",
+    "GUID_WICPixelFormat16bppBGRA5551",
+    "GUID_WICPixelFormat16bppGray",
+    "GUID_WICPixelFormat24bppBGR",
+    "GUID_WICPixelFormat24bppRGB",
+    "GUID_WICPixelFormat32bppBGR",
+    "GUID_WICPixelFormat32bppBGRA",
+    "GUID_WICPixelFormat32bppPBGRA",
+    "GUID_WICPixelFormat32bppGrayFloat",
+    "GUID_WICPixelFormat32bppRGB",
+    "GUID_WICPixelFormat32bppRGBA",
+    "GUID_WICPixelFormat32bppPRGBA",
+    "GUID_WICPixelFormat48bppRGB",
+    "GUID_WICPixelFormat48bppBGR",
+    "GUID_WICPixelFormat64bppRGB",
+    "GUID_WICPixelFormat64bppRGBA",
+    "GUID_WICPixelFormat64bppBGRA",
+    "GUID_WICPixelFormat64bppPRGBA",
+    "GUID_WICPixelFormat64bppPBGRA",
+    "GUID_WICPixelFormat16bppGrayFixedPoint",
+    "GUID_WICPixelFormat32bppBGR101010",
+    "GUID_WICPixelFormat48bppRGBFixedPoint",
+    "GUID_WICPixelFormat48bppBGRFixedPoint",
+    "GUID_WICPixelFormat96bppRGBFixedPoint",
+    "GUID_WICPixelFormat96bppRGBFloat",
+    "GUID_WICPixelFormat128bppRGBAFloat",
+    "GUID_WICPixelFormat128bppPRGBAFloat",
+    "GUID_WICPixelFormat128bppRGBFloat",
+    "GUID_WICPixelFormat32bppCMYK",
+    "GUID_WICPixelFormat64bppRGBAFixedPoint",
+    "GUID_WICPixelFormat64bppBGRAFixedPoint",
+    "GUID_WICPixelFormat64bppRGBFixedPoint",
+    "GUID_WICPixelFormat128bppRGBAFixedPoint",
+    "GUID_WICPixelFormat128bppRGBFixedPoint",
+    "GUID_WICPixelFormat64bppRGBAHalf",
+    "GUID_WICPixelFormat64bppPRGBAHalf",
+    "GUID_WICPixelFormat64bppRGBHalf",
+    "GUID_WICPixelFormat48bppRGBHalf",
+    "GUID_WICPixelFormat32bppRGBE",
+    "GUID_WICPixelFormat16bppGrayHalf",
+    "GUID_WICPixelFormat32bppGrayFixedPoint",
+    "GUID_WICPixelFormat32bppRGBA1010102",
+    "GUID_WICPixelFormat32bppRGBA1010102XR",
+    "GUID_WICPixelFormat32bppR10G10B10A2",
+    "GUID_WICPixelFormat32bppR10G10B10A2HDR10",
+    "GUID_WICPixelFormat64bppCMYK",
+    "GUID_WICPixelFormat24bpp3Channels",
+    "GUID_WICPixelFormat32bpp4Channels",
+    "GUID_WICPixelFormat40bpp5Channels",
+    "GUID_WICPixelFormat48bpp6Channels",
+    "GUID_WICPixelFormat56bpp7Channels",
+    "GUID_WICPixelFormat64bpp8Channels",
+    "GUID_WICPixelFormat48bpp3Channels",
+    "GUID_WICPixelFormat64bpp4Channels",
+    "GUID_WICPixelFormat80bpp5Channels",
+    "GUID_WICPixelFormat96bpp6Channels",
+    "GUID_WICPixelFormat112bpp7Channels",
+    "GUID_WICPixelFormat128bpp8Channels",
+    "GUID_WICPixelFormat40bppCMYKAlpha",
+    "GUID_WICPixelFormat80bppCMYKAlpha",
+    "GUID_WICPixelFormat32bpp3ChannelsAlpha",
+    "GUID_WICPixelFormat40bpp4ChannelsAlpha",
+    "GUID_WICPixelFormat48bpp5ChannelsAlpha",
+    "GUID_WICPixelFormat56bpp6ChannelsAlpha",
+    "GUID_WICPixelFormat64bpp7ChannelsAlpha",
+    "GUID_WICPixelFormat72bpp8ChannelsAlpha",
+    "GUID_WICPixelFormat64bpp3ChannelsAlpha",
+    "GUID_WICPixelFormat80bpp4ChannelsAlpha",
+    "GUID_WICPixelFormat96bpp5ChannelsAlpha",
+    "GUID_WICPixelFormat112bpp6ChannelsAlpha",
+    "GUID_WICPixelFormat128bpp7ChannelsAlpha",
+    "GUID_WICPixelFormat144bpp8ChannelsAlpha",
+    "GUID_WICPixelFormat8bppY",
+    "GUID_WICPixelFormat8bppCb",
+    "GUID_WICPixelFormat8bppCr",
+    "GUID_WICPixelFormat16bppCbCr",
+    "GUID_WICPixelFormat16bppYQuantizedDctCoefficients",
+    "GUID_WICPixelFormat16bppCbQuantizedDctCoefficients",
+    "GUID_WICPixelFormat16bppCrQuantizedDctCoefficients",
+    "Matrix3x2"
 ];
 //# sourceMappingURL=extension.js.map
