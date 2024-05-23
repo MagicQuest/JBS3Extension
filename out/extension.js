@@ -75,7 +75,7 @@ const objectFunctions = {
     "SetBits": makeArgs("function SetBits(bits : Uint32Array) : void", "bits can be a Uint32Array gained from `dib.GetBits` or `GetDIBits`"),
     "LoadBitmapFromFilename": makeArgs("function LoadBitmapFromFilename(filename : wstring | string, format : GUID, frameNumber : number) : wicConverter*", "format can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)  \nreturns a wicConverter object for use with d2d.`CreateBitmapFromWicBitmap`"),
     "LoadDecoder": makeArgs("function LoadDecoder(filename : wstring | string) : wicDecoder*", "returns a wicDecoder object for use with wicDecoder.`GetBitmapFrame`"),
-    "GetPixels": makeArgs("function GetPixels(wic : any) : Uint32Array", "returns a large Uint32Array (for use with `StretchDIBits` or `CreateBitmap`)  \nwic is an object created with `InitializeWIC()`"),
+    "GetPixels": makeArgs("function GetPixels(wic : any, transformOption? : WICBitmapTransformOptions) : Uint32Array", "returns a large Uint32Array (for use with `StretchDIBits` or `CreateBitmap`)  \nwic is an object created with `InitializeWIC()`  \ntransformOption is any `WICBitmapTransform`... const"),
     "GetResolution": makeArgs("function GetResolution(void) : {x : float, y : float}", "returns the dpi of this bitmap"),
     "GetFrameCount": makeArgs("function GetFrameCount(void) : number", "returns the amount of frames in the decoder (i use this in `newwicfuncs.js`)"),
     "GetBitmapFrame": makeArgs("function GetBitmapFrame(wic : any, frameNumber : number, format : GUID) : number", "wic is an object created with `InitializeWIC()`  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
@@ -84,7 +84,11 @@ const objectFunctions = {
     //"GetPixelFormat" : makeArgs("function GetPixelFormat(void) : GUID", "returns the GUID used to make this wicBitmap"),
     "GetContainerFormat": makeArgs("function GetContainerFormat(void) : GUID", "returns the GUID associated with this decoder"),
     "ConvertBitmapSource": makeArgs("function ConvertBitmapSource(dstFormat : GUID, srcBitmap : wicBitmap) : wicBitmap", "converts the srcBitmap to the dstFormat  \nreturns a bitmap with the specified format"),
+    //"Resize" : makeArgs("function Resize(wic : any, newWidth : number, newHeight : number, interpolationMode : WICBitmapInterpolationMode) : void", "VOID NIGGAR"),
+    "CreateBitmapFromHBITMAP": makeArgs("function CreateBitmapFromHBITMAP(srcBitmap : HBITMAP, palette? : number, alphaMode : WICBitmapAlphaChannelOption, format : GUID)", "srcBitmap must be an HBITMAP (for example one gained from `CreateDIBSection()`.bitmap)  \npalette may be NULL if there was no palette used to create the srcBitmap  \nalphaMode can be any `WICBitmapAlphaChannelOption`... const  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
+    "CreateBitmapFromHICON": makeArgs("function CreateBitmapFromHICON(srcIcon : HICON, format : GUID)", "srcIcon must be an HICON (for example one gained from `CreateIconIndirect()`)  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
 };
+//aw shoot at some point i gotta write a way for this to differentiate between createCanvas("d2d") and createCanvas("opengl")
 function registerFunc(name, info, desc = "") {
     //const shit : JBSType = ;
     funcs.push({ name, info, desc, type: 2, args: info.substring(info.indexOf("(") + 1, info.indexOf(")")).split(", ") });
@@ -249,6 +253,7 @@ registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | n
 registerFunc("ReleaseCapture", "function ReleaseCapture() : boolean", "releases the mouse capture from a window  \nreturns 0 if failed");
 registerFunc("ClipCursor", "function ClipCursor(left : number, top : number, right : number, bottom : number) : boolean", "restricts the mouse to the supplied rect  \nreturns 0 if failed");
 registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x : number, y : number}", "takes an lparam and converts it to an object with `x` and `y` properties  \nuses the native MAKEPOINTS macro");
+registerFunc("GET_WHEEL_DELTA_WPARAM", "function GET_WHEEL_DELTA_WPARAM(wp : WPARAM) : number", "used with the WM_MOUSEWHEEL event to get the distance the mouse wheel was scrolled");
 registerFunc("GetSystemMetrics", "function GetSystemMetrics(metric : number) : number", "the metric parameter can be any `SM_` const");
 registerFunc("_com_error", "function _com_error(HRESULT : number) : string", "used for helping with errors for objects (like `createCanvas(\"direct2d\")` or `createCanvas(\"direct3d\")`)  \nalso apparently can be used like `_com_error(GetLastError())` to get the error in text (which i didn't know worked with get last error)");
 registerFunc("Beep", "function Beep(frequency : number, durationMs : number) : number", "plays a sound on your onboard speaker (if you have one) OR plays a sound through your headphones/realtek yk yk yk  \nalso this blocks the thread for `durationMs`");
@@ -328,8 +333,8 @@ function activate(context) {
     const FontObject = { props: [...emptyD2DObject(), /*["family"],*/ ["GetFontSize", vscode.CompletionItemKind.Method], ["GetFlowDirection", vscode.CompletionItemKind.Method], ["GetFontFamilyName", vscode.CompletionItemKind.Method], ["GetFontFamilyNameLength", vscode.CompletionItemKind.Method], ["GetFontStretch", vscode.CompletionItemKind.Method], ["GetFontStyle", vscode.CompletionItemKind.Method], ["GetFontWeight", vscode.CompletionItemKind.Method], ["GetIncrementalTabStop", vscode.CompletionItemKind.Method], ["GetLineSpacing", vscode.CompletionItemKind.Method], ["GetParagraphAlignment", vscode.CompletionItemKind.Method], ["GetReadingDirection", vscode.CompletionItemKind.Method], ["GetTextAlignment", vscode.CompletionItemKind.Method], ["GetWordWrapping", vscode.CompletionItemKind.Method], ["GetTrimming", vscode.CompletionItemKind.Method], ["SetFlowDirection", vscode.CompletionItemKind.Method], ["SetIncrementalTabStop", vscode.CompletionItemKind.Method], ["SetLineSpacing", vscode.CompletionItemKind.Method], ["SetParagraphAlignment", vscode.CompletionItemKind.Method], ["SetReadingDirection", vscode.CompletionItemKind.Method], ["SetTextAlignment", vscode.CompletionItemKind.Method], ["SetTrimming", vscode.CompletionItemKind.Method], ["SetWordWrapping", vscode.CompletionItemKind.Method], ["SetFontSize", vscode.CompletionItemKind.Method]] };
     const BitmapObject = { props: [...emptyD2DObject(), ["GetDpi", vscode.CompletionItemKind.Method], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["CopyFromBitmap", vscode.CompletionItemKind.Method], ["CopyFromRenderTarget", vscode.CompletionItemKind.Method]] };
     const BitmapBrushObject = { props: [...defaultBrushObject(), ["GetExtendModeX", vscode.CompletionItemKind.Method], ["GetExtendModeY", vscode.CompletionItemKind.Method], ["GetExtendMode", vscode.CompletionItemKind.Method], ["GetInterpolationMode", vscode.CompletionItemKind.Method], ["SetExtendModeX", vscode.CompletionItemKind.Method], ["SetExtendModeY", vscode.CompletionItemKind.Method], ["SetExtendMode", vscode.CompletionItemKind.Method], ["SetInterpolationMode", vscode.CompletionItemKind.Method], ["SetBitmap", vscode.CompletionItemKind.Method], ["GetBitmap", vscode.CompletionItemKind.Method]] };
-    const WICObject = { props: [...emptyD2DObject(), ["LoadBitmapFromFilename", vscode.CompletionItemKind.Method], ["LoadDecoder", vscode.CompletionItemKind.Method], ["ConvertBitmapSource", vscode.CompletionItemKind.Method]] };
-    const WICBitmap = { props: [...emptyD2DObject(), ["GetPixels", vscode.CompletionItemKind.Method], ["GetResolution", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GUID"], ["GetPixelFormat", vscode.CompletionItemKind.Method]] };
+    const WICObject = { props: [...emptyD2DObject(), ["LoadBitmapFromFilename", vscode.CompletionItemKind.Method], ["LoadDecoder", vscode.CompletionItemKind.Method], ["ConvertBitmapSource", vscode.CompletionItemKind.Method], ["CreateBitmapFromHBITMAP", vscode.CompletionItemKind.Method], ["CreateBitmapFromHICON", vscode.CompletionItemKind.Method]] };
+    const WICBitmap = { props: [...emptyD2DObject(), ["GetPixels", vscode.CompletionItemKind.Method], ["GetResolution", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GUID"], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method]] };
     const WICDecoder = { props: [...emptyD2DObject(), ["GetFrameCount", vscode.CompletionItemKind.Method], ["GetBitmapFrame", vscode.CompletionItemKind.Method], ["GetThumbnail", vscode.CompletionItemKind.Method], ["GetPreview", vscode.CompletionItemKind.Method], ["GetContainerFormat", vscode.CompletionItemKind.Method]] };
     // genius regex -> /"(.+)"/g regexr.com/7l8cl
     // the regex tips and tricks are WAY too handy
@@ -479,7 +484,7 @@ function activate(context) {
                 const markdown = new vscode.MarkdownString();
                 //const addmarkdown = new vscode.MarkdownString();
                 //const defs = [];
-                console.log(object, line[shit.end.character]);
+                console.log(object, line[shit.end.character], "\x07");
                 if (line[shit.end.character] == "(") {
                     let quit = false;
                     for (const dObject of definedObjects) {
@@ -607,6 +612,8 @@ function activate(context) {
     context.subscriptions.push(provider1, provider2, signatureHelp);
 }
 exports.activate = activate;
+//at some point i should run a loop through jbs to find the values of all of these and use some string stuff to convert it all to a list and just add it to macros so i can do macros[i] for the name and macros[i+1] for the value like
+//"IDOK", 2 (or whatever)
 const macros = [
     "IDOK",
     "IDCANCEL",
@@ -1973,6 +1980,23 @@ const macros = [
     "GUID_WICPixelFormat16bppYQuantizedDctCoefficients",
     "GUID_WICPixelFormat16bppCbQuantizedDctCoefficients",
     "GUID_WICPixelFormat16bppCrQuantizedDctCoefficients",
-    "Matrix3x2"
+    "Matrix3x2",
+    "WICBitmapTransformRotate0",
+    "WICBitmapTransformRotate90",
+    "WICBitmapTransformRotate180",
+    "WICBitmapTransformRotate270",
+    "WICBitmapTransformFlipHorizontal",
+    "WICBitmapTransformFlipVertical",
+    "WICBITMAPTRANSFORMOPTIONS_FORCE_DWORD",
+    "WICBitmapInterpolationModeNearestNeighbor",
+    "WICBitmapInterpolationModeLinear",
+    "WICBitmapInterpolationModeCubic",
+    "WICBitmapInterpolationModeFant",
+    "WICBitmapInterpolationModeHighQualityCubic",
+    "WICBITMAPINTERPOLATIONMODE_FORCE_DWORD",
+    "WICBitmapUseAlpha",
+    "WICBitmapUsePremultipliedAlpha",
+    "WICBitmapIgnoreAlpha",
+    "WICBITMAPALPHACHANNELOPTIONS_FORCE_DWORD",
 ];
 //# sourceMappingURL=extension.js.map
