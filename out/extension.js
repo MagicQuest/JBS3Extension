@@ -88,6 +88,7 @@ const objectFunctions = {
     //"Resize" : makeArgs("function Resize(wic : any, newWidth : number, newHeight : number, interpolationMode : WICBitmapInterpolationMode) : void", "VOID NIGGAR"),
     "CreateBitmapFromHBITMAP": makeArgs("function CreateBitmapFromHBITMAP(srcBitmap : HBITMAP, palette? : number, alphaMode : WICBitmapAlphaChannelOption, format : GUID)", "srcBitmap must be an HBITMAP (for example one gained from `CreateDIBSection()`.bitmap)  \npalette may be NULL if there was no palette used to create the srcBitmap  \nalphaMode can be any `WICBitmapAlphaChannelOption`... const  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
     "CreateBitmapFromHICON": makeArgs("function CreateBitmapFromHICON(srcIcon : HICON, format : GUID)", "srcIcon must be an HICON (for example one gained from `CreateIconIndirect()`)  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
+    "LoadBitmapFromBinaryData": makeArgs("function LoadBitmapFromBinaryData(binary : ArrayBuffer, format : GUID, frameNumber : number, container : GUID) : wicBitmap", "`binary` can be a buffer gained from `require('fs')`'s `readBinary` function  \nformat and container can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
 };
 //aw shoot at some point i gotta write a way for this to differentiate between createCanvas("d2d") and createCanvas("opengl")
 function registerFunc(name, info, desc = "") {
@@ -221,6 +222,9 @@ registerFunc("HIWORD", "function HIWORD(dword : DWORD | number) : number", "Retr
 registerFunc("LOWORD", "function LOWORD(dword : DWORD | number) : number", "Retrieves the low-order word (two bytes) from the specified 32-bit value.  \n<---------------DWORD--------------->  \n[00000000:00000000:00000000:00000000]  \n<-----HIWORD-----><------LOWORD----->");
 //https://www.gamedev.net/forums/topic/17208-wanna-explain-loword-hiword-dword/#:~:text=LOWORD%20gets%20the%20lower%2016,another%20piece%20in%20the%20hiword.
 registerFunc("GetWindowText", "function GetWindowText(hwnd : HWND | number) : string", "gets the window title/text of the HWND");
+registerFunc("SetScrollInfo", "function SetScrollInfo(hwnd : HWND | number, nBar : number, scrollInfo : ScrollInfo, redraw : boolean) : number", "nBar is any `SB_`... const  \nreturns the new position of the scroll bar");
+registerFunc("GetScrollInfo", "function GetScrollInfo(hwnd : HWND | number, nBar : number) : ScrollInfo", "nBar is any `SB_`... const");
+registerFunc("GetScrollRange", "function GetScrollRange(hwnd : HWND | number, nBar : number) : {min : number, max : number}", "nBar is any `SB_`... const");
 registerFunc("SetWindowText", "function SetWindowText(hwnd : HWND | number, text : string) : boolean", "sets the window title/text of the HWND  \nreturns 0 if failed");
 registerFunc("SetWindowPos", "function SetWindowPos(hwnd : HWND | number, hwndInsertAfter : HWND | number, x : number, y : number, cx : number, cy : number, uFlags : number) : number", "hwndInsertAfter is any `HWND_` const  \nvalid flags are any `SWP_` const (can be OR'd together)  \nreturns 0 if failed");
 registerFunc("GetForegroundWindow", "function GetForegroundWindow(void) : HWND | number", "gets the foreground window (the window you are literally looking at)");
@@ -243,7 +247,8 @@ registerFunc("IsIconic", "function IsIconic(hwnd : HWND | number) : boolean", "c
 registerFunc("IsChild", "function IsChild(hwndParent : HWND | number, hwnd : HWND | number) : boolean", "checks if `hwnd` is the child of `hwndParent`");
 registerFunc("SetParent", "function SetParent(hwndChild : HWND | number, hwndNewParent : HWND | number) : boolean", "sets the parent of `hwndChild`");
 registerFunc("GetParent", "function GetParent(hwnd : HWND | number) : HWND", "returns the parent's `HWND`");
-registerFunc("SendMessage", "function SendMessage(hwnd : HWND | number, msg : number, wp : number, lp : number) : LRESULT | number", "sends the `msg` to the `hwnd`  \na message can be any `WM_` const");
+registerFunc("SendMessage", "function SendMessage(hwnd : HWND | number, msg : number, wp : number, lp : number) : LRESULT | number", "sends the `msg` to the `hwnd`  \na message can be alot of consts so google it (normal ones being `WM_`...)");
+registerFunc("SendMessageStr", "function SendMessageStr(hwnd : HWND | number, msg : number, wp : number) : wstring", "sends the `msg` to the `hwnd`  \na message can be alot of consts so google it (normal ones being `WM_`...)  \nif the `msg` is something special like `CB_GETLBTEXT` where the LPARAM is used to get the string within use this function");
 registerFunc("SetClassLongPtr", "function SetClassLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "can be used to change window icons AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("SetWindowLongPtr", "function SetWindowLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "if the `hwnd` is a REGULAR (not a button type window or anything like that) window created with `CreateWindow` then you may not use GWLP_USERDATA because JBS3 uses it internally (sorry)  \ncan set some data in a window  \nnIndex is any `GWLP_` or `DWLP_` (if hwnd is a dialogbox)  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("GetClassLongPtr", "function GetClassLongPtr(hwnd : HWND | number, nIndex : number) : number", "can be used to get a window's icon AMONG other thangs (look it up)  \nnIndex is any `GCL_` or `GCLP_` const");
@@ -313,6 +318,29 @@ registerFunc("showDirectoryPicker", "function showDirectoryPicker(void) : String
 registerFunc("DllLoad", "function DllLoad(dllpath : String) : function(procName : string, argCount : number, args : array, widestr : boolean, returnvalue : number, returnedwidestr : boolean)", "this function follows the same rules as [LoadLibrary](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw)  \nthis returns a function where if any strings you pass into the dll must be wide (utf16/wchar_t) set widestr to true, if the dll returns a string set returnedwidestr to true if it is wide (utf16/wchar_t)  \npassing `__FREE` as procName will release the dll (internally calls `FreeLibrary`)"); //oh BROTHER how will i write docs for the function this returns
 registerFunc("InitializeWIC", "function InitializeWIC(void) : number | ptr", "used to load bitmaps (for d2d (d2d.`CreateBitmapFromWicBitmap`) or GDI)");
 registerFunc("ScopeGUIDs", "function ScopeGUIDs(scope : this) : void", "for some reason i gotta use this weird function instead of setting these values in the initialization of JBS  \n(**allows you to use any `GUID_`... const**)");
+registerFunc("GetControllers", "function GetControllers(void) : Array<number>", "returns a list of controller ids (if any controllers are plugged in) from 0-3 (only a max of 4 controllers connected)");
+registerFunc("XInputGetState", "function XInputGetState(id : number) : XINPUT_STATE", "id is any number from 0-3 (id can be gained from GetControllers)  \nreturns an object with info about the controller (or will crash with an error LO!)");
+registerFunc("XInputSetState", "function XInputSetState(id : number, wLeftMotorSpeed : number, wRightMotorSpeed : number) : DWORD", "id is any number from 0-3 (id can be gained from GetControllers)  \nreturns the result (0 for success)  \nThe left motor is the low-frequency rumble motor. The right motor is the high-frequency rumble motor. The two motors are not the same, and they create different vibration effects.");
+registerFunc("hid_init", "function hid_init(void) : number", "apparently you don't actually have to call this one (because hid_open and `hid_enumerate` will call it anyways)  \nreturns 0 if success");
+registerFunc("hid_enumerate", "function hid_enumerate(vendor_id : number, product_id : number, callback : Function(device : hid_device_info)) : void", "`vender_id` and `product_id` can be 0x0 to enumerate through all HIDs  \ncallback is a function that gets passed a device");
+registerFunc("hid_open", "function hid_open(vendor_id : number, product_id : number, serial_number? : number) : number", "the `vendor_id` and `product_id` can be gained from one of the devices from `hid_enumerate`  \nyou can pass NULL for the `serial_number`  \nreturns a pointer to the handle");
+registerFunc("hid_open_path", "function hid_open_path(path : string) : number", "path is the path string from a device from `hid_enumerate`  \nreturns a pointer to the handle");
+registerFunc("hid_get_handle_from_info", "function hid_get_handle_from_info(device_info : hid_device_info) : number", "`device_info` is one of the devices from `hid_enumerate`  \nreturns a pointer to the handle");
+registerFunc("hid_get_manufacturer_string", "function hid_get_manufacturer_string(handle : number) : number | string", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \nreturns -1 if failed or a string containing the info");
+registerFunc("hid_get_product_string", "function hid_get_product_string(handle : number) : number | string", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \nreturns -1 if failed or a string containing the info");
+registerFunc("hid_get_serial_number_string", "function hid_get_serial_number_string(handle : number) : number | string", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \nreturns -1 if failed or a string containing the info");
+registerFunc("hid_get_indexed_string", "function hid_get_indexed_string(handle : number, i : number) : number | string", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \n`i` is any number but most of the time any number past like 5 doesn't work  \nreturns -1 if failed or a string containing the info");
+registerFunc("hid_set_nonblocking", "function hid_set_nonblocking(handle : number, nonblocking : boolean) : number", "future `hid_read`s will not block the thread if `nonblocking` is true  \nreturns 0 if success");
+registerFunc("hid_read", "function hid_read(handle : number) : Uint32Array", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`");
+registerFunc("hid_read_timeout", "function hid_read_timeout(handle : number, timeoutMS : number) : Uint32Array", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`");
+registerFunc("hid_write", "function hid_write(handle : number, buffer : Uint32Array, length : number) : Uint32Array", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \n");
+registerFunc("hid_error", "function hid_error(handle : number) : wstring", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \nsimilar to GetLastError except it returns a string that says what the problem was");
+registerFunc("hid_send_feature_report", "function hid_send_feature_report(handle : number, buffer : Uint32Array, length : number) : number", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \nreturns 0 if success");
+registerFunc("hid_get_feature_report", "function hid_get_feature_report(handle : number, buffer : Uint32Array) : number | Uint32Array", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`  \nreturns -1 if failed or a Uint32Array containing the feature report");
+registerFunc("hid_close", "function hid_close(handle : number) : void", "`handle` is a device (pointer) gained from `hid_open`, `hid_open_path`, or `hid_get_handle_from_info`");
+registerFunc("hid_exit", "function hid_exit(void) : number", "returns 0 if success");
+registerFunc("StringFromPointer", "function StringFromPointer(ptr : number) : string", "will crash if the ptr is null  \ncan be used with SendMessage and WPARAM and LPARAMs in special situations");
+registerFunc("WStringFromPointer", "function WStringFromPointer(ptr : number) : wstring", "will crash if the ptr is null  \ncan be used with SendMessage and WPARAM and LPARAMs in special situations");
 function emptyD2DObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -334,7 +362,7 @@ function activate(context) {
     const FontObject = { props: [...emptyD2DObject(), /*["family"],*/ ["GetFontSize", vscode.CompletionItemKind.Method], ["GetFlowDirection", vscode.CompletionItemKind.Method], ["GetFontFamilyName", vscode.CompletionItemKind.Method], ["GetFontFamilyNameLength", vscode.CompletionItemKind.Method], ["GetFontStretch", vscode.CompletionItemKind.Method], ["GetFontStyle", vscode.CompletionItemKind.Method], ["GetFontWeight", vscode.CompletionItemKind.Method], ["GetIncrementalTabStop", vscode.CompletionItemKind.Method], ["GetLineSpacing", vscode.CompletionItemKind.Method], ["GetParagraphAlignment", vscode.CompletionItemKind.Method], ["GetReadingDirection", vscode.CompletionItemKind.Method], ["GetTextAlignment", vscode.CompletionItemKind.Method], ["GetWordWrapping", vscode.CompletionItemKind.Method], ["GetTrimming", vscode.CompletionItemKind.Method], ["SetFlowDirection", vscode.CompletionItemKind.Method], ["SetIncrementalTabStop", vscode.CompletionItemKind.Method], ["SetLineSpacing", vscode.CompletionItemKind.Method], ["SetParagraphAlignment", vscode.CompletionItemKind.Method], ["SetReadingDirection", vscode.CompletionItemKind.Method], ["SetTextAlignment", vscode.CompletionItemKind.Method], ["SetTrimming", vscode.CompletionItemKind.Method], ["SetWordWrapping", vscode.CompletionItemKind.Method], ["SetFontSize", vscode.CompletionItemKind.Method]] };
     const BitmapObject = { props: [...emptyD2DObject(), ["GetDpi", vscode.CompletionItemKind.Method], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["CopyFromBitmap", vscode.CompletionItemKind.Method], ["CopyFromRenderTarget", vscode.CompletionItemKind.Method]] };
     const BitmapBrushObject = { props: [...defaultBrushObject(), ["GetExtendModeX", vscode.CompletionItemKind.Method], ["GetExtendModeY", vscode.CompletionItemKind.Method], ["GetExtendMode", vscode.CompletionItemKind.Method], ["GetInterpolationMode", vscode.CompletionItemKind.Method], ["SetExtendModeX", vscode.CompletionItemKind.Method], ["SetExtendModeY", vscode.CompletionItemKind.Method], ["SetExtendMode", vscode.CompletionItemKind.Method], ["SetInterpolationMode", vscode.CompletionItemKind.Method], ["SetBitmap", vscode.CompletionItemKind.Method], ["GetBitmap", vscode.CompletionItemKind.Method]] };
-    const WICObject = { props: [...emptyD2DObject(), ["LoadBitmapFromFilename", vscode.CompletionItemKind.Method], ["LoadDecoder", vscode.CompletionItemKind.Method], ["ConvertBitmapSource", vscode.CompletionItemKind.Method], ["CreateBitmapFromHBITMAP", vscode.CompletionItemKind.Method], ["CreateBitmapFromHICON", vscode.CompletionItemKind.Method]] }; //, ["LoadBitmapFromStream", vscode.CompletionItemKind.Method]]};
+    const WICObject = { props: [...emptyD2DObject(), ["LoadBitmapFromFilename", vscode.CompletionItemKind.Method], ["LoadDecoder", vscode.CompletionItemKind.Method], ["ConvertBitmapSource", vscode.CompletionItemKind.Method], ["CreateBitmapFromHBITMAP", vscode.CompletionItemKind.Method], ["CreateBitmapFromHICON", vscode.CompletionItemKind.Method], ["LoadBitmapFromBinaryData", vscode.CompletionItemKind.Method]] };
     const WICBitmap = { props: [...emptyD2DObject(), ["GetPixels", vscode.CompletionItemKind.Method], ["GetResolution", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GUID"], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method]] };
     const WICDecoder = { props: [...emptyD2DObject(), ["GetFrameCount", vscode.CompletionItemKind.Method], ["GetBitmapFrame", vscode.CompletionItemKind.Method], ["GetThumbnail", vscode.CompletionItemKind.Method], ["GetPreview", vscode.CompletionItemKind.Method], ["GetContainerFormat", vscode.CompletionItemKind.Method]] };
     // genius regex -> /"(.+)"/g regexr.com/7l8cl
@@ -1982,6 +2010,13 @@ const macros = [
     "GUID_WICPixelFormat16bppYQuantizedDctCoefficients",
     "GUID_WICPixelFormat16bppCbQuantizedDctCoefficients",
     "GUID_WICPixelFormat16bppCrQuantizedDctCoefficients",
+    "GUID_ContainerFormatBmp",
+    "GUID_ContainerFormatPng",
+    "GUID_ContainerFormatIco",
+    "GUID_ContainerFormatJpeg",
+    "GUID_ContainerFormatTiff",
+    "GUID_ContainerFormatGif",
+    "GUID_ContainerFormatWmp",
     "Matrix3x2",
     "WICBitmapTransformRotate0",
     "WICBitmapTransformRotate90",
@@ -2000,5 +2035,237 @@ const macros = [
     "WICBitmapUsePremultipliedAlpha",
     "WICBitmapIgnoreAlpha",
     "WICBITMAPALPHACHANNELOPTIONS_FORCE_DWORD",
+    "XINPUT_GAMEPAD_DPAD_UP",
+    "XINPUT_GAMEPAD_DPAD_DOWN",
+    "XINPUT_GAMEPAD_DPAD_LEFT",
+    "XINPUT_GAMEPAD_DPAD_RIGHT",
+    "XINPUT_GAMEPAD_START",
+    "XINPUT_GAMEPAD_BACK",
+    "XINPUT_GAMEPAD_LEFT_THUMB",
+    "XINPUT_GAMEPAD_RIGHT_THUMB",
+    "XINPUT_GAMEPAD_LEFT_SHOULDER",
+    "XINPUT_GAMEPAD_RIGHT_SHOULDER",
+    "XINPUT_GAMEPAD_A",
+    "XINPUT_GAMEPAD_B",
+    "XINPUT_GAMEPAD_X",
+    "XINPUT_GAMEPAD_Y",
+    "HID_BUFFER_SIZE",
+    "CB_OKAY",
+    "CB_ERR",
+    "CB_ERRSPACE",
+    "CBN_ERRSPACE",
+    "CBN_SELCHANGE",
+    "CBN_DBLCLK",
+    "CBN_SETFOCUS",
+    "CBN_KILLFOCUS",
+    "CBN_EDITCHANGE",
+    "CBN_EDITUPDATE",
+    "CBN_DROPDOWN",
+    "CBN_CLOSEUP",
+    "CBN_SELENDOK",
+    "CBN_SELENDCANCEL",
+    "CBS_SIMPLE",
+    "CBS_DROPDOWN",
+    "CBS_DROPDOWNLIST",
+    "CBS_OWNERDRAWFIXED",
+    "CBS_OWNERDRAWVARIABLE",
+    "CBS_AUTOHSCROLL",
+    "CBS_OEMCONVERT",
+    "CBS_SORT",
+    "CBS_HASSTRINGS",
+    "CBS_NOINTEGRALHEIGHT",
+    "CBS_DISABLENOSCROLL",
+    "CBS_UPPERCASE",
+    "CBS_LOWERCASE",
+    "CB_GETEDITSEL",
+    "CB_LIMITTEXT",
+    "CB_SETEDITSEL",
+    "CB_ADDSTRING",
+    "CB_DELETESTRING",
+    "CB_DIR",
+    "CB_GETCOUNT",
+    "CB_GETCURSEL",
+    "CB_GETLBTEXT",
+    "CB_GETLBTEXTLEN",
+    "CB_INSERTSTRING",
+    "CB_RESETCONTENT",
+    "CB_FINDSTRING",
+    "CB_SELECTSTRING",
+    "CB_SETCURSEL",
+    "CB_SHOWDROPDOWN",
+    "CB_GETITEMDATA",
+    "CB_SETITEMDATA",
+    "CB_GETDROPPEDCONTROLRECT",
+    "CB_SETITEMHEIGHT",
+    "CB_GETITEMHEIGHT",
+    "CB_SETEXTENDEDUI",
+    "CB_GETEXTENDEDUI",
+    "CB_GETDROPPEDSTATE",
+    "CB_FINDSTRINGEXACT",
+    "CB_SETLOCALE",
+    "CB_GETLOCALE",
+    "CB_GETTOPINDEX",
+    "CB_SETTOPINDEX",
+    "CB_GETHORIZONTALEXTENT",
+    "CB_SETHORIZONTALEXTENT",
+    "CB_GETDROPPEDWIDTH",
+    "CB_SETDROPPEDWIDTH",
+    "CB_INITSTORAGE",
+    "CB_MULTIPLEADDSTRING",
+    "CB_GETCOMBOBOXINFO",
+    "CB_MSGMAX",
+    "SBS_HORZ",
+    "SBS_VERT",
+    "SBS_TOPALIGN",
+    "SBS_LEFTALIGN",
+    "SBS_BOTTOMALIGN",
+    "SBS_RIGHTALIGN",
+    "SBS_SIZEBOXTOPLEFTALIGN",
+    "SBS_SIZEBOXBOTTOMRIGHTALIGN",
+    "SBS_SIZEBOX",
+    "SBS_SIZEGRIP",
+    "SBM_SETPOS",
+    "SBM_GETPOS",
+    "SBM_SETRANGE",
+    "SBM_SETRANGEREDRAW",
+    "SBM_GETRANGE",
+    "SBM_ENABLE_ARROWS",
+    "SBM_SETSCROLLINFO",
+    "SBM_GETSCROLLINFO",
+    "SBM_GETSCROLLBARINFO",
+    "SIF_RANGE",
+    "SIF_PAGE",
+    "SIF_POS",
+    "SIF_DISABLENOSCROLL",
+    "SIF_TRACKPOS",
+    "SIF_ALL",
+    "LB_OKAY",
+    "LB_ERR",
+    "LB_ERRSPACE",
+    "LBN_ERRSPACE",
+    "LBN_SELCHANGE",
+    "LBN_DBLCLK",
+    "LBN_SELCANCEL",
+    "LBN_SETFOCUS",
+    "LBN_KILLFOCUS",
+    "LB_ADDSTRING",
+    "LB_INSERTSTRING",
+    "LB_DELETESTRING",
+    "LB_SELITEMRANGEEX",
+    "LB_RESETCONTENT",
+    "LB_SETSEL",
+    "LB_SETCURSEL",
+    "LB_GETSEL",
+    "LB_GETCURSEL",
+    "LB_GETTEXT",
+    "LB_GETTEXTLEN",
+    "LB_GETCOUNT",
+    "LB_SELECTSTRING",
+    "LB_DIR",
+    "LB_GETTOPINDEX",
+    "LB_FINDSTRING",
+    "LB_GETSELCOUNT",
+    "LB_GETSELITEMS",
+    "LB_SETTABSTOPS",
+    "LB_GETHORIZONTALEXTENT",
+    "LB_SETHORIZONTALEXTENT",
+    "LB_SETCOLUMNWIDTH",
+    "LB_ADDFILE",
+    "LB_SETTOPINDEX",
+    "LB_GETITEMRECT",
+    "LB_GETITEMDATA",
+    "LB_SETITEMDATA",
+    "LB_SELITEMRANGE",
+    "LB_SETANCHORINDEX",
+    "LB_GETANCHORINDEX",
+    "LB_SETCARETINDEX",
+    "LB_GETCARETINDEX",
+    "LB_SETITEMHEIGHT",
+    "LB_GETITEMHEIGHT",
+    "LB_FINDSTRINGEXACT",
+    "LB_SETLOCALE",
+    "LB_GETLOCALE",
+    "LB_SETCOUNT",
+    "LB_INITSTORAGE",
+    "LB_ITEMFROMPOINT",
+    "LB_GETLISTBOXINFO",
+    "LB_MSGMAX",
+    "LBS_NOTIFY",
+    "LBS_SORT",
+    "LBS_NOREDRAW",
+    "LBS_MULTIPLESEL",
+    "LBS_OWNERDRAWFIXED",
+    "LBS_OWNERDRAWVARIABLE",
+    "LBS_HASSTRINGS",
+    "LBS_USETABSTOPS",
+    "LBS_NOINTEGRALHEIGHT",
+    "LBS_MULTICOLUMN",
+    "LBS_WANTKEYBOARDINPUT",
+    "LBS_EXTENDEDSEL",
+    "LBS_DISABLENOSCROLL",
+    "LBS_NODATA",
+    "LBS_NOSEL",
+    "LBS_COMBOBOX",
+    "LBS_STANDARD",
+    "SS_LEFT",
+    "SS_CENTER",
+    "SS_RIGHT",
+    "SS_ICON",
+    "SS_BLACKRECT",
+    "SS_GRAYRECT",
+    "SS_WHITERECT",
+    "SS_BLACKFRAME",
+    "SS_GRAYFRAME",
+    "SS_WHITEFRAME",
+    "SS_USERITEM",
+    "SS_SIMPLE",
+    "SS_LEFTNOWORDWRAP",
+    "SS_OWNERDRAW",
+    "SS_BITMAP",
+    "SS_ENHMETAFILE",
+    "SS_ETCHEDHORZ",
+    "SS_ETCHEDVERT",
+    "SS_ETCHEDFRAME",
+    "SS_TYPEMASK",
+    "SS_REALSIZECONTROL",
+    "SS_NOPREFIX",
+    "SS_NOTIFY",
+    "SS_CENTERIMAGE",
+    "SS_RIGHTJUST",
+    "SS_REALSIZEIMAGE",
+    "SS_SUNKEN",
+    "SS_EDITCONTROL",
+    "SS_ENDELLIPSIS",
+    "SS_PATHELLIPSIS",
+    "SS_WORDELLIPSIS",
+    "SS_ELLIPSISMASK",
+    "STM_SETICON",
+    "STM_GETICON",
+    "STM_SETIMAGE",
+    "STM_GETIMAGE",
+    "STN_CLICKED",
+    "STN_DBLCLK",
+    "STN_ENABLE",
+    "STN_DISABLE",
+    "STM_MSGMAX",
+    "SB_HORZ",
+    "SB_VERT",
+    "SB_CTL",
+    "SB_BOTH",
+    "SB_LINEUP",
+    "SB_LINELEFT",
+    "SB_LINEDOWN",
+    "SB_LINERIGHT",
+    "SB_PAGEUP",
+    "SB_PAGELEFT",
+    "SB_PAGEDOWN",
+    "SB_PAGERIGHT",
+    "SB_THUMBPOSITION",
+    "SB_THUMBTRACK",
+    "SB_TOP",
+    "SB_LEFT",
+    "SB_BOTTOM",
+    "SB_RIGHT",
+    "SB_ENDSCROLL",
 ];
 //# sourceMappingURL=extension.js.map
