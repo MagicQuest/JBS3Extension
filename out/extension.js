@@ -1080,6 +1080,8 @@ const macros = [
     "DEFAULT_PALETTE",
     "ID2D1RenderTarget",
     "ID2D1DCRenderTarget",
+    "ID2D1DeviceContext",
+    "ID2D1DeviceContextDComposition",
     "MK_CONTROL",
     "MK_LBUTTON",
     "MK_MBUTTON",
