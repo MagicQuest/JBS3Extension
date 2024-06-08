@@ -14,7 +14,7 @@ function makeArgs(info, desc) {
 }
 const objectFunctions = {
     "BeginDraw": makeArgs("function BeginDraw(void) : void", "calls the native `BeginDraw` function on the direct2d renderTarget"),
-    "EndDraw": makeArgs("function EndDraw(present? : boolean) : void", "calls the native `EndDraw` function on the direct2d renderTarget  \nthe `present` bool only does anything if this canvas was created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
+    "EndDraw": makeArgs("function EndDraw(donotpresent? : boolean) : void", "calls the native `EndDraw` function on the direct2d renderTarget  \nthe `donopresent` bool only does anything if this canvas was created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
     "Resize": makeArgs("function Resize(width : number, height : number) : HRESULT", "resizes the internal RenderTarget"),
     "CreateSolidColorBrush": makeArgs("function CreateSolidColorBrush(r : float, g : float, b : float, alpha? : number) : SolidColorBrush", "returns a `Brush` object with 2 unique methods  \n`SetColor` and `GetColor`"),
     "DrawRectangle": makeArgs("function DrawRectangle(left : number, top : number, right : number, bottom : number, brush : Brush, strokeWidth? : number, strokeStyle? : number) : void", "tells direct2d to draw a rectangle's outline using the arguments"),
@@ -60,10 +60,11 @@ const objectFunctions = {
     "DrawTextLayout": makeArgs("function DrawTextLayout(x : float, y : float, layout : TextLayout, brush : Brush) : void", "draws the text layout with the specified brush  \n`layout` can be any object created with `d2d.CreateTextLayout`  \naccording to MSDN `DrawTextLayout` is more efficient than DrawText (probably because you can't change the text once you create the layout)"),
     "DrawGradientText": makeArgs("function DrawGradientText(text : string, textFormat : TextFormat | Font, left : number, top : number, right : number, bottom : number, brush : GradientBrush, gradientRotation? : number | float) : void", "convenience method for drawing text with a gradient brush (don't work as good)"),
     "CreateBitmap": makeArgs("function CreateBitmap(width : number, height : number) : Bitmap", "creates an empty bitmap with the specified `width` and `height`  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
+    "CreateBitmapFromDxgiSurface": makeArgs("function CreateBitmapFromDxgiSurface(bitmapOptions : D2D1_BITMAP_OPTIONS, format? : DXGI_FORMAT, alphaMode? : D2D1_ALPHA_MODE) : Bitmap", "`bitmapOptions` are any ``"),
     "CreateBitmapFromFilename": makeArgs("function CreateBitmapFromFilename(filename : string, frame : number) : Bitmap", "**ONLY WORKS IF YOU CREATED `D2D` AND PASSED A `WIC` OBJECT AS THE LAST PARAMETER**  \ncreates a bitmap with the specified image inside (can be .png/.jpg/.bmp/.whatever)  \nif the file specified with filename is a gif `frame` lets you choose which frame of the gif to load   \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
     "CreateBitmapFromWicBitmap": makeArgs("function CreateBitmapFromWicBitmap(wicBitmap : wicBitmap, release : boolean) : Bitmap", "creates a d2d bitmap from a wic bitmap  \nset release to true if you want to `.Release` the wicBitmap  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
     "DrawBitmap": makeArgs("function DrawBitmap(bitmap : Bitmap, destLeft : number, destTop : number, destRight : number, destBottom : number, opacity : float, bitmapInterpolationMode? : enum D2D1_BITMAP_INTERPOLATION_MODE, srcLeft? : number, srcTop? : number, srcRight? : number, srcBottom? : number) : void", "the `dest` args are where the bitmap will be drawn  \nthe `src` args are how much of the bitmap will be drawn (optional because defaults)  \ninterpolationMode can be any `D2D1_BITMAP_INTERPOLATION_MODE` const"),
-    "DrawImage": makeArgs("function DrawImage(image : Bitmap | Image | Effect, x : float, y : float, srcLeft : float, srcTop : float, srcRight : float, srcBottom : float, interpolationMode : D2D1_INTERPOLATION_MODE) : void", "interpolationMode can be any `D2D1_INTERPOLATION_MODE` const"),
+    "DrawImage": makeArgs("function DrawImage(image : Bitmap | Image | Effect, x? : float, y? : float, srcLeft? : float, srcTop? : float, srcRight? : float, srcBottom? : float, interpolationMode? : D2D1_INTERPOLATION_MODE) : void", "interpolationMode can be any `D2D1_INTERPOLATION_MODE` const"),
     "CreateBitmapBrush": makeArgs("function CreateBitmapBrush(bitmap : Bitmap) : BitmapBrush", "returns a bitmap brush with ykykyk look at `direct2d CreateBitmapBrush msn` dawg"),
     //"CreateGradientStopCollection" : makeArgs("function CreateGradientStopCollection(gradientStops : Array<[position : float, r : float, g : float, b : float, alpha? : float]>) : IUnknown", "creates the gradient stop collection for use in the `Create`(`Linear`/`Radial`)`GradientBrush`  \nreturns the basic IUnknown methods/fields (`Release()`, `internalPtr`)  \nnot sure if the alpha works but that ain't my fault"),
     "CreateGradientStopCollection": makeArgs("function CreateGradientStopCollection(...gradientStops : [position : float, r : float, g : float, b : float, alpha? : float]) : IUnknown", "creates the gradient stop collection for use in the `Create`(`Linear`/`Radial`)`GradientBrush`  \nreturns the basic IUnknown methods/fields (`Release()`, `internalPtr`)  \nnot sure if the alpha works but that ain't my fault"),
@@ -90,8 +91,8 @@ const objectFunctions = {
     //"loop" : makeArgs("function loop(void) : void", "this is called when the window is not handling any events"),
     "SetOpacity": makeArgs("function SetOpacity(opacity : float) : void", "sets the opacity of the brush"),
     "GetOpacity": makeArgs("function GetOpacity(void) : float", "gets the opacity of the brush"),
-    "GetTransform": makeArgs("function GetTransform(void) : Matrix3x2", "gets the matrix object"),
-    "SetTransform": makeArgs("function SetTransform(matrix : Matrix3x2) : void", "sets the transform of this brush (only used for bitmap brushes or gradients)  \n`matrix` can be one gained from `GetTransform` or most `d2d.Matrix3x2...` functions"),
+    "GetTransform": makeArgs("function GetTransform(void) : Matrix3x2F", "gets the matrix object"),
+    "SetTransform": makeArgs("function SetTransform(matrix : Matrix3x2F) : void", "sets the transform of this brush (only used for bitmap brushes or gradients)  \n`matrix` can be one gained from `GetTransform` or most `d2d.Matrix3x2F...` functions"),
     "GetDpi": makeArgs("function GetDpi(void) : number[2]", "returns an array with the first element being the xDpi and the second being the yDpi"),
     "GetPixelFormat": makeArgs("function GetPixelFormat(void) : {format : number, alphaMode : number}", "`format` is any `DXGI_FORMAT_` const  \n`alphaMode` is any `D2D1_ALPHA_MODE_` const"),
     //default brush funcs
@@ -228,8 +229,8 @@ registerFunc("GetDefaultFont", "function GetDefaultFont(void) : number", "return
 registerFunc("GetKey", "function GetKey(keyCode : number) : bool", "calls the native `GetAsyncKeyState(keyCode) & 0x8000`");
 registerFunc("GetKeyDown", "function GetKeyDown(keyCode : number) : bool", "calls the native `GetAsyncKeyState(keyCode) & 0x1` to tell when the key has just been hit");
 registerFunc("PostQuitMessage", "function PostQuitMessage(exitCode : number) : void", "calls the native `PostQuitMessage(exitCode);` to terminate a windows `window`");
-registerFunc("GetMousePos", "function GetMousePos(void) : {x: number, y: number}", "alias for `GetCursorPos`  \ncalls the native `GetCursorPos()` and returns the RECT's values");
-registerFunc("GetCursorPos", "function GetCursorPos(void) : {x: number, y: number}", "calls the native `GetCursorPos()` and returns the RECT's values");
+registerFunc("GetMousePos", "function GetMousePos(void) : {x: number, y: number}", "alias for `GetCursorPos`  \ncalls the native `GetCursorPos()` and returns the POINT's values");
+registerFunc("GetCursorPos", "function GetCursorPos(void) : {x: number, y: number}", "calls the native `GetCursorPos()` and returns the POINT's values");
 registerFunc("SetMousePos", "function SetMousePos(x : number, y : number) : void", "alias for `SetCursorPos`  \ncalls the native `SetCursorPos(x, y)` and returns 0 if failed");
 registerFunc("SetCursorPos", "function SetCursorPos(x : number, y : number) : void", "calls the native `SetCursorPos(x, y)` and returns 0 if failed");
 registerFunc("LoadCursor", "function LoadCursor(hInstance? : number | null, lpCursorName : number) : HCURSOR | number", "lpCursorName can be any `IDC_` const  \nif it isn't working pass hInstance as NULL  \ncalls the native `LoadCursorA(hInstance, lpCursorName)` and returns a pointer to the cursor");
@@ -243,8 +244,8 @@ registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIc
 registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works  \nuses CreateIconIndirect to create an icon with the bitmap");
 registerFunc("createCanvas", "function createCanvas(context : string, type : number, window? : HWND | number) : object<type>", "valid args are `d2d`/`direct2d` and `ID2D1RenderTarget`/`ID2D1DCRenderTarget`  \n`direct3d`/`d3d` not yet implemented  \nreturns an object for the specified type");
 registerFunc("Sleep", "function Sleep(ms : number) : void", "calls the native `Sleep(ms)` function to pause the current thread for x milliseconds");
-registerFunc("GetClientRect", "function GetClientRect(hwnd : HWND | number) : RECT | {left : number, top : number, right : number, bottom : number}", "calls the native `GetClientRect()` function and returns a `RECT` object with the properties  \n`left`,`right`,`top`,`bottom`");
-registerFunc("GetWindowRect", "function GetWindowRect(hwnd : HWND | number) : RECT | {left : number, top : number, right : number, bottom : number}", "calls the native `GetWindowRect()` function and returns a `RECT` object with the properties  \n`left`,`right`,`top`,`bottom`");
+registerFunc("GetClientRect", "function GetClientRect(hwnd : HWND | number) : RECT | {left : number, top : number, right : number, bottom : number}", "calls the native `GetClientRect()` function and returns a `RECT` object with the properties  \n`left`,`top`,`right`,`bottom`");
+registerFunc("GetWindowRect", "function GetWindowRect(hwnd : HWND | number) : RECT | {left : number, top : number, right : number, bottom : number}", "calls the native `GetWindowRect()` function and returns a `RECT` object with the properties  \n`left`,`top`,`right`,`bottom`");
 registerFunc("GetConsoleWindow", "function GetConsoleWindow(void) : number", "returns a pointer to the console window (`HCONSOLE`)");
 registerFunc("DestroyWindow", "function DestroyWindow(hwnd : HWND | number) : void", "calls the native `DestroyWindow` function on the HWND");
 //#endregion
@@ -385,6 +386,9 @@ function defaultTextFormatObject() {
 function d2dCanvasObject() {
     return [["internalDXPtr"], ["renderTarget"], ["BeginDraw", vscode.CompletionItemKind.Method], ["EndDraw", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method], ["CreateSolidColorBrush", vscode.CompletionItemKind.Method], ["DrawRectangle", vscode.CompletionItemKind.Method], ["DrawGradientRectangle", vscode.CompletionItemKind.Method], ["FillRectangle", vscode.CompletionItemKind.Method], ["FillGradientRectangle", vscode.CompletionItemKind.Method], ["DrawGradientEllipse", vscode.CompletionItemKind.Method], ["DrawEllipse", vscode.CompletionItemKind.Method], ["FillEllipse", vscode.CompletionItemKind.Method], ["FillGradientEllipse", vscode.CompletionItemKind.Method], ["CreateFont", vscode.CompletionItemKind.Method], ["CreateTextLayout", vscode.CompletionItemKind.Method], ["DrawText", vscode.CompletionItemKind.Method], ["DrawTextLayout", vscode.CompletionItemKind.Method], ["DrawGradientText", vscode.CompletionItemKind.Method], ["CreateBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapFromWicBitmap", vscode.CompletionItemKind.Method], ["DrawBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapBrush", vscode.CompletionItemKind.Method], ["CreateGradientStopCollection", vscode.CompletionItemKind.Method], ["CreateLinearGradientBrush", vscode.CompletionItemKind.Method], ["CreateRadialGradientBrush", vscode.CompletionItemKind.Method], ["RestoreDrawingState", vscode.CompletionItemKind.Method], /*["CreateDrawingStateBlock", vscode.CompletionItemKind.Method],*/ ["GetTransform", vscode.CompletionItemKind.Method], ["SetTransform", vscode.CompletionItemKind.Method], ["SaveDrawingState", vscode.CompletionItemKind.Method], ["DrawGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["DrawRoundedRectangle", vscode.CompletionItemKind.Method], ["FillRoundedRectangle", vscode.CompletionItemKind.Method], ["FillGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["Flush", vscode.CompletionItemKind.Method], ["GetAntialiasMode", vscode.CompletionItemKind.Method], ["SetAntialiasMode", vscode.CompletionItemKind.Method], ["SetDpi", vscode.CompletionItemKind.Method], ["GetDpi", vscode.CompletionItemKind.Method], ["GetMaximumBitmapSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["DrawLine", vscode.CompletionItemKind.Method], ["DrawGradientLine", vscode.CompletionItemKind.Method], ["Clear", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]];
 }
+function d2dCanvasObject11() {
+    return [...d2dCanvasObject(), ["CreateEffect", vscode.CompletionItemKind.Method], ["Present", vscode.CompletionItemKind.Method], ["SetTarget", vscode.CompletionItemKind.Method], ["CreateBitmapFromDxgiSurface", vscode.CompletionItemKind.Method]];
+}
 const vscode = require("vscode");
 function activate(context) {
     const RectObject = { props: [["left"], ["top"], ["right"], ["bottom"]] };
@@ -393,7 +397,8 @@ function activate(context) {
     const RequireObject = { props: [["read", vscode.CompletionItemKind.Method], ["write", vscode.CompletionItemKind.Method]] };
     const WindowClassObject = { props: [["loop", vscode.CompletionItemKind.Method], ["windowProc", vscode.CompletionItemKind.Method], ["init", vscode.CompletionItemKind.Method], ["hbrBackground"], ["hCursor"], ["hIcon"], ["hIconSm"], ["hInstance"], ["lpszClassName"], ["lpszMenuName"], ["style"], ["DefWindowProc"]] }; //["className"]]};
     const CanvasObject = { props: d2dCanvasObject() };
-    const CanvasObject11 = { props: [...d2dCanvasObject(), ["CreateEffect", vscode.CompletionItemKind.Method], ["Present", vscode.CompletionItemKind.Method], ["SetTarget", vscode.CompletionItemKind.Method]] };
+    const CanvasObject11 = { props: d2dCanvasObject11() };
+    const CanvasObject11DComp = { props: [...d2dCanvasObject11(), ["Commit", vscode.CompletionItemKind.Method], ["CreateGaussianBlurEffect", vscode.CompletionItemKind.Method], ["CreateBrightnessEffect", vscode.CompletionItemKind.Method], ["CreateColorMatrixEffect", vscode.CompletionItemKind.Method], ["CreateShadowEffect", vscode.CompletionItemKind.Method], ["CreateHueRotationEffect", vscode.CompletionItemKind.Method], ["CreateSaturationEffect", vscode.CompletionItemKind.Method], ["CreateTurbulenceEffect", vscode.CompletionItemKind.Method], ["CreateLinearTransferEffect", vscode.CompletionItemKind.Method], ["CreateTableTransferEffect", vscode.CompletionItemKind.Method], ["CreateCompositeEffect", vscode.CompletionItemKind.Method], ["CreateBlendEffect", vscode.CompletionItemKind.Method], ["CreateArithmeticCompositeEffect", vscode.CompletionItemKind.Method], ["CreateAffineTransform2DEffect", vscode.CompletionItemKind.Method]] };
     const GLObject = { props: [["activeTexture", vscode.CompletionItemKind.Method], ["attachShader", vscode.CompletionItemKind.Method], ["bindBuffer", vscode.CompletionItemKind.Method], ["bindFramebuffer", vscode.CompletionItemKind.Method], ["bindRenderbuffer", vscode.CompletionItemKind.Method], ["bindTexture", vscode.CompletionItemKind.Method], ["blendColor", vscode.CompletionItemKind.Method], ["blendEquation", vscode.CompletionItemKind.Method], ["blendEquationSeparate", vscode.CompletionItemKind.Method], ["blendFunc", vscode.CompletionItemKind.Method], ["blendFuncSeparate", vscode.CompletionItemKind.Method], ["checkFramebufferStatus", vscode.CompletionItemKind.Method], ["clear", vscode.CompletionItemKind.Method], ["clearColor", vscode.CompletionItemKind.Method], ["clearDepth", vscode.CompletionItemKind.Method], ["clearStencil", vscode.CompletionItemKind.Method], ["colorMask", vscode.CompletionItemKind.Method], ["compileShader", vscode.CompletionItemKind.Method], ["copyTexImage2D", vscode.CompletionItemKind.Method], ["copyTexSubImage2D", vscode.CompletionItemKind.Method], ["createBuffer", vscode.CompletionItemKind.Method], ["createFramebuffer", vscode.CompletionItemKind.Method], ["createProgram", vscode.CompletionItemKind.Method], ["createRenderbuffer", vscode.CompletionItemKind.Method], ["createShader", vscode.CompletionItemKind.Method], ["createTexture", vscode.CompletionItemKind.Method], ["cullFace", vscode.CompletionItemKind.Method], ["deleteBuffer", vscode.CompletionItemKind.Method], ["deleteFramebuffer", vscode.CompletionItemKind.Method], ["deleteProgram", vscode.CompletionItemKind.Method], ["deleteRenderbuffer", vscode.CompletionItemKind.Method], ["deleteShader", vscode.CompletionItemKind.Method], ["deleteTexture", vscode.CompletionItemKind.Method], ["depthFunc", vscode.CompletionItemKind.Method], ["depthMask", vscode.CompletionItemKind.Method], ["depthRange", vscode.CompletionItemKind.Method], ["detachShader", vscode.CompletionItemKind.Method], ["disable", vscode.CompletionItemKind.Method], ["disableVertexAttribArray", vscode.CompletionItemKind.Method], ["drawArrays", vscode.CompletionItemKind.Method], ["enable", vscode.CompletionItemKind.Method], ["enableVertexAttribArray", vscode.CompletionItemKind.Method], ["finish", vscode.CompletionItemKind.Method], ["flush", vscode.CompletionItemKind.Method], ["framebufferRenderbuffer", vscode.CompletionItemKind.Method], ["framebufferTexture2D", vscode.CompletionItemKind.Method], ["frontFace", vscode.CompletionItemKind.Method], ["generateMipmap", vscode.CompletionItemKind.Method], ["getProgramParameter", vscode.CompletionItemKind.Method], ["getProgramInfoLog", vscode.CompletionItemKind.Method], ["getShaderInfoLog", vscode.CompletionItemKind.Method], ["getUniformLocation", vscode.CompletionItemKind.Method], ["hint", vscode.CompletionItemKind.Method], ["isBuffer", vscode.CompletionItemKind.Method], ["isEnabled", vscode.CompletionItemKind.Method], ["isFramebuffer", vscode.CompletionItemKind.Method], ["isProgram", vscode.CompletionItemKind.Method], ["isRenderbuffer", vscode.CompletionItemKind.Method], ["isShader", vscode.CompletionItemKind.Method], ["isTexture", vscode.CompletionItemKind.Method], ["lineWidth", vscode.CompletionItemKind.Method], ["linkProgram", vscode.CompletionItemKind.Method], ["pixelStorei", vscode.CompletionItemKind.Method], ["shaderSource", vscode.CompletionItemKind.Method], ["stencilFunc", vscode.CompletionItemKind.Method], ["stencilFuncSeparate", vscode.CompletionItemKind.Method], ["stencilMask", vscode.CompletionItemKind.Method], ["stencilMaskSeparate", vscode.CompletionItemKind.Method], ["stencilOp", vscode.CompletionItemKind.Method], ["stencilOpSeparate", vscode.CompletionItemKind.Method], ["texParameterf", vscode.CompletionItemKind.Method], ["texParameteri", vscode.CompletionItemKind.Method], ["uniform1f", vscode.CompletionItemKind.Method], ["uniform2f", vscode.CompletionItemKind.Method], ["uniform3f", vscode.CompletionItemKind.Method], ["uniform4f", vscode.CompletionItemKind.Method], ["uniform1i", vscode.CompletionItemKind.Method], ["uniform2i", vscode.CompletionItemKind.Method], ["uniform3i", vscode.CompletionItemKind.Method], ["uniform4i", vscode.CompletionItemKind.Method], ["useProgram", vscode.CompletionItemKind.Method], ["validateProgram", vscode.CompletionItemKind.Method], ["vertexAttribPointer", vscode.CompletionItemKind.Method], ["viewport", vscode.CompletionItemKind.Method], ["bufferData", vscode.CompletionItemKind.Method], ["texImage2D", vscode.CompletionItemKind.Method], ["texSubImage2D", vscode.CompletionItemKind.Method], ["uniform1fv", vscode.CompletionItemKind.Method], ["uniform2fv", vscode.CompletionItemKind.Method], ["uniform3fv", vscode.CompletionItemKind.Method], ["uniform4fv", vscode.CompletionItemKind.Method], ["uniform1iv", vscode.CompletionItemKind.Method], ["uniform2iv", vscode.CompletionItemKind.Method], ["uniform3iv", vscode.CompletionItemKind.Method], ["uniform4iv", vscode.CompletionItemKind.Method], ["uniformMatrix2fv", vscode.CompletionItemKind.Method], ["uniformMatrix3fv", vscode.CompletionItemKind.Method], ["uniformMatrix4fv", vscode.CompletionItemKind.Method]] };
     const IUnknownObject = { props: emptyD2DObject() };
     const SolidColorBrushObject = { props: [...defaultBrushObject(), ["SetColor", vscode.CompletionItemKind.Method], ["GetColor", vscode.CompletionItemKind.Method]] };
@@ -2074,7 +2079,7 @@ const macros = [
     "GUID_ContainerFormatTiff",
     "GUID_ContainerFormatGif",
     "GUID_ContainerFormatWmp",
-    "Matrix3x2",
+    "Matrix3x2F",
     "WICBitmapTransformRotate0",
     "WICBitmapTransformRotate90",
     "WICBitmapTransformRotate180",
@@ -2728,5 +2733,99 @@ const macros = [
     "D2D1_INTERPOLATION_MODE_ANISOTROPIC",
     "D2D1_INTERPOLATION_MODE_HIGH_QUALITY_CUBIC",
     "D2D1_INTERPOLATION_MODE_FORCE_DWORD",
+    "D2D1_BITMAP_OPTIONS_NONE",
+    "D2D1_BITMAP_OPTIONS_TARGET",
+    "D2D1_BITMAP_OPTIONS_CANNOT_DRAW",
+    "D2D1_BITMAP_OPTIONS_CPU_READ",
+    "D2D1_BITMAP_OPTIONS_GDI_COMPATIBLE",
+    "D2D1_BITMAP_OPTIONS_FORCE_DWORD",
+    "D2D1_CONTRAST_PROP_CONTRAST",
+    "D2D1_CONTRAST_PROP_CLAMP_INPUT",
+    "D2D1_CONTRAST_PROP_FORCE_DWORD",
+    "D2D1_RGBTOHUE_PROP_OUTPUT_COLOR_SPACE",
+    "D2D1_RGBTOHUE_PROP_FORCE_DWORD",
+    "D2D1_RGBTOHUE_OUTPUT_COLOR_SPACE_HUE_SATURATION_VALUE",
+    "D2D1_RGBTOHUE_OUTPUT_COLOR_SPACE_HUE_SATURATION_LIGHTNESS",
+    "D2D1_RGBTOHUE_OUTPUT_COLOR_SPACE_FORCE_DWORD",
+    "D2D1_HUETORGB_PROP_INPUT_COLOR_SPACE",
+    "D2D1_HUETORGB_PROP_FORCE_DWORD",
+    "D2D1_HUETORGB_INPUT_COLOR_SPACE_HUE_SATURATION_VALUE",
+    "D2D1_HUETORGB_INPUT_COLOR_SPACE_HUE_SATURATION_LIGHTNESS",
+    "D2D1_HUETORGB_INPUT_COLOR_SPACE_FORCE_DWORD",
+    "D2D1_CHROMAKEY_PROP_COLOR",
+    "D2D1_CHROMAKEY_PROP_TOLERANCE",
+    "D2D1_CHROMAKEY_PROP_INVERT_ALPHA",
+    "D2D1_CHROMAKEY_PROP_FEATHER",
+    "D2D1_CHROMAKEY_PROP_FORCE_DWORD",
+    "D2D1_EMBOSS_PROP_HEIGHT",
+    "D2D1_EMBOSS_PROP_DIRECTION",
+    "D2D1_EMBOSS_PROP_FORCE_DWORD",
+    "D2D1_EXPOSURE_PROP_EXPOSURE_VALUE",
+    "D2D1_EXPOSURE_PROP_FORCE_DWORD",
+    "D2D1_POSTERIZE_PROP_RED_VALUE_COUNT",
+    "D2D1_POSTERIZE_PROP_GREEN_VALUE_COUNT",
+    "D2D1_POSTERIZE_PROP_BLUE_VALUE_COUNT",
+    "D2D1_POSTERIZE_PROP_FORCE_DWORD",
+    "D2D1_SEPIA_PROP_INTENSITY",
+    "D2D1_SEPIA_PROP_ALPHA_MODE",
+    "D2D1_SEPIA_PROP_FORCE_DWORD",
+    "D2D1_SHARPEN_PROP_SHARPNESS",
+    "D2D1_SHARPEN_PROP_THRESHOLD",
+    "D2D1_SHARPEN_PROP_FORCE_DWORD",
+    "D2D1_STRAIGHTEN_PROP_ANGLE",
+    "D2D1_STRAIGHTEN_PROP_MAINTAIN_SIZE",
+    "D2D1_STRAIGHTEN_PROP_SCALE_MODE",
+    "D2D1_STRAIGHTEN_PROP_FORCE_DWORD",
+    "D2D1_STRAIGHTEN_SCALE_MODE_NEAREST_NEIGHBOR",
+    "D2D1_STRAIGHTEN_SCALE_MODE_LINEAR",
+    "D2D1_STRAIGHTEN_SCALE_MODE_CUBIC",
+    "D2D1_STRAIGHTEN_SCALE_MODE_MULTI_SAMPLE_LINEAR",
+    "D2D1_STRAIGHTEN_SCALE_MODE_ANISOTROPIC",
+    "D2D1_STRAIGHTEN_SCALE_MODE_FORCE_DWORD",
+    "D2D1_TEMPERATUREANDTINT_PROP_TEMPERATURE",
+    "D2D1_TEMPERATUREANDTINT_PROP_TINT",
+    "D2D1_TEMPERATUREANDTINT_PROP_FORCE_DWORD",
+    "D2D1_VIGNETTE_PROP_COLOR",
+    "D2D1_VIGNETTE_PROP_TRANSITION_SIZE",
+    "D2D1_VIGNETTE_PROP_STRENGTH",
+    "D2D1_VIGNETTE_PROP_FORCE_DWORD",
+    "D2D1_EDGEDETECTION_PROP_STRENGTH",
+    "D2D1_EDGEDETECTION_PROP_BLUR_RADIUS",
+    "D2D1_EDGEDETECTION_PROP_MODE",
+    "D2D1_EDGEDETECTION_PROP_OVERLAY_EDGES",
+    "D2D1_EDGEDETECTION_PROP_ALPHA_MODE",
+    "D2D1_EDGEDETECTION_PROP_FORCE_DWORD",
+    "D2D1_EDGEDETECTION_MODE_SOBEL",
+    "D2D1_EDGEDETECTION_MODE_PREWITT",
+    "D2D1_EDGEDETECTION_MODE_FORCE_DWORD",
+    "D2D1_HIGHLIGHTSANDSHADOWS_PROP_HIGHLIGHTS",
+    "D2D1_HIGHLIGHTSANDSHADOWS_PROP_SHADOWS",
+    "D2D1_HIGHLIGHTSANDSHADOWS_PROP_CLARITY",
+    "D2D1_HIGHLIGHTSANDSHADOWS_PROP_INPUT_GAMMA",
+    "D2D1_HIGHLIGHTSANDSHADOWS_PROP_MASK_BLUR_RADIUS",
+    "D2D1_HIGHLIGHTSANDSHADOWS_PROP_FORCE_DWORD",
+    "D2D1_HIGHLIGHTSANDSHADOWS_INPUT_GAMMA_LINEAR",
+    "D2D1_HIGHLIGHTSANDSHADOWS_INPUT_GAMMA_SRGB",
+    "D2D1_HIGHLIGHTSANDSHADOWS_INPUT_GAMMA_FORCE_DWORD",
+    "D2D1_LOOKUPTABLE3D_PROP_LUT",
+    "D2D1_LOOKUPTABLE3D_PROP_ALPHA_MODE",
+    "D2D1_LOOKUPTABLE3D_PROP_FORCE_DWORD",
+    "D2D1_OPACITY_PROP_OPACITY",
+    "D2D1_OPACITY_PROP_FORCE_DWORD",
+    "D2D1_CROSSFADE_PROP_WEIGHT",
+    "D2D1_CROSSFADE_PROP_FORCE_DWORD",
+    "D2D1_TINT_PROP_COLOR",
+    "D2D1_TINT_PROP_CLAMP_OUTPUT",
+    "D2D1_TINT_PROP_FORCE_DWORD",
+    "D2D1_WHITELEVELADJUSTMENT_PROP_INPUT_WHITE_LEVEL",
+    "D2D1_WHITELEVELADJUSTMENT_PROP_OUTPUT_WHITE_LEVEL",
+    "D2D1_WHITELEVELADJUSTMENT_PROP_FORCE_DWORD",
+    "D2D1_HDRTONEMAP_PROP_INPUT_MAX_LUMINANCE",
+    "D2D1_HDRTONEMAP_PROP_OUTPUT_MAX_LUMINANCE",
+    "D2D1_HDRTONEMAP_PROP_DISPLAY_MODE",
+    "D2D1_HDRTONEMAP_PROP_FORCE_DWORD",
+    "D2D1_HDRTONEMAP_DISPLAY_MODE_SDR",
+    "D2D1_HDRTONEMAP_DISPLAY_MODE_HDR",
+    "D2D1_HDRTONEMAP_DISPLAY_MODE_FORCE_DWORD",
 ];
 //# sourceMappingURL=extension.js.map
