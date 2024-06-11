@@ -153,6 +153,12 @@ registerFunc("Inputbox", "function Inputbox(description : string, title : string
 registerFunc("CreateWindowClass", "function CreateWindowClass(className? : string, windowProc? : function, loop? : function) : WNDCLASSEXW", "returns an object for use with `CreateWindow`  \nyou can use this object like its c++ `WNDCLASSEX` counterpart");
 //registerFunc("CreateWindow", "function CreateWindow(wndclass : {className : string, windowProc : function, loop : function}, title : string, x : number, y : number, width : number, height : number) : Promise", "returns a promise that is resolved when the window closes");
 //registerFunc("CreateWindow", "function CreateWindow(wndclass : WNDCLASSEXA | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number) : HWND | number", "the `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL` ((MSDN link for all special classes)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw#remarks])  \nthe windowProc will NOT call WM_CREATE because IDK DAWG just use init  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \nreturns the pointer to the newly created window (`HWND`)");
+registerFunc("CreateMenu", "function CreateMenu(void) : HMENU", "Creates a menu. The menu is initially empty, but it can be filled with menu items by using the `AppendMenu` function");
+registerFunc("SetMenu", "function SetMenu(window : HWND, menu : HMENU) : BOOL", "Assigns a new menu to the specified window.");
+registerFunc("RemoveMenu", "function RemoveMenu(menu : HMENU, position : number, flags : MF_BY...) : BOOL", "Deletes a menu item or detaches a submenu from the specified menu.  \n**RemoveMenu** does not destroy the menu or its handle, allowing the menu to be reused.  \n`flags` can be any `MF_BY`... const");
+registerFunc("AppendMenu", "function AppendMenu(menu : HMENU, flags : MF_..., id : number, name : wstring) : BOOL", "Appends a new item to the end of the specified menu bar, drop-down menu, submenu, or shortcut menu. You can use this function to specify the content, appearance, and behavior of the menu item.  \n`flags` can be any `MF`..., `MFT`..., or `MFS`... const");
+registerFunc("DestroyMenu", "function DestroyMenu(menu : HMENU) : BOOL", "Destroys the specified menu and frees any memory that the menu occupies.");
+registerFunc("DeleteMenu", "function DeleteMenu(menu : HMENU, position : number, flags : MF_BY...) : BOOL", "`flags` can be any `MF_BY`... const");
 registerFunc("CreateWindow", "function CreateWindow(extendedStyle : number, wndclass : WNDCLASSEXW | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number, hwndParent? : HWND | number, hMenu? : HMENU | number, hInstance? : HINSTANCE | number) : HWND | number", "the extendedStyles can be any `WS_EX_` const (can be OR'd together)  \nthe `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL` ((MSDN link for all special classes)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw#remarks])  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \nreturns the pointer to the newly created window (`HWND`)");
 registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const (can be OR'd together)  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
@@ -2827,5 +2833,50 @@ const macros = [
     "D2D1_HDRTONEMAP_DISPLAY_MODE_SDR",
     "D2D1_HDRTONEMAP_DISPLAY_MODE_HDR",
     "D2D1_HDRTONEMAP_DISPLAY_MODE_FORCE_DWORD",
+    "MF_INSERT",
+    "MF_CHANGE",
+    "MF_APPEND",
+    "MF_DELETE",
+    "MF_REMOVE",
+    "MF_BYCOMMAND",
+    "MF_BYPOSITION",
+    "MF_SEPARATOR",
+    "MF_ENABLED",
+    "MF_GRAYED",
+    "MF_DISABLED",
+    "MF_UNCHECKED",
+    "MF_CHECKED",
+    "MF_USECHECKBITMAPS",
+    "MF_STRING",
+    "MF_BITMAP",
+    "MF_OWNERDRAW",
+    "MF_POPUP",
+    "MF_MENUBARBREAK",
+    "MF_MENUBREAK",
+    "MF_UNHILITE",
+    "MF_HILITE",
+    "MF_DEFAULT",
+    "MF_SYSMENU",
+    "MF_HELP",
+    "MF_RIGHTJUSTIFY",
+    "MF_MOUSESELECT",
+    "MF_END",
+    "MFT_STRING",
+    "MFT_BITMAP",
+    "MFT_MENUBARBREAK",
+    "MFT_MENUBREAK",
+    "MFT_OWNERDRAW",
+    "MFT_RADIOCHECK",
+    "MFT_SEPARATOR",
+    "MFT_RIGHTORDER",
+    "MFT_RIGHTJUSTIFY",
+    "MFS_GRAYED",
+    "MFS_DISABLED",
+    "MFS_CHECKED",
+    "MFS_HILITE",
+    "MFS_ENABLED",
+    "MFS_UNCHECKED",
+    "MFS_UNHILITE",
+    "MFS_DEFAULT",
 ];
 //# sourceMappingURL=extension.js.map
