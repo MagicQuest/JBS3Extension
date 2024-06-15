@@ -2879,5 +2879,9 @@ const macros = [
     "MFS_UNCHECKED",
     "MFS_UNHILITE",
     "MFS_DEFAULT",
+    "D2D1_FIGURE_BEGIN_FILLED",
+    "D2D1_FIGURE_BEGIN_HOLLOW",
+    "D2D1_FIGURE_END_OPEN",
+    "D2D1_FIGURE_END_CLOSED",
 ];
 //# sourceMappingURL=extension.js.map
