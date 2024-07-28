@@ -279,7 +279,7 @@ registerFunc("DrawIcon", "function DrawIcon(dc : HDC | number, xLeft : number, y
 registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIconName : number) : HICON | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadIconA(hInstance, lpIconName)` function");
 registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works  \nuses CreateIconIndirect to create an icon with the bitmap");
 
-registerFunc("createCanvas", "function createCanvas(context : string, type : number, window? : HWND | number) : object<type>", "valid args are `d2d`/`direct2d` and `ID2D1RenderTarget`/`ID2D1DCRenderTarget`  \n`direct3d`/`d3d` not yet implemented  \nreturns an object for the specified type");
+registerFunc("createCanvas", "function createCanvas(context : string, type : number, window? : HWND | number) : object<type>", "valid args are `d2d`/`direct2d` and `ID2D1RenderTarget`/`ID2D1DCRenderTarget`/`ID2D1DeviceContext`/`ID2D1DeviceContextDComposition`  \n`direct3d`/`d3d` not yet implemented  \nreturns an object for the specified type");
 
 registerFunc("Sleep", "function Sleep(ms : number) : void", "calls the native `Sleep(ms)` function to pause the current thread for x milliseconds");
 
@@ -307,7 +307,7 @@ registerFunc("SetForegroundWindow", "function SetForegroundWindow(hwnd : HWND | 
 registerFunc("GetActiveWindow", "function GetActiveWindow(void) : HWND | number", "slightly different than the foreground window and doesn't seem do anything");
 registerFunc("SetActiveWindow", "function SetActiveWindow(hwnd : HWND | number) : HWND | number", "sets the active window (usually for text input windows i think)  \nreturns 0 if failed i think");
 
-registerFunc("SetLayeredWindowAttributes", "function SetLayeredWindowAttributes(hwnd : HWND | number, transparencyColor : RGB | number, alpha : number, dwFlags : number) : number", "`transparencyColor` is an `RGB()` value  \nalpha is 0-255  \ndwFlags can be any `LWA_` const [(wtf flags can be OR'd together???)](https://stackoverflow.com/questions/43712796/draw-semitransparently-in-invisible-layered-window)  \nreturns 0 if failed");
+registerFunc("SetLayeredWindowAttributes", "function SetLayeredWindowAttributes(hwnd : HWND | number, transparencyColor : RGB | number, alpha : number, dwFlags : number) : number", "`transparencyColor` is an `RGB()` value  \nalpha is 0-255  \ndwFlags can be any `LWA_` const [(wtf the flags can be OR'd together???)](https://stackoverflow.com/questions/43712796/draw-semitransparently-in-invisible-layered-window)  \nreturns 0 if failed");
 registerFunc("GetLayeredWindowAttributes", "function GetLayeredWindowAttributes(hwnd : HWND | number) : {transparencyColor : number, alpha : number, dwFlags : number}", "returns an object with properties about this thing ykyk");
 registerFunc("UpdateLayeredWindow", "function UpdateLayeredWindow(hwnd : HWND | number, hdcDst : HDC | number, newPosition? : POINT, newSize? : SIZE, hdcSrc? : HDC | number, location? : POINT, crKey : RGB | number, SourceConstantAlpha? : number, AlphaFormat? : number, dwFlags : number) : number", "if `hdcSrc` is NULL, hdcDst must be NULL  \nif the current position is not changing, `newPosition` can be NULL  \nif the size of the window is not changing `newSize` can be NULL  \nIf the shape and visual context of the window are not changing, `hdcSrc` can be **NULL**  \nif `hdcSrc` is NULL `location` should be NULL  \ncrKey is an integer created with `RGB(r,g,b)`  \n`AlphaFormat` can be `AC_SRC_ALPHA`  \n[`SourceConstantAlpha` and `AlphaFormat`](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-blendfunction) can be NULL if dwFlags = `ULW_COLORKEY`  \nreturns 0 if failed  \n[MSDN](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-updatelayeredwindow)");
 
@@ -325,6 +325,7 @@ registerFunc("MakeMouseInput", "function MakeMouseInput(x : number, y : number, 
 registerFunc("GetLastError", "function GetLastError(void) : number", "calls the native `GetLastError()` function  \nreturns the last error code`");
 
 registerFunc("IsIconic", "function IsIconic(hwnd : HWND | number) : boolean", "checks if the window is minimized");
+registerFunc("IsWindowVisible", "function IsWindowVisible(hwnd : HWND | number) : boolean", "checks if the window is visible");
 registerFunc("IsChild", "function IsChild(hwndParent : HWND | number, hwnd : HWND | number) : boolean", "checks if `hwnd` is the child of `hwndParent`");
 registerFunc("SetParent", "function SetParent(hwndChild : HWND | number, hwndNewParent : HWND | number) : boolean", "sets the parent of `hwndChild`");
 registerFunc("GetParent", "function GetParent(hwnd : HWND | number) : HWND", "returns the parent's `HWND`");
@@ -452,6 +453,19 @@ registerFunc("spawn", "function spawn(func : Function) : void", "just like the l
 registerFunc("SetWinEventHook", "function SetWinEventHook(eventMin : number, eventMax : number, dllHandle : NULL | HMODULE, eventProc : Function(hook, event, hwnd, idObject, idChild, idEventThread, dwmsEventTime), idProcess : number, idThread : number, dwFlags : number) : void", "eventMin and eventMax can be any `EVENT_` const  \ndllHandle can probably just be `NULL`  \n`idProcess` can be 0 for all processes and `idThread` can be 0 for all threads on the desktop  \ndwFlags can be any `WINEVENT_` const");
 registerFunc("UnhookWinEvent", "function UnhookWinEvent(hook : HWINEVENTHOOK | number) : BOOL", "hook must be a value returned from SetWinEventHook  \nreturns true if success");
 
+registerFunc("GetWindowThreadProcessId", "function GetWindowThreadProcessId(hwnd : HWND | number) : {processID, thread}", "returns an object with `processID` and `thread` properties");
+
+registerFunc("GetProcessMemoryInfo", "function GetProcessMemoryInfo(hProcess : HANDLE) : {cb, PageFaultCount, PeakWorkingSetSize, WorkingSetSize, QuotaPeakPagedPoolUsage, QuotaPagedPoolUsage, QuotaPeakNonPagedPoolUsage, QuotaNonPagedPoolUsage, PagefileUsage, PeakPagefileUsage, PrivateUsage}", "");
+
+registerFunc("EnumProcesses", "function EnumProcesses(func : Function(pid)) : void", "gives the process ids of all running processes probably i thuink");
+registerFunc("OpenProcess", "function OpenProcess(dwFlags : number, bInheritHandle : boolean, dwProcessId : number) : HANDLE", "`dwFlags` can be any `PROCESS_`... const (and can be OR'd together)  \n`bInheritHandle` can probably just be `false`  \nuse EnumProcesses to iterate through a list of process ids for `dwProcessId`");
+registerFunc("EnumProcessModules", "function EnumProcessModules(hProcess : HANDLE) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
+registerFunc("EnumProcessModulesEx", "function EnumProcessModulesEx(hProcess : HANDLE, dwFlags : number) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \ndwFlags can be any `LIST_MODULES_`... const   \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
+registerFunc("GetModuleBaseName", "function GetModuleBaseName(hProcess : HANDLE, hMod : HMODULE) : wstr", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the name or undefined (apparently)");
+registerFunc("GetModuleFileName", "function GetModuleFileName(hMod : HMODULE) : wstr", "`hMod` can be obtained by calling `EnumProcessModules`  \nreturns the path of the file that contains the module");
+registerFunc("GetModuleFileNameEx", "function GetModuleFileNameEx(hProcess : HANDLE, hMod : HMODULE) : wstr", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the path of the file that contains the module");
+registerFunc("CloseHandle", "function CloseHandle(hObject : HANDLE) : BOOL", "use on HANDLE(s) returned from `OpenProcess` when done with them  \ndo not call CloseHandle on any HMODULE(s) returned from both `EnumProcessModules(Ex)`  \nreturns 1 if success");
+
 function emptyD2DObject() : Array<[string, vscode.CompletionItemKind?]> {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]];//{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -525,6 +539,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     const DIBSection : JBSObjects = {props : [["bitmap"], ["_bits"], ["SetBit", vscode.CompletionItemKind.Method], ["GetBit", vscode.CompletionItemKind.Method], ["GetBits", vscode.CompletionItemKind.Method], ["SetBits", vscode.CompletionItemKind.Method], ["bitCount"], ["width"], ["height"]]};
 
+    const MEMINFOOBJECT : JBSObjects = {props : [["cb"],["PageFaultCount"],["PeakWorkingSetSize"],["WorkingSetSize"],["QuotaPeakPagedPoolUsage"],["QuotaPagedPoolUsage"],["QuotaPeakNonPagedPoolUsage"],["QuotaNonPagedPoolUsage"],["PagefileUsage"],["PeakPagefileUsage"],["PrivateUsage"],]};
+
+    const TPID : JBSObjects = {props : [["processID"], ["thread"]]};
+
 	const objectReturningFunctions:Array<[string, JBSObjects]> = [
         ["createCanvas", CanvasObject],
         ["GetWindowRect", RectObject],
@@ -566,6 +584,8 @@ export function activate(context: vscode.ExtensionContext) {
         ["GetPreview", WICBitmap],
         ["GetBitmapFrame", WICBitmap],
         ["LoadDecoder", WICDecoder],
+        ["GetProcessMemoryInfo", MEMINFOOBJECT],
+        ["GetWindowThreadProcessId", TPID],
     ];
 
     const createCanvasSpecial:Array<[string, string, JBSObjects]> = [
@@ -3139,4 +3159,54 @@ const macros:string[] = [
     "ALERT_SYSTEM_QUERY",
     "ALERT_SYSTEM_CRITICAL",
     "CALERT_SYSTEM",
+    "PROCESS_TERMINATE",
+    "PROCESS_CREATE_THREAD",
+    "PROCESS_SET_SESSIONID",
+    "PROCESS_VM_OPERATION",
+    "PROCESS_VM_READ",
+    "PROCESS_VM_WRITE",
+    "PROCESS_DUP_HANDLE",
+    "PROCESS_CREATE_PROCESS",
+    "PROCESS_SET_QUOTA",
+    "PROCESS_SET_INFORMATION",
+    "PROCESS_QUERY_INFORMATION",
+    "PROCESS_SUSPEND_RESUME",
+    "PROCESS_QUERY_LIMITED_INFORMATION",
+    "PROCESS_SET_LIMITED_INFORMATION",
+    "PROCESS_ALL_ACCESS",
+    "THREAD_TERMINATE",
+    "THREAD_SUSPEND_RESUME",
+    "THREAD_GET_CONTEXT",
+    "THREAD_SET_CONTEXT",
+    "THREAD_QUERY_INFORMATION",
+    "THREAD_SET_INFORMATION",
+    "THREAD_SET_THREAD_TOKEN",
+    "THREAD_IMPERSONATE",
+    "THREAD_DIRECT_IMPERSONATION",
+    "THREAD_SET_LIMITED_INFORMATION",
+    "THREAD_QUERY_LIMITED_INFORMATION",
+    "THREAD_RESUME",
+    "THREAD_ALL_ACCESS",
+    "JOB_OBJECT_ASSIGN_PROCESS",
+    "JOB_OBJECT_SET_ATTRIBUTES",
+    "JOB_OBJECT_QUERY",
+    "JOB_OBJECT_TERMINATE",
+    "JOB_OBJECT_SET_SECURITY_ATTRIBUTES",
+    "JOB_OBJECT_IMPERSONATE",
+    "JOB_OBJECT_ALL_ACCESS",
+    "DELETE",
+    "READ_CONTROL",
+    "WRITE_DAC",
+    "WRITE_OWNER",
+    "SYNCHRONIZE",
+    "STANDARD_RIGHTS_REQUIRED",
+    "STANDARD_RIGHTS_READ",
+    "STANDARD_RIGHTS_WRITE",
+    "STANDARD_RIGHTS_EXECUTE",
+    "STANDARD_RIGHTS_ALL",
+    "SPECIFIC_RIGHTS_ALL",
+    "LIST_MODULES_32BIT",
+    "LIST_MODULES_64BIT",
+    "LIST_MODULES_ALL",
+    "LIST_MODULES_DEFAULT",
 ];
