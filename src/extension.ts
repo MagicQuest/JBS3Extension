@@ -77,7 +77,7 @@ const objectFunctions : SpecialArray = {
 	"CreateBitmap" : makeArgs("function CreateBitmap(width : number, height : number) : Bitmap", "creates an empty bitmap with the specified `width` and `height`  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
     "CreateBitmapFromDxgiSurface" : makeArgs("function CreateBitmapFromDxgiSurface(bitmapOptions : D2D1_BITMAP_OPTIONS, format? : DXGI_FORMAT, alphaMode? : D2D1_ALPHA_MODE) : Bitmap", "`bitmapOptions` are any ``"),
     "CreateBitmapFromFilename" : makeArgs("function CreateBitmapFromFilename(filename : string, frame : number) : Bitmap", "**ONLY WORKS IF YOU CREATED `D2D` AND PASSED A `WIC` OBJECT AS THE LAST PARAMETER**  \ncreates a bitmap with the specified image inside (can be .png/.jpg/.bmp/.whatever)  \nif the file specified with filename is a gif `frame` lets you choose which frame of the gif to load   \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
-    "CreateBitmapFromWicBitmap" : makeArgs("function CreateBitmapFromWicBitmap(wicBitmap : wicBitmap, release : boolean) : Bitmap", "creates a d2d bitmap from a wic bitmap  \nset release to true if you want to `.Release` the wicBitmap  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
+    "CreateBitmapFromWicBitmap" : makeArgs("function CreateBitmapFromWicBitmap(wicBitmap : wicBitmap, release : boolean) : Bitmap", "creates a d2d bitmap from a wic bitmap  \nset release to true if you want to `.Release` the wicBitmap  \nreturns a custom object with all ID2D1Bitmap properties besides (`Get`/`Set`)`Transform`"),
 	"DrawBitmap" : makeArgs("function DrawBitmap(bitmap : Bitmap, destLeft? : number, destTop? : number, destRight? : number, destBottom? : number, opacity? : float, bitmapInterpolationMode? : enum D2D1_BITMAP_INTERPOLATION_MODE, srcLeft? : number, srcTop? : number, srcRight? : number, srcBottom? : number) : void", "the `dest` args are where the bitmap will be drawn  \nthe `src` args are how much of the bitmap will be drawn (optional because defaults)  \ninterpolationMode can be any `D2D1_BITMAP_INTERPOLATION_MODE` const"),
 	"DrawImage" : makeArgs("function DrawImage(image : Bitmap | Image | Effect, x? : float, y? : float, srcLeft? : float, srcTop? : float, srcRight? : float, srcBottom? : float, interpolationMode? : D2D1_INTERPOLATION_MODE) : void", "interpolationMode can be any `D2D1_INTERPOLATION_MODE` const"),
 	"CreateBitmapBrush" : makeArgs("function CreateBitmapBrush(bitmap : Bitmap) : BitmapBrush", "returns a bitmap brush with ykykyk look at `direct2d CreateBitmapBrush msn` dawg"),
@@ -115,7 +115,8 @@ const objectFunctions : SpecialArray = {
     "GetPixelSize" : makeArgs("function GetPixelSize(void) : {width : number, height : number}", "returns an object with pixelWidth and pixelHeight fields/properties ig about this brush"),
     //"GetSize" : makeArgs("function GetSize(void) : {width : number, height : number}", "returns an object with width and height fields/properties ig about this brush"),
     "CopyFromBitmap" : makeArgs("function CopyFromBitmap(startX : number, startY : number, bmp : ID2D1Bitmap, srcLeft : number, srcTop : number, srcRight : number, srcBottom : number) : number", "copies the supplied `bmp` into this bmp  \nreturns 0 or an HRESULT code if failed"),
-    "CopyFromRenderTarget" : makeArgs("function CopyFromRenderTarget(startX : number, startY : number, renderTarget : ID2D1RenderTarget | number, srcLeft : number, srcTop : number, srcRight : number, srcBottom : number) : void", "copied the supplied `renderTarget` into this bmp"),
+    "CopyFromRenderTarget" : makeArgs("function CopyFromRenderTarget(startX : number, startY : number, renderTarget : ID2D1RenderTarget | number, srcLeft : number, srcTop : number, srcRight : number, srcBottom : number) : void", "copies the supplied `renderTarget` into this bmp"),
+    "CopyFromMemory" : makeArgs("function CopyFromMemory(srcLeft : number, srcTop : number, srcRight : number, srcBottom : number, data : Uint32Array) : void", "copied the supplied `renderTarget` into this bmp"),
     "SetColor" : makeArgs("function SetColor(r : float, g : float, b : float, a : float) : void", "sets the color of this brush  \nunlike the GDI drawing function `r`,`g`,`b`,and `a` must be from 0-1 as decimals"),
     "GetBit" : makeArgs("function GetBit(i : number) : RGBA", "`i` is the index  \nreturns an `RGBA` value which is basically RGB (and you can use the `GetRValue`... functions on it) but see `updatelayeredwindow(dibits).js` for a definition of RGBA"),
     "SetBit" : makeArgs("function SetBit(i : number, color : RGBA) : void", "`i` is the index  \n`color` is an `RGBA` value which is defined in `updatelayeredwindow(dibits).js`"),
@@ -134,8 +135,8 @@ const objectFunctions : SpecialArray = {
     "GetContainerFormat" : makeArgs("function GetContainerFormat(void) : GUID", "returns the GUID associated with this decoder"),
     "ConvertBitmapSource" : makeArgs("function ConvertBitmapSource(dstFormat : GUID, srcBitmap : wicBitmap) : wicBitmap", "converts the srcBitmap to the dstFormat  \nreturns a bitmap with the specified format"),
     //"Resize" : makeArgs("function Resize(wic : any, newWidth : number, newHeight : number, interpolationMode : WICBitmapInterpolationMode) : void", "VOID NIGGAR"),
-    "CreateBitmapFromHBITMAP" : makeArgs("function CreateBitmapFromHBITMAP(srcBitmap : HBITMAP, palette? : number, alphaMode : WICBitmapAlphaChannelOption, format : GUID)", "srcBitmap must be an HBITMAP (for example one gained from `CreateDIBSection()`.bitmap)  \npalette may be NULL if there was no palette used to create the srcBitmap  \nalphaMode can be any `WICBitmapAlphaChannelOption`... const  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
-    "CreateBitmapFromHICON" : makeArgs("function CreateBitmapFromHICON(srcIcon : HICON, format : GUID)", "srcIcon must be an HICON (for example one gained from `CreateIconIndirect()`)  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
+    "CreateBitmapFromHBITMAP" : makeArgs("function CreateBitmapFromHBITMAP(srcBitmap : HBITMAP, palette? : number, alphaMode : WICBitmapAlphaChannelOption, format : GUID) : IWICBitmap", "srcBitmap must be an HBITMAP (for example one gained from `CreateDIBSection()`.bitmap)  \npalette may be NULL if there was no palette used to create the srcBitmap  \nalphaMode can be any `WICBitmapAlphaChannelOption`... const  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
+    "CreateBitmapFromHICON" : makeArgs("function CreateBitmapFromHICON(srcIcon : HICON, format : GUID) : IWICBitmap", "srcIcon must be an HICON (for example one gained from `CreateIconIndirect()`)  \nformat can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
     "LoadBitmapFromBinaryData" : makeArgs("function LoadBitmapFromBinaryData(binary : ArrayBuffer, format : GUID, frameNumber : number, container : GUID) : wicBitmap", "`binary` can be a buffer gained from `require('fs')`'s `readBinary` function  \nformat and container can be any `GUID_`... const (you must use `ScopeGUIDs` before accessing any `GUID_`... const)"),
     "CreateEffect" : makeArgs("function CreateEffect(effect : GUID) : ID2D1Effect", "CreateEffect can ONLY be used with a canvas created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
 };
@@ -278,6 +279,7 @@ registerFunc("DrawIconEx", "function DrawIconEx(dc : HDC | number, xLeft : numbe
 registerFunc("DrawIcon", "function DrawIcon(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number) : number", "calls the native `DrawIcon(...)` function  \nreturns 0 if failed`");
 registerFunc("LoadIcon", "function LoadIcon(hInstance : HINSTANCE | number, lpIconName : number) : HICON | number", "if it isn't working pass hInstance as NULL  \ncalls the native `LoadIconA(hInstance, lpIconName)` function");
 registerFunc("HICONFromHBITMAP", "function HICONFromHBITMAP(bitmap : HBITMAP | number) : HICON | number", "some random function i found on the interwebs lets see if it works  \nuses CreateIconIndirect to create an icon with the bitmap");
+registerFunc("ExtractAssociatedIcon", "function ExtractAssociatedIcon(hInstance : HINSTANCE | number, path : string) : {icon : HICON, id : number}", "loads an icon from the file specified with `path` (for example it can be an .exe file)  \nreturns an object with properties `icon` (which is the actual HICON) and `id` (which idk really know what it means)  \nwhen the icon is no longer needed call `DestroyIcon` to free the handle");
 
 registerFunc("createCanvas", "function createCanvas(context : string, type : number, window? : HWND | number) : object<type>", "valid args are `d2d`/`direct2d` and `ID2D1RenderTarget`/`ID2D1DCRenderTarget`/`ID2D1DeviceContext`/`ID2D1DeviceContextDComposition`  \n`direct3d`/`d3d` not yet implemented  \nreturns an object for the specified type");
 
@@ -466,6 +468,8 @@ registerFunc("GetModuleFileName", "function GetModuleFileName(hMod : HMODULE) : 
 registerFunc("GetModuleFileNameEx", "function GetModuleFileNameEx(hProcess : HANDLE, hMod : HMODULE) : wstr", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the path of the file that contains the module");
 registerFunc("CloseHandle", "function CloseHandle(hObject : HANDLE) : BOOL", "use on HANDLE(s) returned from `OpenProcess` when done with them  \ndo not call CloseHandle on any HMODULE(s) returned from both `EnumProcessModules(Ex)`  \nreturns 1 if success");
 
+registerFunc("GlobalMemoryStatusEx", "function GlobalMemoryStatusEx(void) : {}", "returns an object with alot of info about current memory availability");
+
 function emptyD2DObject() : Array<[string, vscode.CompletionItemKind?]> {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]];//{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -509,7 +513,7 @@ export function activate(context: vscode.ExtensionContext) {
     const TextLayoutObject : JBSObjects = {props : [...defaultTextFormatObject(), ["DetermineMinWidth", vscode.CompletionItemKind.Method],["GetDrawingEffect", vscode.CompletionItemKind.Method],["GetLineMetrics", vscode.CompletionItemKind.Method],["GetMaxHeight", vscode.CompletionItemKind.Method],["GetMaxWidth", vscode.CompletionItemKind.Method],["GetMetrics", vscode.CompletionItemKind.Method],["GetOverhangMetrics", vscode.CompletionItemKind.Method],["GetStrikethrough", vscode.CompletionItemKind.Method],["GetUnderline", vscode.CompletionItemKind.Method],["HitTestPoint", vscode.CompletionItemKind.Method],["HitTestTextPosition", vscode.CompletionItemKind.Method],["HitTestTextRange", vscode.CompletionItemKind.Method],["SetDrawingEffect", vscode.CompletionItemKind.Method],["SetFontFamilyName", vscode.CompletionItemKind.Method],["SetFontStretch", vscode.CompletionItemKind.Method],["SetFontStyle", vscode.CompletionItemKind.Method],["SetFontWeight", vscode.CompletionItemKind.Method],["SetMaxHeight", vscode.CompletionItemKind.Method],["SetMaxWidth", vscode.CompletionItemKind.Method],["SetStrikethrough", vscode.CompletionItemKind.Method],["SetUnderline", vscode.CompletionItemKind.Method]]};
     //bruh i added this and when i ran the extension nothing happened and vscode just stopped compiling the extension
 
-    const BitmapObject : JBSObjects = {props : [...emptyD2DObject(), ["GetDpi", vscode.CompletionItemKind.Method], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["CopyFromBitmap", vscode.CompletionItemKind.Method], ["CopyFromRenderTarget", vscode.CompletionItemKind.Method]]};
+    const BitmapObject : JBSObjects = {props : [...emptyD2DObject(), ["GetDpi", vscode.CompletionItemKind.Method], ["GetPixelFormat", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["CopyFromBitmap", vscode.CompletionItemKind.Method], ["CopyFromRenderTarget", vscode.CompletionItemKind.Method], ["CopyFromMemory", vscode.CompletionItemKind.Method]]};
     const BitmapBrushObject : JBSObjects = {props : [...defaultBrushObject(), ["GetExtendModeX", vscode.CompletionItemKind.Method], ["GetExtendModeY", vscode.CompletionItemKind.Method], ["GetExtendMode", vscode.CompletionItemKind.Method], ["GetInterpolationMode", vscode.CompletionItemKind.Method], ["SetExtendModeX", vscode.CompletionItemKind.Method], ["SetExtendModeY", vscode.CompletionItemKind.Method], ["SetExtendMode", vscode.CompletionItemKind.Method], ["SetInterpolationMode", vscode.CompletionItemKind.Method], ["SetBitmap", vscode.CompletionItemKind.Method], ["GetBitmap", vscode.CompletionItemKind.Method]]};
 
     const WICObject : JBSObjects = {props : [...emptyD2DObject(), ["LoadBitmapFromFilename", vscode.CompletionItemKind.Method], ["LoadDecoder", vscode.CompletionItemKind.Method], ["ConvertBitmapSource", vscode.CompletionItemKind.Method], ["CreateBitmapFromHBITMAP", vscode.CompletionItemKind.Method], ["CreateBitmapFromHICON", vscode.CompletionItemKind.Method], ["LoadBitmapFromBinaryData", vscode.CompletionItemKind.Method]]};
@@ -542,6 +546,8 @@ export function activate(context: vscode.ExtensionContext) {
     const MEMINFOOBJECT : JBSObjects = {props : [["cb"],["PageFaultCount"],["PeakWorkingSetSize"],["WorkingSetSize"],["QuotaPeakPagedPoolUsage"],["QuotaPagedPoolUsage"],["QuotaPeakNonPagedPoolUsage"],["QuotaNonPagedPoolUsage"],["PagefileUsage"],["PeakPagefileUsage"],["PrivateUsage"],]};
 
     const TPID : JBSObjects = {props : [["processID"], ["thread"]]};
+
+    const MSEX : JBSObjects = {props : [["dwLength"], ["dwMemoryLoad"], ["ullTotalPhys"], ["ullAvailPhys"], ["ullTotalPageFile"], ["ullAvailPageFile"], ["ullTotalVirtual"], ["ullAvailVirtual"], ["ullAvailExtendedVirtual"], ]};
 
 	const objectReturningFunctions:Array<[string, JBSObjects]> = [
         ["createCanvas", CanvasObject],
@@ -586,6 +592,7 @@ export function activate(context: vscode.ExtensionContext) {
         ["LoadDecoder", WICDecoder],
         ["GetProcessMemoryInfo", MEMINFOOBJECT],
         ["GetWindowThreadProcessId", TPID],
+        ["GlobalMemoryStatusEx", MSEX],
     ];
 
     const createCanvasSpecial:Array<[string, string, JBSObjects]> = [
