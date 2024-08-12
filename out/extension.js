@@ -3112,5 +3112,17 @@ const macros = [
     "STD_INPUT_HANDLE",
     "STD_OUTPUT_HANDLE",
     "STD_ERROR_HANDLE",
+    "EASYTAB_OK",
+    "EASYTAB_MEMORY_ERROR",
+    "EASYTAB_X11_ERROR",
+    "EASYTAB_DLL_LOAD_ERROR",
+    "EASYTAB_WACOM_WIN32_ERROR",
+    "EASYTAB_INVALID_FUNCTION_ERROR",
+    "EASYTAB_EVENT_NOT_HANDLED",
+    "EASYTAB_TRACKING_MODE_SYSTEM",
+    "EASYTAB_TRACKING_MODE_RELATIVE",
+    "EasyTab_Buttons_Pen_Touch",
+    "EasyTab_Buttons_Pen_Lower",
+    "EasyTab_Buttons_Pen_Upper", //why are these not capitalized
 ];
 //# sourceMappingURL=extension.js.map

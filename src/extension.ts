@@ -475,6 +475,19 @@ registerFunc("CloseHandle", "function CloseHandle(hObject : HANDLE) : BOOL", "us
 
 registerFunc("GlobalMemoryStatusEx", "function GlobalMemoryStatusEx(void) : {}", "returns an object with alot of info about current memory availability");
 
+registerFunc("EasyTab_Load", "function EasyTab_Load(window : HWND | number) : EasyTabResult | number", "returns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
+registerFunc("EasyTab_Load_Ex", "function EasyTab_Load_Ex(window : HWND | number, trackingMode : EasyTabTrackingMode | number, relativeModeSensitivity : float, moveCursor : number) : EasyTabResult | number", "trackingMode is any `EASYTAB_TRACKING_MODE_`... const  \nhonestly i think moveCursor should just be boolean but idk  \nreturns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
+registerFunc("EasyTab_HandleEvent", "function EasyTab_HandleEvent(window : HWND | number, msg : number, lp : number, wp : number) : ", "use this function in your window procedure function (check `neweasytabfuncs.js`)  \nreturns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
+registerFunc("EasyTab_GetPosX", "function EasyTab_GetPosX(void) : void", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetPosY", "function EasyTab_GetPosY(void) : void", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetPressure", "function EasyTab_GetPressure(void) : void", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetButtons", "function EasyTab_GetButtons(void) : void", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetRangeX", "function EasyTab_GetRangeX(void) : void", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetRangeY", "function EasyTab_GetRangeY(void) : void", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetMaxPressure", "function EasyTab_GetMaxPressure(void) : void", "haha max design pro");
+registerFunc("EasyTab_Unload", "function EasyTab_Unload(void) : void", "use this function when you no longer need EasyTab");
+
+
 function emptyD2DObject() : Array<[string, vscode.CompletionItemKind?]> {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]];//{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -3240,4 +3253,16 @@ const macros:string[] = [
     "STD_INPUT_HANDLE",
     "STD_OUTPUT_HANDLE",
     "STD_ERROR_HANDLE",
+    "EASYTAB_OK",
+    "EASYTAB_MEMORY_ERROR",
+    "EASYTAB_X11_ERROR",
+    "EASYTAB_DLL_LOAD_ERROR",
+    "EASYTAB_WACOM_WIN32_ERROR",
+    "EASYTAB_INVALID_FUNCTION_ERROR",
+    "EASYTAB_EVENT_NOT_HANDLED",
+    "EASYTAB_TRACKING_MODE_SYSTEM",
+    "EASYTAB_TRACKING_MODE_RELATIVE",
+    "EasyTab_Buttons_Pen_Touch", //why are these not capitalized
+    "EasyTab_Buttons_Pen_Lower", //why are these not capitalized
+    "EasyTab_Buttons_Pen_Upper", //why are these not capitalized
 ];
