@@ -413,6 +413,7 @@ registerFunc("EasyTab_GetRangeX", "function EasyTab_GetRangeX(void) : void", "(c
 registerFunc("EasyTab_GetRangeY", "function EasyTab_GetRangeY(void) : void", "(check `neweasytabfuncs.js` for use)");
 registerFunc("EasyTab_GetMaxPressure", "function EasyTab_GetMaxPressure(void) : void", "haha max design pro");
 registerFunc("EasyTab_Unload", "function EasyTab_Unload(void) : void", "use this function when you no longer need EasyTab");
+registerFunc("MAKELPARAM", "function MAKELPARAM(low : number, high : number) : number", "`low` is the low-order word of the returned value  \n`high` is the high-order word of the returned value  \nuse `MAKELPARAM` for `SendMessage` with a progress bar hwnd and `PBM_SETRANGE`  \n<---------------DWORD--------------->  \n[00000000:00000000:00000000:00000000]  \n<-----HIWORD-----><------LOWORD----->");
 function emptyD2DObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -3135,6 +3136,30 @@ const macros = [
     "EASYTAB_TRACKING_MODE_RELATIVE",
     "EasyTab_Buttons_Pen_Touch",
     "EasyTab_Buttons_Pen_Lower",
-    "EasyTab_Buttons_Pen_Upper", //why are these not capitalized
+    "EasyTab_Buttons_Pen_Upper",
+    "PBS_SMOOTH",
+    "PBS_VERTICAL",
+    "PBM_SETRANGE",
+    "PBM_SETPOS",
+    "PBM_DELTAPOS",
+    "PBM_SETSTEP",
+    "PBM_STEPIT",
+    "PBM_SETRANGE32",
+    "PBM_GETRANGE",
+    "PBM_GETPOS",
+    "PBM_SETBARCOLOR",
+    "PBM_SETBKCOLOR",
+    "PBS_MARQUEE",
+    "PBM_SETMARQUEE",
+    "PBS_SMOOTHREVERSE",
+    "PBM_GETSTEP",
+    "PBM_GETBKCOLOR",
+    "PBM_GETBARCOLOR",
+    "PBM_SETSTATE",
+    "PBM_GETSTATE",
+    "PBST_NORMAL",
+    "PBST_ERROR",
+    "PBST_PAUSED",
+    "PROGRESS_CLASS",
 ];
 //# sourceMappingURL=extension.js.map
