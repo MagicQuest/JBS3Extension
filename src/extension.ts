@@ -490,6 +490,17 @@ registerFunc("EasyTab_Unload", "function EasyTab_Unload(void) : void", "use this
 
 registerFunc("MAKELPARAM", "function MAKELPARAM(low : number, high : number) : number", "`low` is the low-order word of the returned value  \n`high` is the high-order word of the returned value  \nuse `MAKELPARAM` for `SendMessage` with a progress bar hwnd and `PBM_SETRANGE`  \n<---------------DWORD--------------->  \n[00000000:00000000:00000000:00000000]  \n<-----HIWORD-----><------LOWORD----->");
 
+registerFunc("MakeRAWINPUTDEVICE", "function MakeRAWINPUTDEVICE(usUsagePage : number, usUsage : number, dwFlags : number, hwndTarget : HWND) : {usUsagePage, usUsage, dwFlags, hwndTarget}", "convenience function for use with `RegisterRawInputDevices`  \ninfo about `usUsagePage` and `usUsage` can be found on these helpful charts [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/hid/top-level-collections-opened-by-windows-for-system-use) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/hid/hid-usages#usage-page)  \n`dwFlags` can be any [`RIDEV_`... const](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawinputdevice) (i think they can be OR'd together)  \n`hwndTarget` can be NULL or your window (msdn says If **NULL**, raw input events follow the keyboard focus to ensure only the focused application window receives the events.)");
+registerFunc("RegisterRawInputDevices", "function RegisterRawInputDevices(deviceList : Array<RAWINPUTDEVICE> | RAWINPUTDEVICE)", "`deviceList` must be either an array or a single object containing `usUsagePage`, `usUsage`, `dwFlags`, and `hwndTarget` properties (an easy way to get such an object is to use the `MakeRAWINPUTDEVICE` function)");
+registerFunc("GetRawInputDeviceListLength", "function GetRawInputDeviceListLength() : number", "returns the amount of raw devices connected i think (for optional use with `GetRawInputDeviceList`)");
+registerFunc("GetRawInputDeviceList", "function GetRawInputDeviceList(count? : number) : Array<{hDevice, dwType}>", "`count` is optional now lol but if you do use it probably don't put a large number because that shit will probably blow up  \nif successful will return an array of objects with `hDevice` (HANDLE) and `dwType` (`RID_TYPE`...) properties (for use with the `GetRawInputDeviceInfo` function)");
+registerFunc("GetRawInputDeviceInfo", "function GetRawInputDeviceInfo(hDevice : HANDLE | number, uiCommand : number) : any", "depending on the `uiCommand` this function can return one of two things,  \nif the `uiCommand` is `RIDI_DEVICENAME` it will return a string  \nif the `uiCommand` is `RIDI_DEVICEINFO` it will return an object with properties relating to what kind of device it is  \nidk what `RIDI_PREPARSEDDATA` does yet");
+registerFunc("GET_RAWINPUT_CODE_WPARAM", "function GET_RAWINPUT_CODE_WPARAM(wp : WPARAM | number) : number", "can return 0 (for `RIM_INPUT`) - meaning that input occured while the application was in the foreground  \nor 1 (for `RIM_INPUTSINK`) - meaning that the input occured while the application was not in the foreground");
+registerFunc("GetRawInputData", "function GetRawInputData(lp : LPARAM | number, uiCommand : number) : {header: {dwType, dwSize, hDevice, wParam}, ...?}", "if `uiCommand` is `RID_HEADER` then this command (if successful) returns an object with the properties listed in the header  \nif `uiCommand` is `RID_INPUT` then this command (if successful) returns an object with those properties listed in the header and a `data` property with additional properties relating to the type of device (the type of device can be checked with the header's `dwType` and `RIM_TYPE`... consts)");
+
+registerFunc("GetMessageExtraInfo", "function GetMessageExtraInfo(void) : LPARAM : number", "returns additional message info (if there is any idk look [here](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessageextrainfo))");
+registerFunc("SetMessageExtraInfo", "function SetMessageExtraInfo(lp : LPARAM | number) : LPARAM : number", "returns the last LPARAM value");
+
 function emptyD2DObject() : Array<[string, vscode.CompletionItemKind?]> {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]];//{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -3291,4 +3302,24 @@ const macros:string[] = [
     "PBST_ERROR",
     "PBST_PAUSED",
     "PROGRESS_CLASS",
+    "RIDI_PREPARSEDDATA",
+    "RIDI_DEVICENAME",
+    "RIDI_DEVICEINFO",
+    "RIM_TYPEMOUSE",
+    "RIM_TYPEKEYBOARD",
+    "RIM_TYPEHID",
+    "RIM_INPUT",
+    "RIM_INPUTSINK",
+    "RID_HEADER",
+    "RIDEV_REMOVE",
+    "RIDEV_EXCLUDE",
+    "RIDEV_PAGEONLY",
+    "RIDEV_NOLEGACY",
+    "RIDEV_INPUTSINK",
+    "RIDEV_CAPTUREMOUSE",
+    "RIDEV_NOHOTKEYS",
+    "RIDEV_APPKEYS",
+    "RIDEV_EXINPUTSINK",
+    "RIDEV_DEVNOTIFY",
+    "RIDEV_EXMODEMASK",
 ];
