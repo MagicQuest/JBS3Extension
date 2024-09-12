@@ -218,6 +218,8 @@ registerFunc("CreateFontSimple", "function CreateFontSimple(fontName : string, w
 registerFunc("StretchDIBits", "function StretchDIBits(dc : HDC | number, xDest : number, yDest : number, DestWidth : number, DestHeight : number, xSrc : number, ySrc : number, SrcWidth : number, SrcHeight : number, data : Uint32Array, imageWidth : number, imageHeight : number, bitCount : number, compression : number, rop : number) : number", "compression can be any `BI_` const  \nrop can be any `SRC` const (or `NOTSRC` consts lol)  \ndata must be an array made with `new Uint32Array([data])` (because it's fast) OR can be from `GetDIBits` or wicBitmap.`GetPixels()`  \nreturns 0 if failed");
 registerFunc("CreatePatternBrush", "function CreatePatternBrush(bitmap : HBITMAP | number) : HBRUSH | number", "creates a brush with the bitmap as a pattern  \nreturns 0 if failed");
 registerFunc("CreateHatchBrush", "function CreateHatchBrush(hatchMode : number, color : RGB | number) : HBRUSH | number", "hatchMode can be any `HS_`  \nuse SetBkMode to make it `TRANSPARENT` or `OPAQUE`  \ncolor must be an `RGB()` value  \nreturns 0 if failed");
+registerFunc("GetCurrentObject", "function GetCurrentObject(dc : HDC | number, type : number) : HGDIOBJ | number", "the `type` can be any `OBJ_`... const");
+registerFunc("Ellipse", "function Ellipse(dc : HDC | number, left : number, top : number, right : number, bottom : number) : BOOL", "returns 1 if success");
 registerFunc("BitBlt", "function BitBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, rop : number)", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
 registerFunc("StretchBlt", "function StretchBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, cx1 : number, cy1 : number, rop : number)", "calls the `window.h` `StretchBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
 registerFunc("MaskBlt", "function MaskBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, bmpMask : HBITMAP, maskX : number, maskY : number, rop : number)", "calls the `window.h` `MaskBlt` function  \nthe `bmpMask` must be a monochrome bitmap -> (`CreateBitmap(width, height, 1);`)  \nrop can be made by using `MAKEROP4(foregroundrop : number, backgroundrop : number)`  \nthis function will fail if `bmpMask` is not a monochromic bitmap  \nreturns 0 if failed");
@@ -493,7 +495,7 @@ registerFunc("MAKELPARAM", "function MAKELPARAM(low : number, high : number) : n
 registerFunc("MakeRAWINPUTDEVICE", "function MakeRAWINPUTDEVICE(usUsagePage : number, usUsage : number, dwFlags : number, hwndTarget : HWND) : {usUsagePage, usUsage, dwFlags, hwndTarget}", "convenience function for use with `RegisterRawInputDevices`  \ninfo about `usUsagePage` and `usUsage` can be found on these helpful charts [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/hid/top-level-collections-opened-by-windows-for-system-use) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/hid/hid-usages#usage-page)  \n`dwFlags` can be any [`RIDEV_`... const](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawinputdevice) (i think they can be OR'd together)  \n`hwndTarget` can be NULL or your window (msdn says If **NULL**, raw input events follow the keyboard focus to ensure only the focused application window receives the events.)");
 registerFunc("RegisterRawInputDevices", "function RegisterRawInputDevices(deviceList : Array<RAWINPUTDEVICE> | RAWINPUTDEVICE)", "`deviceList` must be either an array or a single object containing `usUsagePage`, `usUsage`, `dwFlags`, and `hwndTarget` properties (an easy way to get such an object is to use the `MakeRAWINPUTDEVICE` function)");
 registerFunc("GetRawInputDeviceListLength", "function GetRawInputDeviceListLength() : number", "returns the amount of raw devices connected i think (for optional use with `GetRawInputDeviceList`)");
-registerFunc("GetRawInputDeviceList", "function GetRawInputDeviceList(count? : number) : Array<{hDevice, dwType}>", "`count` is optional now lol but if you do use it probably don't put a large number because that shit will probably blow up  \nif successful will return an array of objects with `hDevice` (HANDLE) and `dwType` (`RID_TYPE`...) properties (for use with the `GetRawInputDeviceInfo` function)");
+registerFunc("GetRawInputDeviceList", "function GetRawInputDeviceList(count? : number) : Array<{hDevice, dwType}>", "`count` is optional now lol but if you do use it don't put a large number because that shit will probably blow up  \nif successful will return an array of objects with `hDevice` (HANDLE) and `dwType` (`RID_TYPE`...) properties (for use with the `GetRawInputDeviceInfo` function)");
 registerFunc("GetRawInputDeviceInfo", "function GetRawInputDeviceInfo(hDevice : HANDLE | number, uiCommand : number) : any", "depending on the `uiCommand` this function can return one of two things,  \nif the `uiCommand` is `RIDI_DEVICENAME` it will return a string  \nif the `uiCommand` is `RIDI_DEVICEINFO` it will return an object with properties relating to what kind of device it is  \nidk what `RIDI_PREPARSEDDATA` does yet");
 registerFunc("GET_RAWINPUT_CODE_WPARAM", "function GET_RAWINPUT_CODE_WPARAM(wp : WPARAM | number) : number", "can return 0 (for `RIM_INPUT`) - meaning that input occured while the application was in the foreground  \nor 1 (for `RIM_INPUTSINK`) - meaning that the input occured while the application was not in the foreground");
 registerFunc("GetRawInputData", "function GetRawInputData(lp : LPARAM | number, uiCommand : number) : {header: {dwType, dwSize, hDevice, wParam}, ...?}", "if `uiCommand` is `RID_HEADER` then this command (if successful) returns an object with the properties listed in the header  \nif `uiCommand` is `RID_INPUT` then this command (if successful) returns an object with those properties listed in the header and a `data` property with additional properties relating to the type of device (the type of device can be checked with the header's `dwType` and `RIM_TYPE`... consts)");
@@ -3322,4 +3324,33 @@ const macros:string[] = [
     "RIDEV_EXINPUTSINK",
     "RIDEV_DEVNOTIFY",
     "RIDEV_EXMODEMASK",
+    "RI_MOUSE_LEFT_BUTTON_DOWN",
+    "RI_MOUSE_LEFT_BUTTON_UP",
+    "RI_MOUSE_RIGHT_BUTTON_DOWN",
+    "RI_MOUSE_RIGHT_BUTTON_UP",
+    "RI_MOUSE_MIDDLE_BUTTON_DOWN",
+    "RI_MOUSE_MIDDLE_BUTTON_UP",
+    "RI_MOUSE_BUTTON_1_DOWN",
+    "RI_MOUSE_BUTTON_1_UP",
+    "RI_MOUSE_BUTTON_2_DOWN",
+    "RI_MOUSE_BUTTON_2_UP",
+    "RI_MOUSE_BUTTON_3_DOWN",
+    "RI_MOUSE_BUTTON_3_UP",
+    "RI_MOUSE_BUTTON_4_DOWN",
+    "RI_MOUSE_BUTTON_4_UP",
+    "RI_MOUSE_BUTTON_5_DOWN",
+    "RI_MOUSE_BUTTON_5_UP",
+    "RI_MOUSE_WHEEL",
+    "RI_MOUSE_HWHEEL",
+    "MOUSE_MOVE_RELATIVE",
+    "MOUSE_MOVE_ABSOLUTE",
+    "MOUSE_VIRTUAL_DESKTOP",
+    "MOUSE_ATTRIBUTES_CHANGED",
+    "MOUSE_MOVE_NOCOALESCE",
+    "OBJ_BITMAP",
+    "OBJ_BRUSH",
+    "OBJ_COLORSPACE",
+    "OBJ_FONT",
+    "OBJ_PAL",
+    "OBJ_PEN",
 ];
