@@ -237,7 +237,9 @@ registerFunc("Rectangle", "function Rectangle(dc : HDC | number, left : number, 
 registerFunc("FillRect", "function FillRect(dc : HDC | number, left : number, top : number, right : number, bottom : number, hBrush : HBRUSH | number) : number", "calls the native gdi `FillRect` function for drawing  \nwhen `hBrush` is NULL, gdi uses the dc's stock brush  \nreturns zero if failed");
 registerFunc("GetStockObject", "function GetStockObject(stockObject : number) : HGDIOBJ | number", "calls the native `GetStockObject` function for drawing  \nthe stockObject can be constants ending in brush, pen, or font  \n(`BLACK_BRUSH`, `BLACK_PEN`, `DEVICE_DEFAULT_FONT`, `DEFAULT_PALETTE`)  \nreturns zero if failed");
 registerFunc("SetBkColor", "function SetBkColor(dc : HDC | number, rgb : RGB | number) : void", "calls the native `SetBkColor()` which sets the background color for the `TextOut` drawing function");
+registerFunc("GetBkColor", "function GetBkColor(dc : HDC | number) : RGB", "calls the native `GetBkColor()` which returns the current background color for the `TextOut` drawing function");
 registerFunc("SetBkMode", "function SetBkMode(dc : HDC | number, mode : number) : void", "calls the native `SetBkMode(mode)` which sets the background mode for the `TextOut` drawing functions  \nonly valid args are `OPAQUE` and `TRANSPARENT`  \nreturns the last background mode");
+registerFunc("GetBkMode", "function GetBkMode(dc : HDC | number) : number", "calls the native `GetBkMode(dc)` which returns the current background mode for the `TextOut` drawing functions");
 registerFunc("GetTextColor", "function GetTextColor(dc : HDC | number) : RGB", "calls the native `GetTextColor()` which gets the text color for the `TextOut` or `DrawText` gdi drawing functions");
 registerFunc("SetTextColor", "function SetTextColor(dc : HDC | number, rgb : RGB | number) : RGB", "calls the native `SetTextColor()` which sets the text color for the `TextOut` or `DrawText` gdi drawing functions  \nreturns the previous color");
 registerFunc("GetPixel", "function GetPixel(dc : HDC | number, x : number, y : number) : RGB | {r : number, g : number, b : number}", "gets the color of the pixel in the `dc` at the points (`x`,`y`)");
@@ -266,6 +268,7 @@ registerFunc("SetCursorPos", "function SetCursorPos(x : number, y : number) : vo
 registerFunc("LoadCursor", "function LoadCursor(hInstance? : number | null, lpCursorName : number) : HCURSOR | number", "lpCursorName can be any `IDC_` const  \nif it isn't working pass hInstance as NULL  \ncalls the native `LoadCursorA(hInstance, lpCursorName)` and returns a pointer to the cursor");
 registerFunc("LoadCursorFromFile", "function LoadCursorFromFile(lpCursorName : string) : HCURSOR | number", "lpCursorName must be in the `.CUR` or `.ANI` format  \ncalls the native `LoadCursorFromFile(lpCursorName)` and returns a pointer to the cursor  \nsuperseded by LoadImage(NULL, filelocation, ..., IMAGE_CURSOR, ..., LR_SHARED | LR_LOADFROMFILE)");
 registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, width? : number, height? : number, fuLoad : number) : HANDLE | number", "if it isn't working pass hInstance as NULL  \nTHE BITMAP MUST HAVE A `BIT DEPTH <= 24` check the file properties of your bitmap and go to details to find bit depth  \ncalls the native `LoadImageA(hInstance, name, type, width, height, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const (can be OR'd together)  \nif width or height are 0 and you don't use the `LR_DEFAULTSIZE` flag then it will use the icon's actual width/height  \nreturns 0 if failed");
+registerFunc("CopyImage", "function CopyImage(handle : HANDLE | number, type : number, newWidth? : number, newHeight? : number, flags : number) : HANDLE | number", "`handle` is the image to be copied  \n`type` can be any `IMAGE_`... const  \nif newWidth or/and newHeight are 0 the returned image will be the same width and/or height as the original  \nthe image is stretch to fit the new width and height  \n`flags` can be (SOME)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-copyimage] `LR_`... consts  \nbased on what type of image you copied use its respective `Destroy`... function (if you copied a bitmap use `DeleteObject`, if you used a cursor/icon use `DestroyCursor`/`DestroyIcon`)");
 registerFunc("MAKEINTRESOURCE", "function MAKEINTRESOURCE(i : number)", "uses the native `MAKEINTRESOURCEA(i)` macro"); // for use with `LoadCursor`");
 registerFunc("SetCursor", "function SetCursor(cursor : HCURSOR | number) : HCURSOR | number", "calls the native `SetCursor(cursor)` function and if cursor is NULL the cursor is removed  \nreturns the last cursor or 0 if failed`");
 registerFunc("DrawIconEx", "function DrawIconEx(dc : HDC | number, xLeft : number, yTop : number, hIcon : HICON | number, cxWidth? : number, cyWidth? : number, istepIfAniCur? : number, hbrFlickerFreeDraw? : HBRUSH | number, diFlags? : number) : number", "calls the native `DrawIconEx(...)` function  \ndiFlags can be any `DI_` const (can be OR'd together `|` )  \nreturns 0 if failed`");
@@ -1374,6 +1377,9 @@ const macros = [
     "LR_MONOCHROME",
     "LR_SHARED",
     "LR_VGACOLOR",
+    "LR_COPYDELETEORG",
+    "LR_COPYFROMRESOURCE",
+    "LR_COPYRETURNORG",
     "GCL_CBCLSEXTRA",
     "GCL_CBWNDEXTRA",
     "GCLP_HBRBACKGROUND",
