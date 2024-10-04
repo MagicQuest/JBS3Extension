@@ -163,6 +163,15 @@ registerFunc("RemoveMenu", "function RemoveMenu(menu : HMENU, position : number,
 registerFunc("AppendMenu", "function AppendMenu(menu : HMENU, flags : MF_..., id : number, name : wstring) : BOOL", "Appends a new item to the end of the specified menu bar, drop-down menu, submenu, or shortcut menu. You can use this function to specify the content, appearance, and behavior of the menu item.  \n`flags` can be any `MF`..., `MFT`..., or `MFS`... const");
 registerFunc("DestroyMenu", "function DestroyMenu(menu : HMENU) : BOOL", "Destroys the specified menu and frees any memory that the menu occupies.");
 registerFunc("DeleteMenu", "function DeleteMenu(menu : HMENU, position : number, flags : MF_BY...) : BOOL", "`flags` can be any `MF_BY`... const");
+registerFunc("DrawMenuBar", "function DrawMenuBar(hwnd : HWND | number) : BOOL", "Redraws the menu bar of the specified window. If the menu bar changes after the system has created the window, this function must be called to draw the changed menu bar.");
+registerFunc("CreatePopupMenu", "function CreatePopupMenu(void) : HMENU", "Creates a drop-down menu, submenu, or shortcut menu. The menu is initially empty.  \nYou can insert or append menu items by using the `InsertMenuItem` function.  \nYou can also use the `InsertMenu` function to insert menu items and the `AppendMenu` function to append menu items.  \nsee customcontextmenu.js");
+registerFunc("InsertMenu", "function InsertMenu(hMenu : HMENU, position : number, flags : MF_..., id : number, item : number | string) : BOOL", "`flags` can be any `MF_`... const (some can be OR'ed together)  \ndepending on the flags item can be a string (when flags include `MF_STRING`) or a bitmap (when flags include `MF_BITMAP`)");
+registerFunc("ModifyMenu", "function ModifyMenu(hMenu : HMENU, position : number, flags : MF_..., id : number, item : number | string) : BOOL", "Changes an existing menu item. This function is used to specify the content, appearance, and behavior of the menu item.  \n`flags` can be any `MF_`... const (some can be OR'ed together)  \ndepending on the flags item can be a string (when flags include `MF_STRING`) or a bitmap (when flags include `MF_BITMAP`)  \nfor more advanced info use `SetMenuItemInfo`");
+registerFunc("InsertMenuItem", "function InsertMenuItem(hMenu : HMENU, position : number, fByPosition : boolean, menuItemInfo : MENUITEMINFO | {}) : BOOL", "  \n`menuItemInfo` is pretty weird see `customcontextmenu.js` for usage bruh (or check (here)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-menuiteminfow])");
+registerFunc("GetMenuItemInfo", "function GetMenuItemInfo(hMenu : HMENU, position : number, fByPosition : boolean, menuItemInfo : MENUITEMINFO | {}) : BOOL", "  \n`menuItemInfo` is an object containing an fMask key which specifies which values to be returned by this function  \nsee `customcontextmenu.js`");
+registerFunc("SetMenuItemInfo", "function SetMenuItemInfo(hMenu : HMENU, position : number, fByPosition : boolean, menuItemInfo : MENUITEMINFO | {}) : BOOL", "  \n`menuItemInfo` is pretty weird see `customcontextmenu.js` for usage bruh (or check (here)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-menuiteminfow])");
+registerFunc("TrackPopupMenu", "function TrackPopupMenu(hMenu : HMENU, uFlags : `TPM_...`, x : number, y : number, hwnd : HWND | number) : BOOL", "`uFlags` can be any `TPM_`... const (can be OR'ed together)  \nDisplays a shortcut menu at the specified location and tracks the selection of items on the menu. The shortcut menu can appear anywhere on the screen.");
+registerFunc("TrackPopupMenuEx", "function TrackPopupMenuEx(hMenu : HMENU, uFlags : `TPM_...`, x : number, y : number, hwnd : HWND | number, rcExclude : RECT | {}) : BOOL", "`uFlags` can be any `TPM_`... const (can be OR'ed together)  \n  `rcExclude` must be an object with `{left, right, top, bottom}` keys and when specified the menu will not intersect that area i think  \nDisplays a shortcut menu at the specified location and tracks the selection of items on the shortcut menu. The shortcut menu can appear anywhere on the screen.");
 registerFunc("CreateWindow", "function CreateWindow(extendedStyle : number, wndclass : WNDCLASSEXW | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number, hwndParent? : HWND | number, hMenu? : HMENU | number, hInstance? : HINSTANCE | number) : HWND | number", "the extendedStyles can be any `WS_EX_` const (can be OR'd together)  \nthe `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL` ((MSDN link for all special classes)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw#remarks])  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  **IF YOU ARE TRYING TO USE DCOMPOSITION, CREATE THIS WINDOW WITH THE `WS_EX_NOREDIRECTIONBITMAP` EXTENDED FLAG!!!**\n  \nreturns the pointer to the newly created window (`HWND`)  \nunfortunately RIGHT when you make the window the following messages aren't sent:  \n`WM_GETMINMAXINFO`  \n`WM_NCCALCSIZE`  \n`WM_SHOWWINDOW`  \n`WM_WINDOWPOSCHANGING`  \n`WM_ACTIVATEAPP`  \n`WM_NCACTIVATE`  \n`WM_GETICON`  \n`WM_ACTIVATE`  \n`WM_IME_SETCONTEXT`  \n`WM_SETFOCUS`  \n`WM_NCPAINT`  \n`WM_ERASEBKGND`  \n`WM_WINDOWPOSCHANGED`  \n`WM_SIZE`  \n`WM_MOVE`  \nin that order (but don't worry you can still receive these messages later just not when the window is created)");
 registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const (can be OR'd together)  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
@@ -231,6 +240,8 @@ registerFunc("SetDCPenColor", "function SetDCPenColor(dc : HDC | number, rgb : R
 registerFunc("SetDCBrushColor", "function SetDCBrushColor(dc : HDC | number, rgb : RGB | number) : void", "sets the color of the selected brush");
 registerFunc("GetDCPenColor", "function GetDCPenColor(dc : HDC | number) : RGB", "gets the color of the selected pen");
 registerFunc("GetDCBrushColor", "function GetDCBrushColor(dc : HDC | number) : RGB", "gets the color of the selected brush");
+registerFunc("GetSysColor", "function GetSysColor(index : number) : RGB", "gets the color of the specified `COLOR`... const");
+registerFunc("GetTextExtentPoint32", "function GetTextExtentPoint32(dc : HDC | number, text : string) : SIZE | {width, height}", "uses the `text` and currently selected gdi font to determine how big the text drawn would be and returns a SIZE object with width and height keys");
 registerFunc("CreateSolidBrush", "function CreateSolidBrush(rgb : RGB | number) : void", "`rgb` can be made with the `RGB` function  \nreturns the pointer to the `HBRUSH`");
 registerFunc("MoveTo", "function MoveTo(dc : HDC | number, x : number, y : number) : number", "calls the native `MoveToEx` function for drawing  \nreturns zero if failed");
 registerFunc("LineTo", "function LineTo(dc : HDC | number, x : number, y : number) : number", "calls the native `LineTo` function for drawing  \nreturns zero if failed");
@@ -268,7 +279,7 @@ registerFunc("SetMousePos", "function SetMousePos(x : number, y : number) : void
 registerFunc("SetCursorPos", "function SetCursorPos(x : number, y : number) : void", "calls the native `SetCursorPos(x, y)` and returns 0 if failed");
 registerFunc("LoadCursor", "function LoadCursor(hInstance? : number | null, lpCursorName : number) : HCURSOR | number", "lpCursorName can be any `IDC_` const  \nif it isn't working pass hInstance as NULL  \ncalls the native `LoadCursorA(hInstance, lpCursorName)` and returns a pointer to the cursor");
 registerFunc("LoadCursorFromFile", "function LoadCursorFromFile(lpCursorName : string) : HCURSOR | number", "lpCursorName must be in the `.CUR` or `.ANI` format  \ncalls the native `LoadCursorFromFile(lpCursorName)` and returns a pointer to the cursor  \nsuperseded by LoadImage(NULL, filelocation, ..., IMAGE_CURSOR, ..., LR_SHARED | LR_LOADFROMFILE)");
-registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, width? : number, height? : number, fuLoad : number) : HANDLE | number", "if it isn't working pass hInstance as NULL  \nTHE BITMAP MUST HAVE A `BIT DEPTH <= 24` check the file properties of your bitmap and go to details to find bit depth  \ncalls the native `LoadImageA(hInstance, name, type, width, height, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const (can be OR'd together)  \nif width or height are 0 and you don't use the `LR_DEFAULTSIZE` flag then it will use the icon's actual width/height  \nreturns 0 if failed");
+registerFunc("LoadImage", "function LoadImage(hInstance? : number | null, name : number | string, type : number, width? : number, height? : number, fuLoad : number) : HANDLE | number", "if it isn't working pass hInstance as NULL  \nTHE BITMAP MUST HAVE A `BIT DEPTH <= 24` check the file properties of your bitmap and go to details to find bit depth  \ncalls the native `LoadImageW(hInstance, name, type, width, height, fuLoad)` and returns a pointer to the cursor  \ntype can be any `IMAGE_` const  \nfuLoad can be any `LR_` const (can be OR'd together)  \nif width or height are 0 and you don't use the `LR_DEFAULTSIZE` flag then it will use the icon's actual width/height  \nreturns 0 if failed");
 registerFunc("CopyImage", "function CopyImage(handle : HANDLE | number, type : number, newWidth? : number, newHeight? : number, flags : number) : HANDLE | number", "`handle` is the image to be copied  \n`type` can be any `IMAGE_`... const  \nif newWidth or/and newHeight are 0 the returned image will be the same width and/or height as the original  \nthe image is stretch to fit the new width and height  \n`flags` can be (SOME)[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-copyimage] `LR_`... consts  \nbased on what type of image you copied use its respective `Destroy`... function (if you copied a bitmap use `DeleteObject`, if you used a cursor/icon use `DestroyCursor`/`DestroyIcon`)");
 registerFunc("MAKEINTRESOURCE", "function MAKEINTRESOURCE(i : number)", "uses the native `MAKEINTRESOURCEA(i)` macro"); // for use with `LoadCursor`");
 registerFunc("SetCursor", "function SetCursor(cursor : HCURSOR | number) : HCURSOR | number", "calls the native `SetCursor(cursor)` function and if cursor is NULL the cursor is removed  \nreturns the last cursor or 0 if failed`");
@@ -1846,6 +1857,52 @@ const macros = [
     "ES_READONLY",
     "ES_WANTRETURN",
     "ES_NUMBER",
+    "TPM_LEFTBUTTON",
+    "TPM_RIGHTBUTTON",
+    "TPM_LEFTALIGN",
+    "TPM_CENTERALIGN",
+    "TPM_RIGHTALIGN",
+    "TPM_TOPALIGN",
+    "TPM_VCENTERALIGN",
+    "TPM_BOTTOMALIGN",
+    "TPM_HORIZONTAL",
+    "TPM_VERTICAL",
+    "TPM_NONOTIFY",
+    "TPM_RETURNCMD",
+    "TPM_RECURSE",
+    "TPM_HORPOSANIMATION",
+    "TPM_HORNEGANIMATION",
+    "TPM_VERPOSANIMATION",
+    "TPM_VERNEGANIMATION",
+    "TPM_NOANIMATION",
+    "TPM_LAYOUTRTL",
+    "TPM_WORKAREA",
+    "MND_CONTINUE",
+    "MND_ENDMENU",
+    "MNGOF_TOPGAP",
+    "MNGOF_BOTTOMGAP",
+    "MNGO_NOINTERFACE",
+    "MNGO_NOERROR",
+    "MIIM_STATE",
+    "MIIM_ID",
+    "MIIM_SUBMENU",
+    "MIIM_CHECKMARKS",
+    "MIIM_TYPE",
+    "MIIM_DATA",
+    "MIIM_STRING",
+    "MIIM_BITMAP",
+    "MIIM_FTYPE",
+    "HBMMENU_CALLBACK",
+    "HBMMENU_SYSTEM",
+    "HBMMENU_MBAR_RESTORE",
+    "HBMMENU_MBAR_MINIMIZE",
+    "HBMMENU_MBAR_CLOSE",
+    "HBMMENU_MBAR_CLOSE_D",
+    "HBMMENU_MBAR_MINIMIZE_D",
+    "HBMMENU_POPUP_CLOSE",
+    "HBMMENU_POPUP_RESTORE",
+    "HBMMENU_POPUP_MAXIMIZE",
+    "HBMMENU_POPUP_MINIMIZE",
     "BS_3STATE",
     "BS_AUTO3STATE",
     "BS_AUTOCHECKBOX",
@@ -2072,6 +2129,10 @@ const macros = [
     "VAR_WSTRING",
     //"VAR_FLOAT", //(sorry bruh)
     "CW_USEDEFAULT",
+    "MNC_IGNORE",
+    "MNC_CLOSE",
+    "MNC_EXECUTE",
+    "MNC_SELECT",
     "D2D1_ANTIALIAS_MODE_PER_PRIMITIVE",
     "D2D1_ANTIALIAS_MODE_ALIASED",
     "D2D1_ANTIALIAS_MODE_FORCE_DWORD",
