@@ -442,6 +442,8 @@ registerFunc("hid_exit", "function hid_exit(void) : number", "returns 0 if succe
 registerFunc("StringFromPointer", "function StringFromPointer(ptr : number) : string", "will crash if the ptr is null  \ncan be used with SendMessage and WPARAM and LPARAMs in special situations");
 registerFunc("WStringFromPointer", "function WStringFromPointer(ptr : number) : wstring", "will crash if the ptr is null  \ncan be used with SendMessage and WPARAM and LPARAMs in special situations");
 registerFunc("ArrayBufferFromPointer", "function ArrayBufferFromPointer(type : number, bits : number, data : number, byteLength : number) : TypedArray", "`type` and `bits` denote the kind of TypedArray returned  \nwhen `type` is 0 the array will be an Int{`bits`}Array, when `type` is 1 it returns a Uint{`bits`}Array, when `type` is 2 it returns a Float{`bits`}Array  \n`bits` can be 8, 16, 32, or 64 (passing `type` as 2 (float) only supports 32 and 64)  \n`data` is a pointer to some shit  \n`byteLength`  \nthe only reason to use this function is probably for `DllLoad`");
+registerFunc("PointerFromArrayBuffer", "function PointerFromArrayBuffer(data : TypedArray | ArrayBufferView) : number", "`data` can be any Uint or Int or Float typed arrays  \nreturns the internal pointer of the data (is valid for as long as the arraybuffer is active)");
+registerFunc("SoundSentry", "function SoundSentry(void) : number", "Triggers a visual signal to indicate that a sound is playing. (apparently)  \nSet the notification behavior by calling SystemParametersInfo with the SPI_SETSOUNDSENTRY value.");
 registerFunc("spawn", "function spawn(func : Function) : void", "just like the lua spawn function (except i can't find any info on it for some reason?)  \nanyways it \"spawns\" a new thread and runs the function in it  \nprobably use this one at your own risk because it might just crash randomly and idk what's up with that (this hasn't happened to me YET but it has other times)");
 registerFunc("SetWinEventHook", "function SetWinEventHook(eventMin : number, eventMax : number, dllHandle : NULL | HMODULE, eventProc : Function(hook, event, hwnd, idObject, idChild, idEventThread, dwmsEventTime), idProcess : number, idThread : number, dwFlags : number) : void", "eventMin and eventMax can be any `EVENT_` const  \ndllHandle can probably just be `NULL`  \n`idProcess` can be 0 for all processes and `idThread` can be 0 for all threads on the desktop  \ndwFlags can be any `WINEVENT_` const");
 registerFunc("UnhookWinEvent", "function UnhookWinEvent(hook : HWINEVENTHOOK | number) : BOOL", "hook must be a value returned from SetWinEventHook  \nreturns true if success");
@@ -3303,7 +3305,7 @@ const macros = [
     "PBST_NORMAL",
     "PBST_ERROR",
     "PBST_PAUSED",
-    "PROGRESS_CLASS",
+    //"PROGRESS_CLASS",
     "RIDI_PREPARSEDDATA",
     "RIDI_DEVICENAME",
     "RIDI_DEVICEINFO",
@@ -3365,5 +3367,48 @@ const macros = [
     "GRADIENT_FILL_RECT_H",
     "GRADIENT_FILL_RECT_V",
     "GRADIENT_FILL_TRIANGLE",
+    "ANIMATE_CLASS",
+    "DATETIMEPICK_CLASS",
+    "HOTKEY_CLASS",
+    "MONTHCAL_CLASS",
+    "PROGRESS_CLASS",
+    "REBARCLASSNAME",
+    "STATUSCLASSNAME",
+    "TOOLBARCLASSNAME",
+    "TOOLTIPS_CLASS",
+    "TRACKBAR_CLASS",
+    "UPDOWN_CLASS",
+    "WC_BUTTON",
+    "WC_COMBOBOX",
+    "WC_COMBOBOXEX",
+    "WC_EDIT",
+    "WC_HEADER",
+    "WC_LISTBOX",
+    "WC_IPADDRESS",
+    "WC_LINK",
+    "WC_LISTVIEW",
+    "WC_NATIVEFONTCTL",
+    "WC_PAGESCROLLER",
+    "WC_SCROLLBAR",
+    "WC_STATIC",
+    "WC_TABCONTROL",
+    "WC_TREEVIEW",
+    "ICC_LISTVIEW_CLASSES",
+    "ICC_TREEVIEW_CLASSES",
+    "ICC_BAR_CLASSES",
+    "ICC_TAB_CLASSES",
+    "ICC_UPDOWN_CLASS",
+    "ICC_PROGRESS_CLASS",
+    "ICC_HOTKEY_CLASS",
+    "ICC_ANIMATE_CLASS",
+    "ICC_WIN95_CLASSES",
+    "ICC_DATE_CLASSES",
+    "ICC_USEREX_CLASSES",
+    "ICC_COOL_CLASSES",
+    "ICC_INTERNET_CLASSES",
+    "ICC_PAGESCROLLER_CLASS",
+    "ICC_NATIVEFNTCTL_CLASS",
+    "ICC_STANDARD_CLASSES",
+    "ICC_LINK_CLASS",
 ];
 //# sourceMappingURL=extension.js.map
