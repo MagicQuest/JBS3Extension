@@ -484,6 +484,8 @@ registerFunc("DragDetect", "function DragDetect(hwnd : HWND | number, point : PO
 
 registerFunc("DllLoad", "function DllLoad(dllpath : String) : function(procName : string, argCount : number, args : Array, argTypes : Array, returnvalue : number)", "this function follows the same rules as [LoadLibrary](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryw)  \nthis returns a function where if any strings you pass into the dll must be wide (utf16?/wchar_t) use `VAR_WSTRING`, if the dll returns a string use `RETURN_WSTRING` if it is wide (utf16/wchar_t)  \npassing `__FREE` as procName will release the dll (internally calls `FreeLibrary`)  \n`argTypes` can be one `VAR_`... const  \n`returnvalue` can be one `RETURN_`... const"); //oh BROTHER how will i write docs for the function this returns
 
+registerFunc("LoadLibraryEx", "function LoadLibraryEx(filename : wstr, dwFlags : number) : HMODULE | number", "`dwFlags` can be and `LOAD_`... const  \nusually LoadLibraryEx has 3 parameters but the second one MUST be NULL so i just didn't add that");
+
 registerFunc("InitializeWIC", "function InitializeWIC(void) : number | ptr", "used to load bitmaps (like pngs, jpgs, gifs, bmps, icos...) (for d2d (d2d.`CreateBitmapFromWicBitmap`) or GDI (using a dibsection))");
 registerFunc("ScopeGUIDs", "function ScopeGUIDs(scope : this) : void", "for some reason i gotta use this weird function instead of setting these values in the initialization of JBS  \n(**allows you to use any `GUID_`... const**)");
 
@@ -540,13 +542,13 @@ registerFunc("GlobalMemoryStatusEx", "function GlobalMemoryStatusEx(void) : {}",
 registerFunc("EasyTab_Load", "function EasyTab_Load(window : HWND | number) : EasyTabResult | number", "returns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
 registerFunc("EasyTab_Load_Ex", "function EasyTab_Load_Ex(window : HWND | number, trackingMode : EasyTabTrackingMode | number, relativeModeSensitivity : float, moveCursor : number) : EasyTabResult | number", "trackingMode is any `EASYTAB_TRACKING_MODE_`... const  \nhonestly i think moveCursor should just be boolean but idk  \nreturns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
 registerFunc("EasyTab_HandleEvent", "function EasyTab_HandleEvent(window : HWND | number, msg : number, lp : number, wp : number) : ", "use this function in your window procedure function (check `neweasytabfuncs.js`)  \nreturns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
-registerFunc("EasyTab_GetPosX", "function EasyTab_GetPosX(void) : void", "(check `neweasytabfuncs.js` for use)");
-registerFunc("EasyTab_GetPosY", "function EasyTab_GetPosY(void) : void", "(check `neweasytabfuncs.js` for use)");
-registerFunc("EasyTab_GetPressure", "function EasyTab_GetPressure(void) : void", "(check `neweasytabfuncs.js` for use)");
-registerFunc("EasyTab_GetButtons", "function EasyTab_GetButtons(void) : void", "(check `neweasytabfuncs.js` for use)");
-registerFunc("EasyTab_GetRangeX", "function EasyTab_GetRangeX(void) : void", "(check `neweasytabfuncs.js` for use)");
-registerFunc("EasyTab_GetRangeY", "function EasyTab_GetRangeY(void) : void", "(check `neweasytabfuncs.js` for use)");
-registerFunc("EasyTab_GetMaxPressure", "function EasyTab_GetMaxPressure(void) : void", "haha max design pro");
+registerFunc("EasyTab_GetPosX", "function EasyTab_GetPosX(void) : number", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetPosY", "function EasyTab_GetPosY(void) : number", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetPressure", "function EasyTab_GetPressure(void) : number", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetButtons", "function EasyTab_GetButtons(void) : number", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetRangeX", "function EasyTab_GetRangeX(void) : number", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetRangeY", "function EasyTab_GetRangeY(void) : number", "(check `neweasytabfuncs.js` for use)");
+registerFunc("EasyTab_GetMaxPressure", "function EasyTab_GetMaxPressure(void) : number", "haha max design pro");
 registerFunc("EasyTab_Unload", "function EasyTab_Unload(void) : void", "use this function when you no longer need EasyTab");
 
 registerFunc("MAKELPARAM", "function MAKELPARAM(low : number, high : number) : number", "`low` is the low-order WORD (unsigned short) of the returned value  \n`high` is the high-order WORD (unsigned short) of the returned value  \nuse `MAKELPARAM` for `SendMessage` with a progress bar hwnd and `PBM_SETRANGE`  \n<---------------DWORD--------------->  \n[00000000:00000000:00000000:00000000]  \n<-----HIWORD-----><------LOWORD----->");
@@ -2294,11 +2296,30 @@ const macros:string[] = [
     "RETURN_CSTRING",
     "RETURN_WSTRING",
     "RETURN_NUMBER",
+    "RETURN_FLOAT",
+    "RETURN_DOUBLE",
     "VAR_INT",
     "VAR_BOOLEAN",
     "VAR_CSTRING",
     "VAR_WSTRING",
-    //"VAR_FLOAT", //(sorry bruh)
+    "VAR_FLOAT", //(sorry bruh (ok now if you have USING_FFI #defined (in JBS3.cpp) you can use floats))
+    "VAR_DOUBLE",
+    "DONT_RESOLVE_DLL_REFERENCES",
+    "LOAD_LIBRARY_AS_DATAFILE",
+    //"LOAD_PACKAGED_LIBRARY", //sadly not
+    "LOAD_WITH_ALTERED_SEARCH_PATH",
+    "LOAD_IGNORE_CODE_AUTHZ_LEVEL",
+    "LOAD_LIBRARY_AS_IMAGE_RESOURCE",
+    "LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE",
+    "LOAD_LIBRARY_REQUIRE_SIGNED_TARGET",
+    "LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR",
+    "LOAD_LIBRARY_SEARCH_APPLICATION_DIR",
+    "LOAD_LIBRARY_SEARCH_USER_DIRS",
+    "LOAD_LIBRARY_SEARCH_SYSTEM32",
+    "LOAD_LIBRARY_SEARCH_DEFAULT_DIRS",
+    "LOAD_LIBRARY_SAFE_CURRENT_DIRS",
+    "LOAD_LIBRARY_SEARCH_SYSTEM32_NO_FORWARDER",
+    "LOAD_LIBRARY_OS_INTEGRITY_CONTINUITY",
     "CW_USEDEFAULT",
     "MNC_IGNORE",
     "MNC_CLOSE",
@@ -3506,6 +3527,17 @@ const macros:string[] = [
     "GRADIENT_FILL_RECT_V",
     "GRADIENT_FILL_TRIANGLE",
     "ANIMATE_CLASS",
+    "ACS_CENTER",
+    "ACS_TRANSPARENT",
+    "ACS_AUTOPLAY",
+    "ACS_TIMER",
+    "ACM_OPEN",
+    "ACM_PLAY",
+    "ACM_STOP",
+    "ACM_ISPLAYING",
+    "ACN_START",
+    "ACN_STOP",
+
     "DATETIMEPICK_CLASS",
     "HOTKEY_CLASS",
     "MONTHCAL_CLASS",
