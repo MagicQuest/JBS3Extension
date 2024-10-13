@@ -245,6 +245,7 @@ registerFunc("SetDCBrushColor", "function SetDCBrushColor(dc : HDC | number, rgb
 registerFunc("GetDCPenColor", "function GetDCPenColor(dc : HDC | number) : RGB", "gets the color of the selected pen");
 registerFunc("GetDCBrushColor", "function GetDCBrushColor(dc : HDC | number) : RGB", "gets the color of the selected brush");
 registerFunc("GetSysColor", "function GetSysColor(index : number) : RGB", "gets the color of the specified `COLOR`... const");
+registerFunc("SetSysColors", "function SetSysColors(elements : number, colorNames : Array<number>, colorValues : Array<COLORREF>) : BOOL", "this function actually changes the system colors for **EVERY window** so if any window is using these colors those shits gone change  \n`elements` is the number of elements in the `colorNames`/`colorValues` arrays  \n`colorNames` is an array of `COLOR_` consts  \n`colorValues` is an array of `RGB(...)` values");
 registerFunc("GetTextExtentPoint32", "function GetTextExtentPoint32(dc : HDC | number, text : string) : SIZE | {width, height}", "uses the `text` and currently selected gdi font to determine how big the text drawn would be and returns a SIZE object with width and height keys");
 registerFunc("CreateSolidBrush", "function CreateSolidBrush(rgb : RGB | number) : void", "`rgb` can be made with the `RGB` function  \nreturns the pointer to the `HBRUSH`");
 registerFunc("MoveTo", "function MoveTo(dc : HDC | number, x : number, y : number) : number", "calls the native `MoveToEx` function for drawing  \nreturns zero if failed");
