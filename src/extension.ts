@@ -483,11 +483,15 @@ registerFunc("DragFinish", "function DragFinish(hDrop : HDROP) : void", "Release
 
 registerFunc("DragDetect", "function DragDetect(hwnd : HWND | number, point : POINT | {x, y}) : BOOL", "Captures the mouse and tracks its movement until the user releases the left button, presses the ESC key, or moves the mouse outside the drag rectangle around the specified point.  \nThe width and height of the drag rectangle are specified by the `SM_CXDRAG` and `SM_CYDRAG` values returned by the `GetSystemMetrics` function.  \nreturns 1 on success");
 
+
 registerFunc("DllLoad", "function DllLoad(dllpath : String, dwFlags? : number) : function(procName : string, argCount : number, args : Array, argTypes : Array, returnvalue : number)", "this function follows the same rules as [LoadLibraryEx](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw) minus the reserved second param  \n`dwFlags` can be any `LOAD_` const (or 0 for the same effect as `LoadLibrary`)  \nthis returns a function where if any strings you pass into the dll must be wide (utf16?/wchar_t) use `VAR_WSTRING`, if the dll returns a string use `RETURN_WSTRING` if it is wide (utf16/wchar_t)  \npassing `__FREE` as procName will release the dll (internally calls `FreeLibrary`)  \n`argTypes` can be one `VAR_`... const  \n`returnvalue` can be one `RETURN_`... const"); //oh BROTHER how will i write docs for the function this returns
 registerFunc("AddDllDirectory", "function AddDllDirectory(dir : string) : DLL_DIRECTORY_COOKIE", "Adds a directory to the process DLL search path. (**only works when specifying `LOAD_LIBRARY_SEARCH_USER_DIRS` with `DllLoad`/`LoadLibraryEx`**)  \n`dir` is an absolute path to the directory to add to the search path  \nreturns a pointer that can be passed to `RemoveDllDirectory` to remove the DLL from the process DLL search path.");
 registerFunc("SetDllDirectory", "function SetDllDirectory(dir : string) : BOOL", "if `dir` is empty, the call removes the current directory from the default DLL search order.  \nIf `dir` is **NULL**, the function restores the default search order.  \nEach time the `SetDllDirectory` function is called, it replaces the directory specified in the previous `SetDllDirectory` call. To specify more than one directory, use the `AddDllDirectory` function and call `DllLoad`/`LoadLibraryEx` with `LOAD_LIBRARY_SEARCH_USER_DIRS`.");
 registerFunc("RemoveDllDirectory", "function RemoveDllDirectory(cookie : DLL_DIRECTORY_COOKIE) : BOOL", "Removes a directory that was added to the process DLL search path by using `AddDllDirectory`.  \n`cookie` is a value returned from `AddDllDirectory` and after this function returns, the cookie is no longer valid and should not be used.");
-registerFunc("LoadLibraryEx", "function LoadLibraryEx(filename : wstr, dwFlags : number) : HMODULE | number", "`dwFlags` can be and `LOAD_`... const  \nusually LoadLibraryEx has 3 parameters but the second one MUST be NULL so i just didn't add that");
+registerFunc("LoadLibraryEx", "function LoadLibraryEx(filename : wstr, dwFlags : number) : HMODULE | number", "`dwFlags` can be and `LOAD_`... const  \nusually LoadLibraryEx has 3 parameters but the second one MUST be NULL so i just didn't add that  \nCall `FreeLibrary` when you are done with this module");
+registerFunc("GetProcAddress", "function GetProcAddress(dll : HMODULE | number, funcName : string) : FARPROC | number", "`dll` is a pointer returned from `LoadLibraryEx`  \n`funcName` is the name of the function to find  \nreturns a pointer to the function (use `Call` to run le function)");
+registerFunc("Call", "function Call(funcPtr : FARPROC | number, argCount : number, parameters : Array<>, paramTypes : Array<`VAR_`...>, returnType : `RETURN_`... | number) : any", "calls `func_ptr` with the specified number of arguments (`argCount`), interprets the specified array of `parameters` as their corresponding `paramTypes` (any `VAR`... const!) and returns based on the `returnType` (one `RETURN_`... const!)");
+registerFunc("FreeLibrary", "function FreeLibrary(dll : HMODULE | number) : BOOL", "frees the memory or something like that you know...  \nreturns 1 if success");
 
 registerFunc("InitializeWIC", "function InitializeWIC(void) : number | ptr", "used to load bitmaps (like pngs, jpgs, gifs, bmps, icos...) (for d2d (d2d.`CreateBitmapFromWicBitmap`) or GDI (using a dibsection))");
 registerFunc("ScopeGUIDs", "function ScopeGUIDs(scope : this) : void", "for some reason i gotta use this weird function instead of setting these values in the initialization of JBS  \n(**allows you to use any `GUID_`... const**)");
@@ -533,6 +537,7 @@ registerFunc("GetProcessMemoryInfo", "function GetProcessMemoryInfo(hProcess : H
 
 registerFunc("EnumProcesses", "function EnumProcesses(func : Function(pid)) : void", "gives the process ids of all running processes probably i thuink");
 registerFunc("OpenProcess", "function OpenProcess(dwFlags : number, bInheritHandle : boolean, dwProcessId : number) : HANDLE", "`dwFlags` can be any `PROCESS_`... const (and can be OR'd together)  \n`bInheritHandle` can probably just be `false`  \nuse EnumProcesses to iterate through a list of process ids for `dwProcessId`");
+registerFunc("GetCurrentProcess", "function GetCurrentProcess(void) : HANDLE", "Retrieves a pseudo handle for the current process.  \nA pseudo handle is a special constant, currently (**HANDLE**)-1, that is interpreted as the current process handle.  \nFor compatibility with future operating systems, it is best to call `GetCurrentProcess` instead of hard-coding this constant value.");
 registerFunc("EnumProcessModules", "function EnumProcessModules(hProcess : HANDLE) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
 registerFunc("EnumProcessModulesEx", "function EnumProcessModulesEx(hProcess : HANDLE, dwFlags : number) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \ndwFlags can be any `LIST_MODULES_`... const   \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
 registerFunc("GetModuleBaseName", "function GetModuleBaseName(hProcess : HANDLE, hMod : HMODULE) : wstr", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the name or undefined (apparently)");
@@ -579,7 +584,18 @@ registerFunc("NewWCharStrPtr", "function NewWCharStrPtr(wstr : string) : number"
 registerFunc("DeletePtr", "function DeletePtr(ptr : number) : void", "Deletes a scalar pointer");
 registerFunc("DeleteArrayPtr", "function DeleteArrayPtr", "Deletes a vector pointer  \nuse this function on the value returned by `NewCharStrPtr` when you're done!");
 
+registerFunc("VirtualProtect", "function VirtualProtect(address : LPVOID | number, size : number, newProtect : number) : number", "Changes the protection on a region of committed pages in the virtual address space of the calling process.  \n`size` is the size of the region whose access protection attributes are to be changed, **in bytes**.  \nnewProtect can be any `PAGE_`... const  \nif success, returns the old access protection value");
+
+registerFunc("FlushInstructionCache", "function FlushInstructionCache(process : HANDLE : number, baseAddress? : number, size? : number) : BOOL", "idk if you *have* to call it but  \nApplications should call `FlushInstructionCache` if they generate or modify code in memory (like in `scripts/dllstuffs/CALLASM.js`). The CPU cannot detect the change, and may execute the old code it cached.  \n`baseAddress` and `size` can both be **NULL**  \n`baseAddress` is the pointer of the base of the region to be flushed. This parameter can be NULL.  \n`size` is the size of the region to be flushed if `baseAddress` isn't NULL, **in bytes**.");
+
 registerFunc("GetDlgItem", "function GetDlgItem(hDlg : HWND | number, id : number) : HWND", "Retrieves a handle to a control in the specified dialog box.  \n`id` is the identifier of the control to be retrieved.  \nYou can use the `GetDlgItem` function with any parent-child window pair, not just with dialog boxes. As long as the `hDlg` parameter specifies a parent window and the child window has a unique identifier. (as specified by the `hMenu` parameter of `CreateWindow`)");
+
+registerFunc("FindFirstChangeNotification", "function FindFirstChangeNotification(pathName : wstring, watchSubtree : BOOL, notifyFilter : number) : HANDLE | number", "Creates a change notification handle and sets up initial change notification filter conditions.  \nWhen the returned handle is no longer needed, close it by using the `FindCloseChangeNotification` function.  \nThis function does not return when a change occurs. You must call `WaitForSingleObject`!  \nBy default, the `pathName` is limited to MAX_PATH (usually 260) characters. To extend this limit to 32,767 wide characters, prepend \"\\?\\\" to the path. For more information, see [Naming Files, Paths, and Namespaces](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).  \n`notifyFilter` is any `FILE_NOTIFY_CHANGE_`... const (can be OR'd together)");
+registerFunc("FindNextChangeNotification", "function FindNextChangeNotification(hChangeHandle : HANDLE | number) : BOOL", "Requests that the operating system signal a change notification handle the next time it detects an appropriate change.  \n`hChangeHandle` is a handle to a change notification handle created by the `FindFirstChangeNotification` function.  \nWhen `hChangeHandle` is no longer needed, close it by using the `FindCloseChangeNotification` function.");
+registerFunc("FindCloseChangeNotification", "function FindCloseChangeNotification(hChangeHandle : HANDLE | number) : BOOL", "Stops change notification handle monitoring.  \n`hChangeHandle` is a handle to a change notification handle created by the `FindFirstChangeNotification` function.  \nAfter the this function is called, the handle specified by the `hChangeHandle` parameter cannot be used in subsequent calls to either the `FindNextChangeNotification` or `FindCloseChangeNotification` function.");
+registerFunc("WaitForSingleObject", "function WaitForSingleObject(handle : HANDLE | number, milliseconds : number, alertable : BOOL) : number", "if `milliseconds` is 0 then this function returns immediately. To wait indefinitely, pass `0xFFFFFFFF`.  \nreturns a `WAIT_`... const indicating what caused this function to return.  \nThe `WaitForSingleObject` function can wait for the following objects:  \n* Change notification  \n* Console input  \n* Event  \n* Memory resource notification  \n* Mutex  \n* Process  \n* Semaphore  \n* Thread  \n* Waitable timer");
+
+registerFunc("__debugbreak", "function __debugbreak(void) : void", "debug this shit and find out");
 
 function emptyD2DObject() : Array<[string, vscode.CompletionItemKind?]> {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]];//{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
@@ -3799,5 +3815,74 @@ const macros:string[] = [
     //"TD_ERROR_ICON",
     //"TD_INFORMATION_ICON",
     //"TD_SHIELD_ICON",
+    "FILE_NOTIFY_CHANGE_FILE_NAME",
+    "FILE_NOTIFY_CHANGE_DIR_NAME",
+    "FILE_NOTIFY_CHANGE_ATTRIBUTES",
+    "FILE_NOTIFY_CHANGE_SIZE",
+    "FILE_NOTIFY_CHANGE_LAST_WRITE",
+    "FILE_NOTIFY_CHANGE_LAST_ACCESS",
+    "FILE_NOTIFY_CHANGE_CREATION",
+    "FILE_NOTIFY_CHANGE_SECURITY",
+    "WAIT_ABANDONED",
+    "WAIT_IO_COMPLETION",
+    "WAIT_OBJECT_0",
+    "WAIT_TIMEOUT",
+    "WAIT_FAILED",
+    "PAGE_NOACCESS",
+    "PAGE_READONLY",
+    "PAGE_READWRITE",
+    "PAGE_WRITECOPY",
+    "PAGE_EXECUTE",
+    "PAGE_EXECUTE_READ",
+    "PAGE_EXECUTE_READWRITE",
+    "PAGE_EXECUTE_WRITECOPY",
+    "PAGE_GUARD",
+    "PAGE_NOCACHE",
+    "PAGE_WRITECOMBINE",
+    "PAGE_GRAPHICS_NOACCESS",
+    "PAGE_GRAPHICS_READONLY",
+    "PAGE_GRAPHICS_READWRITE",
+    "PAGE_GRAPHICS_EXECUTE",
+    "PAGE_GRAPHICS_EXECUTE_READ",
+    "PAGE_GRAPHICS_EXECUTE_READWRITE",
+    "PAGE_GRAPHICS_COHERENT",
+    "PAGE_GRAPHICS_NOCACHE",
+    "PAGE_ENCLAVE_THREAD_CONTROL",
+    "PAGE_REVERT_TO_FILE_MAP",
+    "PAGE_TARGETS_NO_UPDATE",
+    "PAGE_TARGETS_INVALID",
+    "PAGE_ENCLAVE_UNVALIDATED",
+    "PAGE_ENCLAVE_MASK",
+    "PAGE_ENCLAVE_DECOMMIT",
+    "PAGE_ENCLAVE_SS_FIRST",
+    "PAGE_ENCLAVE_SS_REST",
+    "MEM_COMMIT",
+    "MEM_RESERVE",
+    "MEM_REPLACE_PLACEHOLDER",
+    "MEM_RESERVE_PLACEHOLDER",
+    "MEM_RESET",
+    "MEM_TOP_DOWN",
+    "MEM_WRITE_WATCH",
+    "MEM_PHYSICAL",
+    "MEM_ROTATE",
+    "MEM_DIFFERENT_IMAGE_BASE_OK",
+    "MEM_RESET_UNDO",
+    "MEM_LARGE_PAGES",
+    "MEM_4MB_PAGES",
+    "MEM_64K_PAGES",
+    "MEM_UNMAP_WITH_TRANSIENT_BOOST",
+    "MEM_COALESCE_PLACEHOLDERS",
+    "MEM_PRESERVE_PLACEHOLDER",
+    "MEM_DECOMMIT",
+    "MEM_RELEASE",
+    "MEM_FREE",
+    "MEM_EXTENDED_PARAMETER_GRAPHICS",
+    "MEM_EXTENDED_PARAMETER_NONPAGED",
+    "MEM_EXTENDED_PARAMETER_ZERO_PAGES_OPTIONAL",
+    "MEM_EXTENDED_PARAMETER_NONPAGED_LARGE",
+    "MEM_EXTENDED_PARAMETER_NONPAGED_HUGE",
+    "MEM_EXTENDED_PARAMETER_SOFT_FAULT_PAGES",
+    "MEM_EXTENDED_PARAMETER_EC_CODE",
+    "MEM_EXTENDED_PARAMETER_NUMA_NODE_MANDATORY",
 
 ];
