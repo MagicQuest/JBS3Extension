@@ -150,6 +150,7 @@ registerGlobalObject("screenWidth", "the screen's width", "obtained with `GetSys
 registerGlobalObject("screenHeight", "the screen's height", "obtained with `GetSystemMetrics(SM_CYSCREEN)`");
 registerGlobalObject("__dirname", "this file's directory", "think node js!");
 registerGlobalObject("args", "the arguments used to start this file", "think something like process.argv[] node js!");
+registerGlobalObject("nCmdShow", "straight from WinMain", "use this with `ShowWindow`");
 registerFunc("Msgbox", "function Msgbox(description : string, title : string, flags : number) : number", "calls the `windows.h` `MessageBoxW` function  \nthe flags are all the `MB_` constants (can be OR'ed together)  \nreturns a number based on the user's choice");
 registerFunc("Inputbox", "function Inputbox(description : string, title : string, placeholder : string) : string", "returns the text the user submitted or none if they `cancelled`");
 //registerFunc("CreateWindowClass", "function CreateWindowClass(className : string, init : function, windowProc : function, loop : function) : wndclass | {className : string, windowProc : function, loop : function}", "returns an object with these 3 properties/methods for use with `CreateWindow`");
@@ -190,6 +191,12 @@ registerFunc("MAKEROP4", "function MAKEROP4(fore : number, back : number) : numb
 registerFunc("BeginPaint", "function BeginPaint(window? : HWND | number) : PaintStruct | object", "calls the `windows.h` `BeginPaint` function  \nreturns a newly created custom object with the original c++ `PAINTSTRUCT` object's methods  \n**don't forget to call EndPaint or else memory leak :3**"); //meant to write :) but whatever (lol this just jumpscared me)
 registerFunc("EndPaint", "function EndPaint(window? : HWND | number, paintstruct : PaintStruct | object) : void", "calls the `windows.h` `EndPaint` function  \ndeletes the paintstruct object");
 registerFunc("CreateRectRgn", "function CreateRectRgn(x1 : number, y1 : number, x2 : number, y2 : number) : HRGN | number", "creates an HRGN object behind the scenes and returns a pointer to it  \nused in functions like `GetDCEx`");
+registerFunc("SetRectRgn", "function SetRectRgn(hrgn : HRGN | number, left : number, top : number, right : number, bottom : number) : BOOL", "The `SetRectRgn` function converts a region into a rectangular region with the specified coordinates.  \n`hrgn` can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam");
+registerFunc("GetRgnBox", "function GetRgnBox(rgn : HRGN | number) : RECT | {left, top, right, bottom, complexity}", "`rgn` can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam  \nunlike other RECT returning functions, `GetRgnBox` returns a RECT object with an additional property: `complexity`  \n`complexity` can be `NULLREGION`, `SIMPLEREGION`, or `COMPLEXREGION`");
+registerFunc("PaintRgn", "function PaintRgn(hDC : HDC | number, hrgn : HRGN | number) : BOOL", "The `PaintRgn` function paints the specified region by using the brush currently selected into the device context.  \n`hrgn` can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam");
+registerFunc("FillRgn", "function FillRgn(hDC : HDC | number, hrgn : HRGN | number, brush : HBRUSH | number) : BOOL", "The `FillRgn` function fills a region by using the specified brush.  \n`hrgn` can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam");
+registerFunc("EqualRgn", "function EqualRgn(hrgn1 : HRGN | number, hrgn2 : HRGN | number) : BOOL", "The `EqualRgn` function checks the two specified regions to determine whether they are identical. The function considers two regions identical if they are equal in size and shape.  \nan `HRGN` can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam");
+registerFunc("FrameRgn", "function FrameRgn(hDC : HDC | number, hrgn : HRGN | number, brush : HBRUSH | number, w : number, h : number) : BOOL", "The `FrameRgn` function draws a border around the specified region by using the specified brush.  \n`hrgn` can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam");
 registerFunc("GetDCEx", "function GetDCEx(window? : HWND | number, hrgnClip : HRGN | number, flags : number) : HDC | number", "calls the `windows.h` `GetDCEx` function  \nhrgnClip can be created using `CreateRectRgn` or used in the `WM_NCPAINT` window message as the wParam  \nflags are any `DCX_` const (can be OR'd together)  \nreturns the pointer (integer in js) to the HDC in c++");
 registerFunc("GetDC", "function GetDC(window? : HWND | number) : HDC | number", "calls the `windows.h` `GetDC` function  \nreturns the pointer (integer in js) to the HDC in c++");
 registerFunc("GetWindowDC", "function GetWindowDC(window : HWND | number) : HDC | number", "calls the `windows.h` `GetWindowDC` function which gets the ENTIRE window's device context including the titlebar (well that was a lie but it does include scrollbars)  \nreturns the pointer (integer in js) to the HDC in c++");
@@ -381,7 +388,7 @@ registerFunc("SetBitmapBits", "function SetBitmapBits(compatiblehbm : HBITMAP | 
 registerFunc("SetTimer", "function SetTimer(hwnd : HWND | number, timerId? : number, timeMs : number) : number", "sends the `hwnd` a WM_TIMER message every `timeMs` milliseconds  \nif timerId is 0 it will choose a random id and return it  \nreturns the id of the newly created timer");
 registerFunc("KillTimer", "function KillTimer(hwnd : HWND | number, timerId : number) : number", "stops the `hwnd`'s timer by its id  \nreturns 0 if failed");
 registerFunc("GetGraphicsMode", "function GetGraphicsMode(dc : HDC | number) : number", "returns this device context's graphics mode  \nthe only values can be `GM_COMPATIBLE` or `GM_ADVANCED`");
-registerFunc("SetGraphicsMode", "function SetGraphicsMode(dc : HDC | number, mode : number) : number", "`mode` can only be `GM_COMPATIBLE` or `GM_ADVANCED`  \n`GM_LAST` is equal to `GM_ADVANCED`  \ndefault mode is GM_COMPATIBLE");
+registerFunc("SetGraphicsMode", "function SetGraphicsMode(dc : HDC | number, mode : number) : number", "`mode` can only be `GM_COMPATIBLE` or `GM_ADVANCED`  \n`GM_LAST` is equal to `GM_ADVANCED`  \ndefault mode is GM_COMPATIBLE  \nreturns the old graphics mode");
 registerFunc("GetMapMode", "function GetMapMode(dc : HDC | number) : number", "returns this device context's map mode (any `MM_` const)");
 registerFunc("SetMapMode", "function SetMapMode(dc : HDC | number, mode : number) : number", "`mode` can be any `MM_` const");
 registerFunc("GetWorldTransform", "function GetWorldTransform(dc : HDC | number) : XFORM", "returns an object with properties dawg just look at em");
@@ -504,7 +511,8 @@ registerFunc("FindFirstChangeNotification", "function FindFirstChangeNotificatio
 registerFunc("FindNextChangeNotification", "function FindNextChangeNotification(hChangeHandle : HANDLE | number) : BOOL", "Requests that the operating system signal a change notification handle the next time it detects an appropriate change.  \n`hChangeHandle` is a handle to a change notification handle created by the `FindFirstChangeNotification` function.  \nWhen `hChangeHandle` is no longer needed, close it by using the `FindCloseChangeNotification` function.");
 registerFunc("FindCloseChangeNotification", "function FindCloseChangeNotification(hChangeHandle : HANDLE | number) : BOOL", "Stops change notification handle monitoring.  \n`hChangeHandle` is a handle to a change notification handle created by the `FindFirstChangeNotification` function.  \nAfter the this function is called, the handle specified by the `hChangeHandle` parameter cannot be used in subsequent calls to either the `FindNextChangeNotification` or `FindCloseChangeNotification` function.");
 registerFunc("WaitForSingleObject", "function WaitForSingleObject(handle : HANDLE | number, milliseconds : number, alertable : BOOL) : number", "if `milliseconds` is 0 then this function returns immediately. To wait indefinitely, pass `0xFFFFFFFF`.  \nreturns a `WAIT_`... const indicating what caused this function to return.  \nThe `WaitForSingleObject` function can wait for the following objects:  \n* Change notification  \n* Console input  \n* Event  \n* Memory resource notification  \n* Mutex  \n* Process  \n* Semaphore  \n* Thread  \n* Waitable timer");
-registerFunc("__debugbreak", "function __debugbreak(void) : void", "debug this shit and find out");
+registerFunc("__debugbreak", "function __debugbreak(void) : void", "**this function will crash jbs if it's not attached to a debugger!**  \npauses execution (where this function is defined in JBS3.cpp)  \nwhen compiled, this function is replaced by the `int 3` asm instruction (0xcc)");
+registerFunc("TrackMouseEvent", "function TrackMouseEvent(dwFlags : number, hwndTrack : HWND | number, dwHoverTime : number) : BOOL | {dwFlags, hwndTrack, dwHoverTime}", "  \n`dwFlags` can be any `TME_`... const (some can be OR'd together)  \n`dwHoverTime` can be the hover time-out in milliseconds (use the `HOVER_DEFAULT` const to use the system default hover time-out)  \n**TME_HOVER and TME_LEAVE will not work if the mouse is not already over the window!**  \n**After you receive an event from `TrackMouseEvent` you must call it again to receive further events!**  \nIf you specify `TME_QUERY` this function will return an object containing the current tracking settings");
 function emptyD2DObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
 }
@@ -1241,6 +1249,17 @@ const macros = [
     "VK_OEM_CLEAR",
     "OPAQUE",
     "TRANSPARENT",
+    "BS_SOLID",
+    "BS_NULL",
+    "BS_HOLLOW",
+    "BS_HATCHED",
+    "BS_PATTERN",
+    "BS_INDEXED",
+    "BS_DIBPATTERN",
+    "BS_DIBPATTERNPT",
+    "BS_PATTERN8X8",
+    "BS_DIBPATTERN8X8",
+    "BS_MONOPATTERN",
     "PS_SOLID",
     "PS_DASH",
     "PS_DOT",
@@ -2145,6 +2164,9 @@ const macros = [
     "DCX_INTERSECTUPDATE",
     "DCX_LOCKWINDOWUPDATE",
     "DCX_VALIDATE",
+    "NULLREGION",
+    "SIMPLEREGION",
+    "COMPLEXREGION",
     "ACCENT_DISABLED",
     "ACCENT_ENABLE_GRADIENT",
     "ACCENT_ENABLE_TRANSPARENTGRADIENT",
@@ -3735,5 +3757,40 @@ const macros = [
     "MEM_EXTENDED_PARAMETER_SOFT_FAULT_PAGES",
     "MEM_EXTENDED_PARAMETER_EC_CODE",
     "MEM_EXTENDED_PARAMETER_NUMA_NODE_MANDATORY",
+    "TME_CANCEL",
+    "TME_HOVER",
+    "TME_LEAVE",
+    "TME_NONCLIENT",
+    "TME_QUERY",
+    "HOVER_DEFAULT",
+    "HTERROR",
+    "HTTRANSPARENT",
+    "HTNOWHERE",
+    "HTCLIENT",
+    "HTCAPTION",
+    "HTSYSMENU",
+    "HTGROWBOX",
+    "HTSIZE",
+    "HTMENU",
+    "HTHSCROLL",
+    "HTVSCROLL",
+    "HTMINBUTTON",
+    "HTMAXBUTTON",
+    "HTLEFT",
+    "HTRIGHT",
+    "HTTOP",
+    "HTTOPLEFT",
+    "HTTOPRIGHT",
+    "HTBOTTOM",
+    "HTBOTTOMLEFT",
+    "HTBOTTOMRIGHT",
+    "HTBORDER",
+    "HTREDUCE",
+    "HTZOOM",
+    "HTSIZEFIRST",
+    "HTSIZELAST",
+    "HTOBJECT",
+    "HTCLOSE",
+    "HTHELP",
 ];
 //# sourceMappingURL=extension.js.map
