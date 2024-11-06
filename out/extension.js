@@ -71,9 +71,9 @@ const objectFunctions = {
     "CreateGradientStopCollection": makeArgs("function CreateGradientStopCollection(...gradientStops : [position : float, r : float, g : float, b : float, alpha? : float]) : IUnknown", "creates the gradient stop collection for use in the `Create`(`Linear`/`Radial`)`GradientBrush`  \nreturns the basic IUnknown methods/fields (`Release()`, `internalPtr`)  \nnot sure if the alpha works but that ain't my fault"),
     "CreateLinearGradientBrush": makeArgs("function CreateLinearGradientBrush(startX : number, startY : number, endX : number, endY : number, gradientStopCollection : GradientStopCollection) : LinearGradientBrush", "creates a linear gradient brush for drawing  \n`startX`, `startY`, `endX`, and `endY` dictate the direction of the gradient starting at the upper-left corner (`startX`, `startY`) and ending at the lower-right corner (`endX`, `endY`)"),
     "CreateRadialGradientBrush": makeArgs("function CreateRadialGradientBrush(centerX : number, centerY : number, offsetX : number, offsetY : number, radiusX : number, radiusY : number, gradientStopCollection : GradientStopCollection) : RadialGradientBrush", "creates a radial gradient brush for drawing"),
-    "RestoreDrawingState": makeArgs("function RestoreDrawingState", ""),
-    "CreateDrawingStateBlock": makeArgs("function CreateDrawingStateBlock", ""),
-    "SaveDrawingState": makeArgs("function SaveDrawingState", ""),
+    "RestoreDrawingState": makeArgs("function RestoreDrawingState", "equivalent to html canvas 2d context's restore function"),
+    "CreateDrawingStateBlock": makeArgs("function CreateDrawingStateBlock", "you don't have to call this yourself if you want to use `Save`/`RestoreDrawingState`"),
+    "SaveDrawingState": makeArgs("function SaveDrawingState(void) : void", "equivalent to html canvas 2d context's save function (i think?)"),
     "DrawGradientRoundedRectangle": makeArgs("function DrawGradientRoundedRectangle(left : number, top : number, right : number, bottom : number, radiusX : number, radiusY : number, gradientBrush : GradientBrush, gradientRotation? : number | float, strokeWidth? : number, strokeStyle? : number) : void", "convenience method to draw centered gradients  \ndraws the outline of a rounded rectangle with the corners rounded by the `radiusX` and `radiusY` properties"),
     "DrawRoundedRectangle": makeArgs("function DrawRoundedRectangle(left : number, top : number, right : number, bottom : number, radiusX : number, radiusY : number, brush : Brush, strokeWidth? : number, strokeStyle? : number) : void", "draws the outline of a rounded rectangle with the corners rounded by the `radiusX` and `radiusY` properties"),
     "FillRoundedRectangle": makeArgs("function FillRoundedRectangle(left : number, top : number, right : number, bottom : number, radiusX : number, radiusY : number, brush : Brush) : void", "fills a rounded rectangle with a brush (the corners are rounded by the `radiusX` and `radiusY` properties)"),
@@ -93,7 +93,7 @@ const objectFunctions = {
     "SetOpacity": makeArgs("function SetOpacity(opacity : float) : void", "sets the opacity of the brush"),
     "GetOpacity": makeArgs("function GetOpacity(void) : float", "gets the opacity of the brush"),
     "GetTransform": makeArgs("function GetTransform(void) : Matrix3x2F", "gets the matrix object"),
-    "SetTransform": makeArgs("function SetTransform(matrix : Matrix3x2F) : void", "sets the transform of this brush (only used for bitmap brushes or gradients)  \n`matrix` can be one gained from `GetTransform` or most `d2d.Matrix3x2F...` functions"),
+    "SetTransform": makeArgs("function SetTransform(matrix : Matrix3x2F) : void", "sets the transform of this drawing context, brush, or gradient  \n`matrix` can be one gained from `GetTransform` or most `Matrix3x2F...` functions"),
     "GetDpi": makeArgs("function GetDpi(void) : number[2]", "returns an array with the first element being the xDpi and the second being the yDpi"),
     "GetPixelFormat": makeArgs("function GetPixelFormat(void) : {format : number, alphaMode : number}", "`format` is any `DXGI_FORMAT_` const  \n`alphaMode` is any `D2D1_ALPHA_MODE_` const"),
     "SetTextAlignment": makeArgs("function SetTextAlignment(alignment : number) : void", "`alignment` must be a `DWRITE_TEXT_ALIGNMENT_`... const!"),
@@ -177,7 +177,7 @@ registerFunc("TrackPopupMenu", "function TrackPopupMenu(hMenu : HMENU, uFlags : 
 registerFunc("TrackPopupMenuEx", "function TrackPopupMenuEx(hMenu : HMENU, uFlags : `TPM_...`, x : number, y : number, hwnd : HWND | number, rcExclude : RECT | {}) : BOOL", "`uFlags` can be any `TPM_`... const (can be OR'ed together)  \n  `rcExclude` must be an object with `{left, right, top, bottom}` keys and when specified the menu will not intersect that area i think  \nDisplays a shortcut menu at the specified location and tracks the selection of items on the shortcut menu. The shortcut menu can appear anywhere on the screen.");
 registerFunc("GET_MEASURE_ITEM_STRUCT_LPARAM", "function GET_MEASURE_ITEM_STRUCT_LPARAM(lp : LPARAM | number) : {CtlType, CtlID, itemID, itemWidth, itemHeight, itemData}", "used with the `WM_MEASUREITEM` window message  \nreturns an object with many keys (all the values are numbers)  \n`CtlType` can be one `ODT`... const  \n`CtlID` is the id of the combo box or list box (if this is a menu item use `itemID`)  \n`itemID` is the id for a menu item or the position of a list box or combo box item. This value is specified for a list box only if it has the LBS_OWNERDRAWVARIABLE style; this value is specified for a combo box only if it has the CBS_OWNERDRAWVARIABLE style.  \n`itemWidth` is the width of this menu item. You must set this number.  \n`itemHeight` is the height of this menu item. You must set this number.  \n`itemData` is the application-defined value associated with the menu item. (when using `InsertMenu` it's the last parameter)  \nI used some proxy trickery so that when you set these values it directly changes the values lp points to");
 registerFunc("GET_DRAW_ITEM_STRUCT_LPARAM", "function GET_DRAW_ITEM_STRUCT_LPARAM(lp : LPARAM | number) : {CtlType, CtlID, itemID, itemAction, itemState, hwndItem, hDC, rcItem, itemData}", "used with the `WM_DRAWITEM` window message  \nreturns an object with many keys  \n`CtlType` can be one `ODT`... const  \n`CtlID` is the id of the combo box or list box (if this is a menu item use `itemID`)  \n`itemID` is the id for a menu item or the position of a list box or combo box item. This value is specified for a list box only if it has the LBS_OWNERDRAWVARIABLE style; this value is specified for a combo box only if it has the CBS_OWNERDRAWVARIABLE style.  \n`itemAction` can be one or more `ODA_`... consts  \n`itemState` can be one or more `ODS_`... consts  \n`hwndItem` is a handle to the control for combo boxes, list boxes, buttons, and static controls. For menus, this member is a handle to the menu that contains the item.  \n`hDC` is the device context to draw onto  \n`rcItem` all drawing (with the exception of menu items) is clipped within this RECT  \n`itemData` is the application-defined value associated with the menu item. (when using `InsertMenu` it's the last parameter)");
-registerFunc("CreateWindow", "function CreateWindow(extendedStyle : number, wndclass : WNDCLASSEXW | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number, hwndParent? : HWND | number, hMenu? : HMENU | number, hInstance? : HINSTANCE | number) : HWND | number", "the extendedStyles can be any `WS_EX_` const (can be OR'd together)  \nthe `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL` ([MSDN link for all special classes](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw#remarks))  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \n**IF YOU ARE TRYING TO USE DCOMPOSITION, CREATE THIS WINDOW WITH THE `WS_EX_NOREDIRECTIONBITMAP` EXTENDED FLAG!!!**\n  \nreturns the pointer to the newly created window (`HWND`)  \nunfortunately RIGHT when you make the window the following messages aren't sent:  \n`WM_GETMINMAXINFO`  \n`WM_NCCALCSIZE`  \n`WM_SHOWWINDOW`  \n`WM_WINDOWPOSCHANGING`  \n`WM_ACTIVATEAPP`  \n`WM_NCACTIVATE`  \n`WM_GETICON`  \n`WM_ACTIVATE`  \n`WM_IME_SETCONTEXT`  \n`WM_SETFOCUS`  \n`WM_NCPAINT`  \n`WM_ERASEBKGND`  \n`WM_WINDOWPOSCHANGED`  \n`WM_SIZE`  \n`WM_MOVE`  \nin that order (but don't worry you can still receive these messages later just not when the window is created)"); //nevermind: if `winclass` is an object from `CreateWindowClass` and this is the first window created with one, **it will block the thread after this call.** Further `CreateWindow` calls will not block the thread.  \n
+registerFunc("CreateWindow", "function CreateWindow(extendedStyle : number, wndclass : WNDCLASSEXW | string, title : string, windowStyles : number, x : number, y : number, width : number, height : number, hwndParent? : HWND | number, hMenu? : HMENU | number, hInstance? : HINSTANCE | number) : HWND | number", "the extendedStyles can be any `WS_EX_` const (can be OR'd together)  \nthe `wndclass` can be an object created with the `CreateWindowClass` function or a string like `BUTTON` or `CONTROL` ([MSDN link for all special classes](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createwindowexw#remarks))  \nif the `wndclass` WAS created with `CreateWindowClass` one thing to note about the windowProc is that if you return any number besides 0, DefWindowProc will NOT be called behind the scenes!~  \nwindowStyles can be any `WS_` const (can be OR'd together `|` )  \n**IF YOU ARE TRYING TO USE DCOMPOSITION, CREATE THIS WINDOW WITH THE `WS_EX_NOREDIRECTIONBITMAP` EXTENDED FLAG!!!**\n  \nreturns the pointer to the newly created window (`HWND`)  \nunfortunately RIGHT when you make the window the following messages aren't sent:  \n`WM_GETMINMAXINFO`  \n`WM_NCCALCSIZE`  \n`WM_SHOWWINDOW`  \n`WM_WINDOWPOSCHANGING`  \n`WM_ACTIVATEAPP`  \n`WM_NCACTIVATE`  \n`WM_GETICON`  \n`WM_ACTIVATE`  \n`WM_IME_SETCONTEXT`  \n`WM_SETFOCUS`  \n`WM_NCPAINT`  \n`WM_ERASEBKGND`  \n`WM_WINDOWPOSCHANGED`  \n`WM_SIZE`  \n`WM_MOVE`  \nin that order (but don't worry you can still receive these messages later just not when the window is created)"); //nevermind: if `winclass` is an object from `CreateWindowClass` and this is the first window created with one, **it will block the thread after this call.** Further `CreateWindow` calls will not block the thread.  \n
 registerFunc("RedrawWindow", "function RedrawWindow(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, hrgnUpdate : HRGN | number | undefined, flags : number) : number", "can immediately redraw the window like `UpdateWindow`  \n  the flags can be any `RDW_` const (can be OR'd together)  \nreturns 0 if failed"); //https://stackoverflow.com/questions/2325894/difference-between-invalidaterect-and-redrawwindow
 registerFunc("InvalidateRect", "function InvalidateRect(hwnd : HWND | number, left : number, top : number, right : number, bottom : number, bErase : boolean) : number", "calls the native `InvalidateRect` which \"schedules\" a redraw  \nreturns 0 if failed");
 registerFunc("ShowWindow", "function ShowWindow(hwnd : HWND | number, nCmdShow : number) : number", "nCmdShow can be any `SW_` const  \nreturns 0 if failed");
@@ -209,6 +209,8 @@ registerFunc("CreateCompatibleBitmap", "function CreateCompatibleBitmap(dc : HDC
 registerFunc("ReleaseDC", "function ReleaseDC(window? : HWND | number, dc : HDC | number) : any | number", "calls the `windows.h` `ReleaseDC` function  \nreturns what ever the native c++ function returns idk probably 0");
 registerFunc("TextOut", "function TextOut(dc : HDC | number, x : number, y : number, text : string) : any | number", "calls the `windows.h` `TextOutW` function  \nreturns what ever the native c++ function returns");
 registerFunc("DrawText", "function DrawText(dc : HDC | number, text : string, left : number, top : number, right : number, bottom : number, format : number) : number", "the format can be any `DT_` const (can be OR'd together)  \nreturns 0 if failed");
+registerFunc("DrawFrameControl", "function DrawFrameControl(dc : HDC | number, left : number, top : number, right : number, bottom : number, type : number, state : number) : BOOL", "The `DrawFrameControl` function draws a frame control of the specified type and style.  \n`dc` can be a number obtained from `GetDC`, `GetWindowDC`, `GetDCEx` and probably others lol  \nthe `left, top, right, bottom` parameters specify the bounding rectangle for the frame control  \n`type` can be one `DFC_`... const  \n`state` can be any `DFCS_`... const (some can be OR'd together!)");
+registerFunc("DrawCaption", "function DrawCaption(hwnd : HWND | number, dc : HDC | number, left : number, top : number, right : number, bottom : number, flags : number) : BOOL", "The `DrawCaption` function draws a window caption.  \n`dc` can be a number obtained from `GetDC`, `GetWindowDC`, `GetDCEx` and probably others lol  \nthe `left, top, right, bottom` parameters specify the bounding rectangle for the window caption  \n`flags` are the drawing options and can be any `DC_`... const (BESIDE `DC_BRUSH` AND `DC_PEN` LOL!) (can be OR'd together)  \nIf `DC_SMALLCAP` is specified, the function draws a normal window caption.");
 registerFunc("CreateFont", "function CreateFont(cHeight : number, cWidth : number, cEscapement : number, cOrientation : number, cWeight : number, bItalic : boolean, bUnderline : boolean, bStrikeOut : boolean, iCharSet : number, iOutPrecision : number, iClipPrecision : number, iQuality : number, iPitchAndFamily : number, pszFaceName? : string) : number", "`cWeight` can be any `FW_` const  \n`iCharSet` can be any ...`_CHARSET` const  \niOutPrecision can be any `OUT_` const  \niClipPrecision can be any `CLIP_` const  \niQuality can be any ...`_QUALITY` const  \niPitchAndFamily can be any ...`_PITCH` | `FF_` consts");
 registerFunc("EnumFontFamilies", "function EnumFontFamilies(dc : HDC | number, func : Function(font : LOGFONT, textMetric : TEXTMETRIC, FontType : number)) : void", "takes a function with 3 parameters  \ncalls the native `EnumFontFamiliesExA` function");
 registerFunc("CreateFontSimple", "function CreateFontSimple(fontName : string, width : number, height : number) : HFONT | number", "a convenience function because `CreateFont` takes like 30 arguments  \n`fontName` is case-insensitive so \"Impact\" or \"impact\" will work");
@@ -280,6 +282,7 @@ registerFunc("GetStretchBltMode", "function GetStretchBltMode(dc : HDC | number)
 registerFunc("SetStretchBltMode", "function SetStretchBltMode(dc : HDC | number, mode : number) : number", "sets the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)  \nreturns 0 if failed");
 registerFunc("PrintWindow", "function PrintWindow(hwnd : HWND | number, dc : HDC | number, flags : number) : boolean", "copies a visual window into the specified device context (DC), typically a printer DC. (MSDN)  \ni ain't never seen this function in my life  \nreturns 0 if failed");
 registerFunc("CreateBitmap", "function CreateBitmap(width : number, height : number, bitCount? : number, data? : Uint32Array) : HBITMAP | number", "creates an empty bitmap with the specified width and height  \nsetting the bitCount to 1 gives a monochromic bitmap (the default value is 32)  \ndata must be an array made with `new Uint32Array([data])` (because it's fast) OR can be from `GetDIBits` or wicBitmap.`GetPixels()`  \nThe `CreateBitmap` function can be used to create color bitmaps. However, for performance reasons applications should use `CreateBitmap` to create monochrome bitmaps and `CreateCompatibleBitmap` to create color bitmaps.  \nreturns 0 if failed");
+registerFunc("getline", "function getline(str : string)", "prints `str` and gets the input from the console (like std::wcin.getline or python's input(str) )  \nthe max length of the string returned from this function is 256"); //oops! i forgot i added this like 20 commits ago
 registerFunc("FindWindow", "function FindWindow(className? : string, windowTitle : string) : number", "className isn't required and usually is not needed  \nreturns a pointer to the window (`HWND`)");
 //registerFunc("GetDesktopWindow", "function GetDesktopWindow(void) : HWND | number", "calls the native `GetDesktopWindow` function and returns the screen's `HWND`");
 //registerFunc("GetKeyboardState", "function GetKeyboardState(void) : Array", "calls the native `GetKeyboardState` function and returns an array of length 255");
@@ -355,10 +358,14 @@ registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBIT
 //registerFunc("GetBitmapDimensionEx", "function GetBitmapDimensionEx(hBitmap : HBITMAP | number) : number | {width : number, height : number}", "`hBitmap` can be a bitmap obtained from `LoadImage`  \nreturns the bitmap's size if success otherwise 0"); //lowkey still implemented but they don't really work
 //registerFunc("SetBitmapDimensionEx", "function SetBitmapDimensionEx(hBitmap : HBITMAP | number, newWidth : number, newHeight : number) : number | {width : number, height : number}", "`hBitmap` can be a bitmap obtained from `LoadImage` BUT it cannot be a DIB section bitmap or else this shit will fail  \nreturns the previous size if success otherwise 0");
 registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | number", "sets the mouse capture to the `hwnd`  \nallows your window to still get mouse events even if you aren't hovering over the window  \nreturns the last window that had the mouse or 0");
+registerFunc("GetCapture", "function GetCapture() : HWND | number", "Retrieves a handle to the window (if any) that has captured the mouse. Only one window at a time can capture the mouse; this window receives mouse input whether or not the cursor is within its borders.  \nreturns a handle to the capture window associated with the current thread. If no window in the thread has captured the mouse, the return value is `NULL`.  \nHowever, it is possible that another thread or process has captured the mouse. To get a handle to the capture window on another thread, use the `GetGUIThreadInfo` function.");
 registerFunc("ReleaseCapture", "function ReleaseCapture() : boolean", "releases the mouse capture from a window  \nreturns 0 if failed");
 registerFunc("ClipCursor", "function ClipCursor(left : number, top : number, right : number, bottom : number) : boolean", "restricts the mouse to the supplied rect  \nreturns 0 if failed");
 registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x : number, y : number}", "takes an lparam and converts it to an object with `x` and `y` properties  \nuses the native MAKEPOINTS macro");
 registerFunc("GET_WHEEL_DELTA_WPARAM", "function GET_WHEEL_DELTA_WPARAM(wp : WPARAM) : number", "used with the WM_MOUSEWHEEL event to get the distance the mouse wheel was scrolled");
+registerFunc("GetGUIThreadInfo", "function GetGUIThreadInfo(idThread : number) : GUITHREADINFO | {flags, hwndActive, hwndFocus, hwndCapture, hwndMenuOwner, hwndMoveSize, hwndCaret, rcCaret}", "idThread can be a value obtained from `GetWindowThreadProcessId` but if this parameter is `NULL`, the function returns information for the foreground thread.  \nreturns an object with info about the gui thread idk lol  \nthe returned object's `flags` property can be any `GUI_`... const");
+registerFunc("GetGuiResources", "function GetGuiResources(hProcess : HANDLE | number, uiFlags : number) : number", "Retrieves the count of handles to graphical user interface (GUI) objects in use by the specified process. (i think chrome's task manager will show info like this!)  \n`hProcess` can be a handle to a process or `GR_GLOBAL` (which will return the data for all processes in the current session)  \n`uiFlags` can be any `GR_`... const");
+registerFunc("DisableProcessWindowsGhosting", "function DisableProcessWindowsGhosting(void) : void", "Disables the window ghosting feature for the calling GUI process. Window ghosting is a Windows Manager feature that lets the user minimize, move, or close the main window of an application that is not responding.  \nbasically stops the window from going white if your window is unresponsive (really stops the window from doing anything while unresponsive lmao)  \nfor some reason there is no matching function to enable process window ghosting so you're stuck with this for the lifetime of the process...");
 registerFunc("GetSystemMetrics", "function GetSystemMetrics(metric : number) : number", "the metric parameter can be any `SM_`... const");
 registerFunc("_com_error", "function _com_error(HRESULT : number) : string", "used for helping with errors for objects (like `createCanvas(\"direct2d\")` or `createCanvas(\"direct3d\")`)  \nalso apparently can be used like `_com_error(GetLastError())` to get the error in text (which i didn't know worked with get last error)");
 registerFunc("Beep", "function Beep(frequency : number, durationMs : number, nonblocking? : boolean) : number", "plays a sound on your onboard speaker (if you have one) OR plays a sound through your headphones/realtek yk yk yk  \nalso this blocks the thread for `durationMs` unless specified");
@@ -506,7 +513,7 @@ registerFunc("EnumPropsEx", "function EnumPropsEx(hwnd, func : Function(key : st
 registerFunc("NewCharStrPtr", "function NewCharStrPtr(str : string) : number", "This function puts `str` into a `new` char* and that pointer is returned  \n**use `DeleteArrayPtr` to free this memory**  \ndon't forget to free this shit bruh");
 registerFunc("NewWCharStrPtr", "function NewWCharStrPtr(wstr : string) : number", "This function puts `wstr` into a `new` wchar_t* and that pointer is returned  \n**use `DeleteArrayPtr` to free this memory**  \ndon't forget to free this shit bruh");
 registerFunc("DeletePtr", "function DeletePtr(ptr : number) : void", "Deletes a scalar pointer");
-registerFunc("DeleteArrayPtr", "function DeleteArrayPtr", "Deletes a vector pointer  \nuse this function on the value returned by `NewCharStrPtr` when you're done!");
+registerFunc("DeleteArrayPtr", "function DeleteArrayPtr(ptr : number) : void", "Deletes a vector pointer  \nuse this function on the value returned by `NewCharStrPtr` when you're done!");
 registerFunc("VirtualProtect", "function VirtualProtect(address : LPVOID | number, size : number, newProtect : number) : number", "Changes the protection on a region of committed pages in the virtual address space of the calling process.  \n`size` is the size of the region whose access protection attributes are to be changed, **in bytes**.  \nnewProtect can be any `PAGE_`... const  \nif success, returns the old access protection value");
 registerFunc("FlushInstructionCache", "function FlushInstructionCache(process : HANDLE : number, baseAddress? : number, size? : number) : BOOL", "idk if you *have* to call it but  \nApplications should call `FlushInstructionCache` if they generate or modify code in memory (like in `scripts/dllstuffs/CALLASM.js`). The CPU cannot detect the change, and may execute the old code it cached.  \n`baseAddress` and `size` can both be **NULL**  \n`baseAddress` is the pointer of the base of the region to be flushed. This parameter can be NULL.  \n`size` is the size of the region to be flushed if `baseAddress` isn't NULL, **in bytes**.");
 registerFunc("GetDlgItem", "function GetDlgItem(hDlg : HWND | number, id : number) : HWND", "Retrieves a handle to a control in the specified dialog box.  \n`id` is the identifier of the control to be retrieved.  \nYou can use the `GetDlgItem` function with any parent-child window pair, not just with dialog boxes. As long as the `hDlg` parameter specifies a parent window and the child window has a unique identifier. (as specified by the `hMenu` parameter of `CreateWindow`)");
@@ -3797,5 +3804,58 @@ const macros = [
     "HTHELP",
     "FR_PRIVATE",
     "FR_NOT_ENUM",
+    "DFC_CAPTION",
+    "DFC_MENU",
+    "DFC_SCROLL",
+    "DFC_BUTTON",
+    "DFC_POPUPMENU",
+    "DFCS_CAPTIONCLOSE",
+    "DFCS_CAPTIONMIN",
+    "DFCS_CAPTIONMAX",
+    "DFCS_CAPTIONRESTORE",
+    "DFCS_CAPTIONHELP",
+    "DFCS_MENUARROW",
+    "DFCS_MENUCHECK",
+    "DFCS_MENUBULLET",
+    "DFCS_MENUARROWRIGHT",
+    "DFCS_SCROLLUP",
+    "DFCS_SCROLLDOWN",
+    "DFCS_SCROLLLEFT",
+    "DFCS_SCROLLRIGHT",
+    "DFCS_SCROLLCOMBOBOX",
+    "DFCS_SCROLLSIZEGRIP",
+    "DFCS_SCROLLSIZEGRIPRIGHT",
+    "DFCS_BUTTONCHECK",
+    "DFCS_BUTTONRADIOIMAGE",
+    "DFCS_BUTTONRADIOMASK",
+    "DFCS_BUTTONRADIO",
+    "DFCS_BUTTON3STATE",
+    "DFCS_BUTTONPUSH",
+    "DFCS_INACTIVE",
+    "DFCS_PUSHED",
+    "DFCS_CHECKED",
+    "DFCS_TRANSPARENT",
+    "DFCS_HOT",
+    "DFCS_ADJUSTRECT",
+    "DFCS_FLAT",
+    "DFCS_MONO",
+    "DC_ACTIVE",
+    "DC_SMALLCAP",
+    "DC_ICON",
+    "DC_TEXT",
+    "DC_INBUTTON",
+    "DC_GRADIENT",
+    "DC_BUTTONS",
+    "GR_GDIOBJECTS",
+    "GR_USEROBJECTS",
+    "GR_GDIOBJECTS_PEAK",
+    "GR_USEROBJECTS_PEAK",
+    "GR_GLOBAL",
+    "GUI_CARETBLINKING",
+    "GUI_INMOVESIZE",
+    "GUI_INMENUMODE",
+    "GUI_SYSTEMMENUMODE",
+    "GUI_POPUPMENUMODE",
+    "GUI_16BITTASK",
 ];
 //# sourceMappingURL=extension.js.map
