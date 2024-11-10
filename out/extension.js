@@ -360,8 +360,8 @@ registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBIT
 //registerFunc("GetBitmapDimensionEx", "function GetBitmapDimensionEx(hBitmap : HBITMAP | number) : number | {width : number, height : number}", "`hBitmap` can be a bitmap obtained from `LoadImage`  \nreturns the bitmap's size if success otherwise 0"); //lowkey still implemented but they don't really work
 //registerFunc("SetBitmapDimensionEx", "function SetBitmapDimensionEx(hBitmap : HBITMAP | number, newWidth : number, newHeight : number) : number | {width : number, height : number}", "`hBitmap` can be a bitmap obtained from `LoadImage` BUT it cannot be a DIB section bitmap or else this shit will fail  \nreturns the previous size if success otherwise 0");
 registerFunc("SetCapture", "function SetCapture(hwnd : HWND | number) : HWND | number", "sets the mouse capture to the `hwnd`  \nallows your window to still get mouse events even if you aren't hovering over the window  \nreturns the last window that had the mouse or 0");
-registerFunc("GetCapture", "function GetCapture() : HWND | number", "Retrieves a handle to the window (if any) that has captured the mouse. Only one window at a time can capture the mouse; this window receives mouse input whether or not the cursor is within its borders.  \nreturns a handle to the capture window associated with the current thread. If no window in the thread has captured the mouse, the return value is `NULL`.  \nHowever, it is possible that another thread or process has captured the mouse. To get a handle to the capture window on another thread, use the `GetGUIThreadInfo` function.");
-registerFunc("ReleaseCapture", "function ReleaseCapture() : boolean", "releases the mouse capture from a window  \nreturns 0 if failed");
+registerFunc("GetCapture", "function GetCapture(void) : HWND | number", "Retrieves a handle to the window (if any) that has captured the mouse. Only one window at a time can capture the mouse; this window receives mouse input whether or not the cursor is within its borders.  \nreturns a handle to the capture window associated with the current thread. If no window in the thread has captured the mouse, the return value is `NULL`.  \nHowever, it is possible that another thread or process has captured the mouse. To get a handle to the capture window on another thread, use the `GetGUIThreadInfo` function.");
+registerFunc("ReleaseCapture", "function ReleaseCapture(void) : boolean", "releases the mouse capture from a window  \nreturns 0 if failed");
 registerFunc("ClipCursor", "function ClipCursor(left : number, top : number, right : number, bottom : number) : boolean", "restricts the mouse to the supplied rect  \nreturns 0 if failed");
 registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x : number, y : number}", "takes an lparam and converts it to an object with `x` and `y` properties  \nuses the native MAKEPOINTS macro");
 registerFunc("GET_WHEEL_DELTA_WPARAM", "function GET_WHEEL_DELTA_WPARAM(wp : WPARAM) : number", "used with the WM_MOUSEWHEEL event to get the distance the mouse wheel was scrolled");
@@ -678,8 +678,8 @@ registerOARFAS("Canvas", ["createCanvas"], (args) => {
     "GetMaximumBitmapSize": makeArgs("function GetMaximumBitmapSize(void) : number", "i wonder how big it can be"),
     "SetDpi": makeArgs("function SetDpi(x : number, y : number) : void", "idk bro"),
     "GetDpi": makeArgs("function GetDpi(void) : {x : number, y : number}", "idk bro"),
-    "GetTransform": makeArgs("function GetTransform(void) : Matrix3x2F", "gets the matrix object"),
-    "SetTransform": makeArgs("function SetTransform(matrix : Matrix3x2F) : void", "sets the transform of this drawing context, brush, or gradient  \n`matrix` can be one gained from `GetTransform` or most `Matrix3x2F...` functions"),
+    "GetTransform": makeArgs("function GetTransform(void) : D2D1_MATRIX_3X2_F", "gets the matrix object"),
+    "SetTransform": makeArgs("function SetTransform(matrix : D2D1_MATRIX_3X2_F) : void", "sets the transform of this drawing context, brush, or gradient  \n`matrix` can be one gained from `GetTransform` or most `Matrix3x2F...` functions"),
     "EnumFonts": makeArgs("function EnumFonts(func : Function<FontFamily>, passFontFamilyObjects? : bool) : void", "enumerates system font families (the DirectWrite way)  \nslightly different from GDI's `EnumFontFamilies`  \nwhen `passFontFamilyObjects` is false it will only pass the name of the font family (so no having to manually release the FontFamily object) but if it's true then you MUST release the FontFamily objects once you're done with them (see `d2dfontenum.js`)"),
     "GetPixelSize": makeArgs("function GetPixelSize(void) : {width : number, height : number}", "returns an object with `width` and `height` fields/properties ig about this rendertarget or somethung"),
     "GetSize": makeArgs("function GetSize(void) : SizeF | {width : number, height : number}", "returns an object with `width` and `height` properties related to the size of this object"),
@@ -1023,9 +1023,11 @@ registerOARFAS("Matrix5x4F", [], (args) => [["Identity", vscode.CompletionItemKi
 function registerGlobalObjectSignature(globalName, objectName) {
     globalObjects.push({ varName: globalName, props: objectMethodList[objectName].get(""), name: objectName });
 }
-registerGlobalObjectSignature("Matrix3x2F", "Matrix3x2F");
+registerGlobalObjectSignature("Matrix3x2F", "Matrix3x2F"); //back in the day you couldn't do this!
 registerGlobalObjectSignature("Matrix4x4F", "Matrix4x4F");
 registerGlobalObjectSignature("Matrix5x4F", "Matrix5x4F");
+//const functionRegex = /([A-z0-9_]+)\s*=\s*(?:\w*\.)?([A-z0-9_]+)\(/; //you lowkey could just replace [A-z0-9_] with \w
+const functionRegex = /([A-z0-9_$]+)\s*=\s*(?:[A-z0-9_$]*\.)?([A-z0-9_$]+)\(/; //nevermind lol i just remembered js variables can have '$' in them
 function activate(context) {
     //class BrushObject implements JBSObjects {
     //    props: [["shit", vscode.CompletionItemKind.Method]];
@@ -1033,51 +1035,79 @@ function activate(context) {
     function calcDefinedObjects(document) {
         //definedObjects = globalObjects; //OOPS! this shit is NOT a copy!!!
         definedObjects = []; //structuredClone(globalObjects); //come on bruh
-        //Object.assign(definedObjects, globalObjects);
+        Object.assign(definedObjects, globalObjects);
+        console.log("defining objects...", document.lineCount * objectReturningInfo.length); //oops that old loop was kinda inefficient
+        //for(let i = 0; i < document.lineCount; i++) {
+        //    for(const orf of objectReturningInfo) {
+        //        //const line = document.lineAt(i).text.replaceAll("   ", "");
+        //        const text = document.lineAt(i).text;
+        //        if(/*line*/text.includes(orf[0]+"(")) {
+        //            /*
+        //            //console.log(line.substring(line.indexOf(" ")+1, line.indexOf(" =")), orf[0], "line",i);
+        //            //definedObjects.push({varName: line.substring(line.indexOf(" ")+1, line.indexOf(" =")), object: orf[1]});
+        //            let tline = document.lineAt(i).text.replaceAll("    ", "");
+        //            //const line = document.lineAt(i).text.replaceAll("   ", "");
+        //            //if(tline.substring(0, 6) == "const ") {
+        //            //    tline = tline.replace("const ", "");
+        //            //}else if(tline.substring(0,4) == "var ") {
+        //            //    tline = tline.replace("var ", "");
+        //            //}else if(tline.substring(0,4) == "let ") {
+        //            //    tline = tline.replace("let ", "");
+        //            //}
+        //            tline = tline.replace("const ", "").replace("var ", "").replace("let ", "");
+        //            //console.log(tline.substring(0, tline.indexOf(" =")), orf[0], "line",i);
+        //            */
+        //            
+        //            //damn typescript doesn't like that regex could be null or something idk
+        //            //const [_, varName, funcName] = document.lineAt(i).text.match(/([A-z0-9_]+)\s*=\s*([A-z0-9_]+).*\(/); //yo typescript chill out bruh this is valid js
+        //            const match = text.match(/([A-z0-9_]+)\s*=\s*([A-z0-9_]+.*)\(/); //damn i was tryna get the args too but idk if i can doo all that
+        //            if(match) { //kys TS it shouldn't be null here anyways (well... technically)
+        //                const varName: string = match[1];
+        //                if(text.indexOf("//") != -1 && text.indexOf(varName) > text.indexOf("//")) {
+        //                    console.log("lol this var is commented out!", varName);
+        //                    continue;
+        //                }
+        //                const funcName: string = match[2]; //oops this has sometimes been wrong!
+        //                const objectName: string = orf[1];
+        //                const args: string = text.match(/\((.+)+\)/)?.[1] ?? "";
+        //                //if(args == "") {
+        //                    //console.log("args are \"\" something may or may not of happened", varName, funcName);
+        //                //}
+        //                console.log(args, varName, funcName, definedObjects.length);
+        //                const props : SignatureInfo = objectMethodList[objectName].get(args);
+        //                //console.log(varName, funcName, objectName, args, props);
+        //                //let object = orf[1];
+        //                //if(object) {
+        //                //    object = object.testArgs(text.match(/\((.+)+\)/)[1]);
+        //                //}
+        //                definedObjects.push({varName/*: tline.substring(0, tline.indexOf(" ="))*/, props, name: objectName});
+        //            }
+        //        }
+        //    }
+        //}
+        //console.log(definedObjects);
         for (let i = 0; i < document.lineCount; i++) {
-            for (const orf of objectReturningInfo) {
-                //const line = document.lineAt(i).text.replaceAll("   ", "");
-                const text = document.lineAt(i).text;
-                if ( /*line*/text.includes(orf[0] + "(")) {
-                    /*
-                    //console.log(line.substring(line.indexOf(" ")+1, line.indexOf(" =")), orf[0], "line",i);
-                    //definedObjects.push({varName: line.substring(line.indexOf(" ")+1, line.indexOf(" =")), object: orf[1]});
-                    let tline = document.lineAt(i).text.replaceAll("    ", "");
-                    //const line = document.lineAt(i).text.replaceAll("   ", "");
-                    //if(tline.substring(0, 6) == "const ") {
-                    //    tline = tline.replace("const ", "");
-                    //}else if(tline.substring(0,4) == "var ") {
-                    //    tline = tline.replace("var ", "");
-                    //}else if(tline.substring(0,4) == "let ") {
-                    //    tline = tline.replace("let ", "");
-                    //}
-                    tline = tline.replace("const ", "").replace("var ", "").replace("let ", "");
-                    //console.log(tline.substring(0, tline.indexOf(" =")), orf[0], "line",i);
-                    */
-                    //damn typescript doesn't like that regex could be null or something idk
-                    //const [_, varName, funcName] = document.lineAt(i).text.match(/([A-z0-9_]+)\s*=\s*([A-z0-9_]+).*\(/); //yo typescript chill out bruh this is valid js
-                    const match = text.match(/([A-z0-9_]+)\s*=\s*([A-z0-9_]+).*\(/); //damn i was tryna get the args too but idk if i can doo all that
-                    if (match) { //kys ts it shouldn't be null here anyways (well... technically)
-                        const varName = match[1];
-                        const funcName = match[2];
-                        const objectName = orf[1];
-                        const args = text.match(/\((.+)+\)/)?.[1] ?? "";
-                        //if(args == "") {
-                        //console.log("args are \"\" something may or may not of happened", varName, funcName);
-                        //}
-                        console.log(args, varName, funcName);
-                        const props = objectMethodList[objectName].get(args);
-                        //console.log(varName, funcName, objectName, args, props);
-                        //let object = orf[1];
-                        //if(object) {
-                        //    object = object.testArgs(text.match(/\((.+)+\)/)[1]);
-                        //}
-                        definedObjects.push({ varName /*: tline.substring(0, tline.indexOf(" ="))*/, props, name: objectName });
-                    }
+            const match = document.lineAt(i).text.match(functionRegex);
+            if (match) {
+                const varName = match[1];
+                const funcName = match[2];
+                const index = objectReturningInfo.findIndex(([orifn]) => orifn == funcName); //object returning info function name
+                //console.log(varName, funcName, index);
+                if (index != -1) {
+                    const orf = objectReturningInfo[index];
+                    const objectName = orf[1];
+                    //console.log("right before args what's the problem", document.lineAt(i).text);
+                    //console.log("regex", document.lineAt(i).text.match(/\((.+)+\)/));
+                    //const args: string = document.lineAt(i).text.match(/\((.+)+\)/)?.[1] ?? ""; //for some reason BOTH times it gets stuck on this line?
+                    //GUYS
+                    //i had NO IDEA that regex could get stuck in a loop if you put some dumb shit LMAO
+                    const args = document.lineAt(i).text.match(/\((.*?)\)/)?.[1] ?? ""; //magnificent
+                    const props = objectMethodList[objectName].get(args);
+                    console.log(args, varName, funcName, definedObjects.length);
+                    definedObjects.push({ varName /*: tline.substring(0, tline.indexOf(" ="))*/, props, name: objectName });
                 }
             }
         }
-        //console.log(definedObjects);
     }
     const signatureHelp = vscode.languages.registerSignatureHelpProvider('javascript', {
         provideSignatureHelp(document, position, token, sigcontext) {
@@ -1207,7 +1237,7 @@ function activate(context) {
             //const commitCharacterCompletion = new vscode.CompletionItem('console', vscode.CompletionItemKind.Variable);
             //commitCharacterCompletion.commitCharacters = ['.'];
             //commitCharacterCompletion.documentation = new vscode.MarkdownString('Press `.` to get `consoele.`');
-            //console.log("completions : 21");
+            console.log("completions : 21");
             const completions = [];
             for (const func of funcs) {
                 const completion = new vscode.CompletionItem(func.name, func.type); //vscode.CompletionItemKind.Function);
@@ -1246,6 +1276,7 @@ function activate(context) {
         provideCompletionItems(document, position) {
             // get all text until the `position` and check if it reads `console.`
             // and if so then complete if `log`, `warn`, and `error`
+            console.log("dot nottation");
             calcDefinedObjects(document);
             const linePrefix = document.lineAt(position).text.slice(0, position.character);
             for (const object of definedObjects) {
