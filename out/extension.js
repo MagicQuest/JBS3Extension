@@ -525,6 +525,14 @@ registerFunc("FindCloseChangeNotification", "function FindCloseChangeNotificatio
 registerFunc("WaitForSingleObject", "function WaitForSingleObject(handle : HANDLE | number, milliseconds : number, alertable : BOOL) : number", "if `milliseconds` is 0 then this function returns immediately. To wait indefinitely, pass `0xFFFFFFFF`.  \nreturns a `WAIT_`... const indicating what caused this function to return.  \nThe `WaitForSingleObject` function can wait for the following objects:  \n* Change notification  \n* Console input  \n* Event  \n* Memory resource notification  \n* Mutex  \n* Process  \n* Semaphore  \n* Thread  \n* Waitable timer");
 registerFunc("__debugbreak", "function __debugbreak(void) : void", "**this function will crash jbs if it's not attached to a debugger!**  \npauses execution (where this function is defined in JBS3.cpp)  \nwhen compiled, this function is replaced by the `int 3` asm instruction (0xcc)");
 registerFunc("TrackMouseEvent", "function TrackMouseEvent(dwFlags : number, hwndTrack : HWND | number, dwHoverTime : number) : BOOL | {dwFlags, hwndTrack, dwHoverTime}", "  \n`dwFlags` can be any `TME_`... const (some can be OR'd together)  \n`dwHoverTime` can be the hover time-out in milliseconds (use the `HOVER_DEFAULT` const to use the system default hover time-out)  \n**TME_HOVER and TME_LEAVE will not work if the mouse is not already over the window!**  \n**After you receive an event from `TrackMouseEvent` you must call it again to receive further events!**  \nIf you specify `TME_QUERY` this function will return an object containing the current tracking settings");
+registerFunc("CreateMailslot", "function CreateMailslot(name : wstring, maxMessageSize : number, readTimeout : number) : HANDLE | number", "`name` MUST have the following form!: \\\\.\\mailslot\\[path]name  \n`maxMessageSize` can be `NULL` for no limit  \n`readTimeout` is the time, in milliseconds, a read operation can wait before a time-out occurs (can be `MAILSLOT_WAIT_FOREVER` for no timeout, `0` instantly returns if no message is present)  \nyou must call `CloseHandle` when done with the mailslot (or, when the process closes, the system destroys it anyways)  \ninternally using the default (NULL) security attributes for this function because idk how all that works");
+registerFunc("GetMailslotInfo", "function GetMailslotInfo(mailslot : HANDLE | number) : BOOL | {maxMessageSize, nextSize, messageCount, readTimeout}", "`mailslot` is a value returned from `CreateMailslot` my boy  \nif this function succeeds it returns an object with info about the mailslot but if not this function returns 0");
+registerFunc("WriteFile", "function WriteFile(hFile : HANDLE | number, data : number | string | ArrayBufferView, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL", "`hFile` can be a value returned from `CreateMailslot` or `CreateFile`  \n`data` can be a string, bool, number, OR any ArrayBuffer type object like a `Uint8Array` and shit");
+registerFunc("CreateFile", "function CreateFile(fileName : wstring, desiredAccess : number, shareMode : number, creationDisposition : number, flagsAndAttributes : number, hTemplateFile? : HANDLE | number) : HANDLE | number", "`desiredAccess` can be `GENERIC_READ`, `GENERIC_WRITE`, or `NULL`  \n`shareMode` can be `FILE_SHARE_DELETE`, `FILE_SHARE_READ`, or `FILE_SHARE_WRITE`  \n`creationDisposition` can be `CREATE_NEW`, `CREATE_ALWAYS`, `OPEN_EXISTING`, `OPEN_ALWAYS`, `TRUNCATE_EXISTING`  \n`flagsAndAttributes` can be any `FILE_ATTRIBUTE_`... const AND any `FILE_FLAG_`... const (`FILE_ATTRIBUTE_NORMAL` is the most common)  \n`hTemplateFile` google it"); //oops i forgot to write one for create file
+registerFunc("CreateEvent", "function CreateEvent(manualReset : BOOL, initialState : BOOL, name : wstring) : HANDLE | number", "if `manualReset` is true the function creates a manual-reset event object, which requires the use of the `ResetEvent` function to set the event state to nonsignaled.  \nif `initialState` is true, the initial state of the event object is signaled; otherwise, it is nonsignaled.  \n`name` is limited to MAX_PATH (260) characters  \ninternally, `lpEventAttributes` is NULL  \nyou gotta call `CloseHandle` on the HANDLE returned from this function when you're done with it");
+registerFunc("ResetEvent", "function ResetEvent(hEvent : HANDLE | number) : BOOL", "Sets the specified event object to the nonsignaled state.  \n`hEvent` can be a HANDLE returned from `CreateEvent`");
+registerFunc("SetEvent", "function SetEvent(hEvent : HANDLE | number) : BOOL", "Sets the specified event object to the signaled state.  \n`hEvent` can be a HANDLE returned from `CreateEvent`");
+registerFunc("ReadFile", "function ReadFile(hFile : HANDLE | number, bytesToRead : number, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL | wstring", "`hFile` can be a HANDLE returned from `CreateFile` or `CreateMailslot`  \nlowkey im assuming a ton of stuff with this implementation");
 const vscode = require("vscode");
 function emptyCOMObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
@@ -1020,12 +1028,14 @@ registerOARFAS("Matrix4x4F", [], (args) => [["IsIdentity", vscode.CompletionItem
 registerOARFAS("Matrix5x4F", [], (args) => [["Identity", vscode.CompletionItemKind.Method]], {
     "Identity": makeArgs("function Identity(void) : D2D1_MATRIX_5X4_F", "returns the default 5x4 matrix (for some reason this is the only `Matrix5x4F` method (and it's literally just the constructor))"),
 });
+registerOARFAS("ColorF", [], (args) => [["AliceBlue"], ["AntiqueWhite"], ["Aqua"], ["Aquamarine"], ["Azure"], ["Beige"], ["Bisque"], ["Black"], ["BlanchedAlmond"], ["Blue"], ["BlueViolet"], ["Brown"], ["BurlyWood"], ["CadetBlue"], ["Chartreuse"], ["Chocolate"], ["Coral"], ["CornflowerBlue"], ["Cornsilk"], ["Crimson"], ["Cyan"], ["DarkBlue"], ["DarkCyan"], ["DarkGoldenrod"], ["DarkGray"], ["DarkGreen"], ["DarkKhaki"], ["DarkMagenta"], ["DarkOliveGreen"], ["DarkOrange"], ["DarkOrchid"], ["DarkRed"], ["DarkSalmon"], ["DarkSeaGreen"], ["DarkSlateBlue"], ["DarkSlateGray"], ["DarkTurquoise"], ["DarkViolet"], ["DeepPink"], ["DeepSkyBlue"], ["DimGray"], ["DodgerBlue"], ["Firebrick"], ["FloralWhite"], ["ForestGreen"], ["Fuchsia"], ["Gainsboro"], ["GhostWhite"], ["Gold"], ["Goldenrod"], ["Gray"], ["Green"], ["GreenYellow"], ["Honeydew"], ["HotPink"], ["IndianRed"], ["Indigo"], ["Ivory"], ["Khaki"], ["Lavender"], ["LavenderBlush"], ["LawnGreen"], ["LemonChiffon"], ["LightBlue"], ["LightCoral"], ["LightCyan"], ["LightGoldenrodYellow"], ["LightGreen"], ["LightGray"], ["LightPink"], ["LightSalmon"], ["LightSeaGreen"], ["LightSkyBlue"], ["LightSlateGray"], ["LightSteelBlue"], ["LightYellow"], ["Lime"], ["LimeGreen"], ["Linen"], ["Magenta"], ["Maroon"], ["MediumAquamarine"], ["MediumBlue"], ["MediumOrchid"], ["MediumPurple"], ["MediumSeaGreen"], ["MediumSlateBlue"], ["MediumSpringGreen"], ["MediumTurquoise"], ["MediumVioletRed"], ["MidnightBlue"], ["MintCream"], ["MistyRose"], ["Moccasin"], ["NavajoWhite"], ["Navy"], ["OldLace"], ["Olive"], ["OliveDrab"], ["Orange"], ["OrangeRed"], ["Orchid"], ["PaleGoldenrod"], ["PaleGreen"], ["PaleTurquoise"], ["PaleVioletRed"], ["PapayaWhip"], ["PeachPuff"], ["Peru"], ["Pink"], ["Plum"], ["PowderBlue"], ["Purple"], ["Red"], ["RosyBrown"], ["RoyalBlue"], ["SaddleBrown"], ["Salmon"], ["SandyBrown"], ["SeaGreen"], ["SeaShell"], ["Sienna"], ["Silver"], ["SkyBlue"], ["SlateBlue"], ["SlateGray"], ["Snow"], ["SpringGreen"], ["SteelBlue"], ["Tan"], ["Teal"], ["Thistle"], ["Tomato"], ["Turquoise"], ["Violet"], ["Wheat"], ["White"], ["WhiteSmoke"], ["Yellow"], ["YellowGreen"],], {});
 function registerGlobalObjectSignature(globalName, objectName) {
     globalObjects.push({ varName: globalName, props: objectMethodList[objectName].get(""), name: objectName });
 }
 registerGlobalObjectSignature("Matrix3x2F", "Matrix3x2F"); //back in the day you couldn't do this!
 registerGlobalObjectSignature("Matrix4x4F", "Matrix4x4F");
 registerGlobalObjectSignature("Matrix5x4F", "Matrix5x4F");
+registerGlobalObjectSignature("ColorF", "ColorF");
 //const functionRegex = /([A-z0-9_]+)\s*=\s*(?:\w*\.)?([A-z0-9_]+)\(/; //you lowkey could just replace [A-z0-9_] with \w
 const functionRegex = /([A-z0-9_$]+)\s*=\s*(?:[A-z0-9_$]*\.)?([A-z0-9_$]+)\(/; //nevermind lol i just remembered js variables can have '$' in them
 function activate(context) {
@@ -4360,5 +4370,125 @@ const macros = [
     "D2D1_GEOMETRY_RELATION_IS_CONTAINED",
     "D2D1_GEOMETRY_RELATION_CONTAINS",
     "D2D1_GEOMETRY_RELATION_OVERLAP",
+    "GENERIC_READ",
+    "GENERIC_WRITE",
+    "GENERIC_EXECUTE",
+    "GENERIC_ALL",
+    "FILE_READ_DATA",
+    "FILE_LIST_DIRECTORY",
+    "FILE_WRITE_DATA",
+    "FILE_ADD_FILE",
+    "FILE_APPEND_DATA",
+    "FILE_ADD_SUBDIRECTORY",
+    "FILE_CREATE_PIPE_INSTANCE",
+    "FILE_READ_EA",
+    "FILE_WRITE_EA",
+    "FILE_EXECUTE",
+    "FILE_TRAVERSE",
+    "FILE_DELETE_CHILD",
+    "FILE_READ_ATTRIBUTES",
+    "FILE_WRITE_ATTRIBUTES",
+    "FILE_ALL_ACCESS",
+    "FILE_GENERIC_READ",
+    "FILE_GENERIC_WRITE",
+    "FILE_GENERIC_EXECUTE",
+    "FILE_SHARE_READ",
+    "FILE_SHARE_WRITE",
+    "FILE_SHARE_DELETE",
+    "FILE_ATTRIBUTE_READONLY",
+    "FILE_ATTRIBUTE_HIDDEN",
+    "FILE_ATTRIBUTE_SYSTEM",
+    "FILE_ATTRIBUTE_DIRECTORY",
+    "FILE_ATTRIBUTE_ARCHIVE",
+    "FILE_ATTRIBUTE_DEVICE",
+    "FILE_ATTRIBUTE_NORMAL",
+    "FILE_ATTRIBUTE_TEMPORARY",
+    "FILE_ATTRIBUTE_SPARSE_FILE",
+    "FILE_ATTRIBUTE_REPARSE_POINT",
+    "FILE_ATTRIBUTE_COMPRESSED",
+    "FILE_ATTRIBUTE_OFFLINE",
+    "FILE_ATTRIBUTE_NOT_CONTENT_INDEXED",
+    "FILE_ATTRIBUTE_ENCRYPTED",
+    "FILE_ATTRIBUTE_INTEGRITY_STREAM",
+    "FILE_ATTRIBUTE_VIRTUAL",
+    "FILE_ATTRIBUTE_NO_SCRUB_DATA",
+    "FILE_ATTRIBUTE_EA",
+    "FILE_ATTRIBUTE_PINNED",
+    "FILE_ATTRIBUTE_UNPINNED",
+    "FILE_ATTRIBUTE_RECALL_ON_OPEN",
+    "FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS",
+    "TREE_CONNECT_ATTRIBUTE_PRIVACY",
+    "TREE_CONNECT_ATTRIBUTE_INTEGRITY",
+    "TREE_CONNECT_ATTRIBUTE_GLOBAL",
+    "TREE_CONNECT_ATTRIBUTE_PINNED",
+    "FILE_ATTRIBUTE_STRICTLY_SEQUENTIAL",
+    //"FILE_NOTIFY_CHANGE_FILE_NAME", //oops i already defined these earlier!
+    //"FILE_NOTIFY_CHANGE_DIR_NAME",
+    //"FILE_NOTIFY_CHANGE_ATTRIBUTES",
+    //"FILE_NOTIFY_CHANGE_SIZE",
+    //"FILE_NOTIFY_CHANGE_LAST_WRITE",
+    //"FILE_NOTIFY_CHANGE_LAST_ACCESS",
+    //"FILE_NOTIFY_CHANGE_CREATION",
+    //"FILE_NOTIFY_CHANGE_SECURITY",
+    "FILE_ACTION_ADDED",
+    "FILE_ACTION_REMOVED",
+    "FILE_ACTION_MODIFIED",
+    "FILE_ACTION_RENAMED_OLD_NAME",
+    "FILE_ACTION_RENAMED_NEW_NAME",
+    "MAILSLOT_NO_MESSAGE",
+    "MAILSLOT_WAIT_FOREVER",
+    "FILE_CASE_SENSITIVE_SEARCH",
+    "FILE_CASE_PRESERVED_NAMES",
+    "FILE_UNICODE_ON_DISK",
+    "FILE_PERSISTENT_ACLS",
+    "FILE_FILE_COMPRESSION",
+    "FILE_VOLUME_QUOTAS",
+    "FILE_SUPPORTS_SPARSE_FILES",
+    "FILE_SUPPORTS_REPARSE_POINTS",
+    "FILE_SUPPORTS_REMOTE_STORAGE",
+    "FILE_RETURNS_CLEANUP_RESULT_INFO",
+    "FILE_SUPPORTS_POSIX_UNLINK_RENAME",
+    "FILE_SUPPORTS_BYPASS_IO",
+    "FILE_SUPPORTS_STREAM_SNAPSHOTS",
+    "FILE_SUPPORTS_CASE_SENSITIVE_DIRS",
+    "FILE_VOLUME_IS_COMPRESSED",
+    "FILE_SUPPORTS_OBJECT_IDS",
+    "FILE_SUPPORTS_ENCRYPTION",
+    "FILE_NAMED_STREAMS",
+    "FILE_READ_ONLY_VOLUME",
+    "FILE_SEQUENTIAL_WRITE_ONCE",
+    "FILE_SUPPORTS_TRANSACTIONS",
+    "FILE_SUPPORTS_HARD_LINKS",
+    "FILE_SUPPORTS_EXTENDED_ATTRIBUTES",
+    "FILE_SUPPORTS_OPEN_BY_FILE_ID",
+    "FILE_SUPPORTS_USN_JOURNAL",
+    "FILE_SUPPORTS_INTEGRITY_STREAMS",
+    "FILE_SUPPORTS_BLOCK_REFCOUNTING",
+    "FILE_SUPPORTS_SPARSE_VDL",
+    "FILE_DAX_VOLUME",
+    "FILE_SUPPORTS_GHOSTING",
+    "FILE_INVALID_FILE_ID",
+    "CREATE_NEW",
+    "CREATE_ALWAYS",
+    "OPEN_EXISTING",
+    "OPEN_ALWAYS",
+    "TRUNCATE_EXISTING",
+    "INVALID_FILE_SIZE",
+    "INVALID_SET_FILE_POINTER",
+    "INVALID_FILE_ATTRIBUTES",
+    "INVALID_HANDLE_VALUE",
+    "FILE_FLAG_WRITE_THROUGH",
+    "FILE_FLAG_OVERLAPPED",
+    "FILE_FLAG_NO_BUFFERING",
+    "FILE_FLAG_RANDOM_ACCESS",
+    "FILE_FLAG_SEQUENTIAL_SCAN",
+    "FILE_FLAG_DELETE_ON_CLOSE",
+    "FILE_FLAG_BACKUP_SEMANTICS",
+    "FILE_FLAG_POSIX_SEMANTICS",
+    "FILE_FLAG_SESSION_AWARE",
+    "FILE_FLAG_OPEN_REPARSE_POINT",
+    "FILE_FLAG_OPEN_NO_RECALL",
+    "FILE_FLAG_FIRST_PIPE_INSTANCE",
+    "MAX_PATH",
 ];
 //# sourceMappingURL=extension.js.map
