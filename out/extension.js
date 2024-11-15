@@ -284,7 +284,7 @@ registerFunc("GetStretchBltMode", "function GetStretchBltMode(dc : HDC | number)
 registerFunc("SetStretchBltMode", "function SetStretchBltMode(dc : HDC | number, mode : number) : number", "sets the stretch mode (which can be `BLACKONWHITE`,`COLORONCOLOR`,`HALFTONE`,`WHITEONBLACK`)  \nreturns 0 if failed");
 registerFunc("PrintWindow", "function PrintWindow(hwnd : HWND | number, dc : HDC | number, flags : number) : boolean", "copies a visual window into the specified device context (DC), typically a printer DC. (MSDN)  \ni ain't never seen this function in my life  \nreturns 0 if failed");
 registerFunc("CreateBitmap", "function CreateBitmap(width : number, height : number, bitCount? : number, data? : Uint32Array) : HBITMAP | number", "creates an empty bitmap with the specified width and height  \nsetting the bitCount to 1 gives a monochromic bitmap (the default value is 32)  \ndata must be an array made with `new Uint32Array([data])` (because it's fast) OR can be from `GetDIBits` or wicBitmap.`GetPixels()`  \nThe `CreateBitmap` function can be used to create color bitmaps. However, for performance reasons applications should use `CreateBitmap` to create monochrome bitmaps and `CreateCompatibleBitmap` to create color bitmaps.  \nreturns 0 if failed");
-registerFunc("getline", "function getline(str : string)", "prints `str` and gets the input from the console (like std::wcin.getline or python's input(str) )  \nthe max length of the string returned from this function is 256"); //oops! i forgot i added this like 20 commits ago
+registerFunc("getline", "function getline(wstr : wstring, length? : number)", "prints `wstr` and gets the input from the console (like std::wcin.getline or python's input(str) )  \nthe max length of the string returned from this function is `length` or 256"); //oops! i forgot i added this like 20 commits ago
 registerFunc("FindWindow", "function FindWindow(className? : string, windowTitle : string) : number", "className isn't required and usually is not needed  \nreturns a pointer to the window (`HWND`)");
 //registerFunc("GetDesktopWindow", "function GetDesktopWindow(void) : HWND | number", "calls the native `GetDesktopWindow` function and returns the screen's `HWND`");
 //registerFunc("GetKeyboardState", "function GetKeyboardState(void) : Array", "calls the native `GetKeyboardState` function and returns an array of length 255");
@@ -484,6 +484,7 @@ registerFunc("EnumProcessModulesEx", "function EnumProcessModulesEx(hProcess : H
 registerFunc("GetModuleBaseName", "function GetModuleBaseName(hProcess : HANDLE, hMod : HMODULE) : wstr", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the name or undefined (apparently)");
 registerFunc("GetModuleFileName", "function GetModuleFileName(hMod : HMODULE) : wstr", "`hMod` can be obtained by calling `EnumProcessModules`  \nreturns the path of the file that contains the module");
 registerFunc("GetModuleFileNameEx", "function GetModuleFileNameEx(hProcess : HANDLE, hMod : HMODULE) : wstr", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the path of the file that contains the module");
+//registerFunc("CompareObjectHandles", "function CompareObjectHandles(hFirstObjHandle : HANDLE, hSecondObjHandle : HANDLE) : BOOL", "Compares two object handles to determine if they refer to the same underlying kernel object."); //lowkey this function should've worked i should try again next time
 registerFunc("CloseHandle", "function CloseHandle(hObject : HANDLE) : BOOL", "use on HANDLE(s) returned from `OpenProcess` when done with them  \ndo not call CloseHandle on any HMODULE(s) returned from both `EnumProcessModules(Ex)`  \nreturns 1 if success");
 registerFunc("GlobalMemoryStatusEx", "function GlobalMemoryStatusEx(void) : {}", "returns an object with alot of info about current memory availability");
 registerFunc("EasyTab_Load", "function EasyTab_Load(window : HWND | number) : EasyTabResult | number", "returns an `EASYTAB_`... const and if this function was successful  it returns `EASYTAB_OK`");
@@ -532,7 +533,13 @@ registerFunc("CreateFile", "function CreateFile(fileName : wstring, desiredAcces
 registerFunc("CreateEvent", "function CreateEvent(manualReset : BOOL, initialState : BOOL, name : wstring) : HANDLE | number", "if `manualReset` is true the function creates a manual-reset event object, which requires the use of the `ResetEvent` function to set the event state to nonsignaled.  \nif `initialState` is true, the initial state of the event object is signaled; otherwise, it is nonsignaled.  \n`name` is limited to MAX_PATH (260) characters  \ninternally, `lpEventAttributes` is NULL  \nyou gotta call `CloseHandle` on the HANDLE returned from this function when you're done with it");
 registerFunc("ResetEvent", "function ResetEvent(hEvent : HANDLE | number) : BOOL", "Sets the specified event object to the nonsignaled state.  \n`hEvent` can be a HANDLE returned from `CreateEvent`");
 registerFunc("SetEvent", "function SetEvent(hEvent : HANDLE | number) : BOOL", "Sets the specified event object to the signaled state.  \n`hEvent` can be a HANDLE returned from `CreateEvent`");
-registerFunc("ReadFile", "function ReadFile(hFile : HANDLE | number, bytesToRead : number, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL | wstring", "`hFile` can be a HANDLE returned from `CreateFile` or `CreateMailslot`  \nlowkey im assuming a ton of stuff with this implementation");
+registerFunc("ReadFile", "function ReadFile(hFile : HANDLE | number, bytesToRead : number, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL | wstring", "`hFile` can be a HANDLE returned from `CreateFile` or `CreateMailslot`  \n`overlapped` is optional or it can be an object returned from `OVERLAPPED` (or you could just write the properties yourself)  \nlowkey im assuming a ton of stuff with this implementation");
+registerFunc("OVERLAPPED", "function OVERLAPPED(Internal : number, InternalHigh : number, Offset : number, OffsetHigh : number, hEvent : HANDLE | number) : OVERLAPPED | {}", "this function just returns an object with these named properties for use with `WriteFile` and `ReadFile`");
+registerFunc("Shell_NotifyIcon", "function Shell_NotifyIcon(dwMessage : number, data : NOTIFYICONDATA | {hWnd, uID, uFlags, uCallbackMessage, hIcon, szTip, dwState, dwStateMask, szInfo, uVersion, szInfoTitle, dwInfoFlags, guidItem, hBalloonIcon})", "`dwMessage` is a `NIM_`* const  \n`data` can be an object returned from `NOTIFYICONDATA` (or you can just write the properties yourself)  \nThe content of `data` depends on the value of `dwMessage`. It can define an icon to add to the notification area, cause that icon to display a notification, or identify an icon to modify or delete.");
+registerFunc("NOTIFYICONDATA", "function NOTIFYICONDATA(hWnd : number, uID : number, uFlags : number, uCallbackMessage : number, hIcon : number, szTip : wstring, dwState : number, dwStateMask : number, szInfo : wstring, uVersion : number, szInfoTitle : wstring, dwInfoFlags : number, guidItem : GUID, hBalloonIcon : number) : NOTIFYICONDATA | {}", "`hwnd` is a handle to the window that receives notifications associated with an icon in the notification area.  \n`uID` is The application-defined identifier of the taskbar icon.  \n`uFlags` can be any `NIF_`* const  \n`uCallbackMessage` is an application-defined message identifier. The system uses this identifier to send notification messages to the window identified in `hWnd`.  \n`hIcon` is a handle to the icon to be added, modified, or deleted. Windows XP and later support icons of up to 32 BPP.  \n`szTip` is a null-terminated string that specifies the text for a standard tooltip. (its max length is 128 characters including the terminating null character)  \n`dwState` can be `NIS_HIDDEN` or `NIS_SHAREDICON`  \n`dwStateMask` is a value that specifies which bits of the dwState member are retrieved or modified.  \n`szInfo` is a null-terminated string that specifies the text to display in a balloon notification. (max length is 256)  \n`uVersion` is specifies which version of the Shell notification icon interface should be used. This member is employed only when using `Shell_NotifyIcon` to send an `NIM_SETVERSION` message.  \n`szInfoTitle` is a null-terminated string that specifies a title for a balloon notification. This title appears in a larger font immediately above the text. (max length is 64 characters including null terminator)  \n`dwInfoFlags` are flags that can be set to modify the behavior and appearance of a balloon notification. The icon is placed to the left of the title. If the `szInfoTitle` member is zero-length, the icon is not shown. Flags can be any `NIIF_`* const  \n`guidItem` is lowkey something you probably can't use because you need to make a guid for this and like why do all that (To generate a GUID for use in this member, use a GUID-generating tool such as Guidgen.exe.)  \n`hBalloonIcon` is the handle of a customized notification icon provided by the application that should be used independently of the notification area icon. If this member is non-NULL and the `NIIF_USER` flag is set in the `dwInfoFlags` member, this icon is used as the notification icon. If this member is NULL, the legacy behavior is carried out.  \nthis function just returns an object with these named properties for use with `Shell_NotifyIcon");
+registerFunc("Shell_NotifyIconGetRect", "function Shell_NotifyIconGetRect(identifier : NOTIFYICONIDENTIFIER) : RECT | {left, top, right, bottom}", "`identifier` is an object returned from the `NOTIFYICONIDENTIFIER` function/constructor whathaveoyu");
+registerFunc("NOTIFYICONIDENTIFIER", "function NOTIFYICONIDENTIFIER(hWnd : number, uID : number, guidItem : GUID) : ", "`hWnd` is a handle to the parent window used by the notification's callback function. For more information, see the hWnd member of the NOTIFYICONDATA structure.  \n`uID` is an application-defined identifier of the notification icon. Multiple icons can be associated with a single hWnd, each with their own uID.  \n`guidItem` is a registered GUID that identifies the icon.");
+registerFunc("RtlGetLastNtStatus", "function RtlGetLastNtStatus(void) : NTSTATUS | number", "exported function from *ntdll.dll*  \ni think this is like an old `GetLastError`  \nnot sure what you'd do with this function lowkey...");
 const vscode = require("vscode");
 function emptyCOMObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
@@ -593,7 +600,7 @@ function extendMethods(objectName, arr) {
 registerOARFAS("IUnknown", [], (args) => emptyCOMObject(), {
     "Release": makeArgs("function Release(void) : number", "Decrements the reference count for an interface on a COM object.  \nreturns the number of remaining references to this COM object (if it's 0 then this object is freed)"),
 });
-registerOARFAS("RECT", ["GetWindowRect", "GetClientRect", "GetBounds", "GetWidenedBounds"], (args) => [["left"], ["top"], ["right"], ["bottom"]], {});
+registerOARFAS("RECT", ["GetWindowRect", "GetClientRect", "GetBounds", "GetWidenedBounds", "Shell_NotifyIconGetRect"], (args) => [["left"], ["top"], ["right"], ["bottom"]], {});
 registerOARFAS("POINT", ["MAKEPOINTS", "GetMousePos", "GetCursorPos", "GetRadius", "GetStartPoint", "GetEndPoint", "GetCenter", "GetGradientOriginOffset", "GetDpi"], (args) => [["x"], ["y"]], {});
 registerOARFAS("PAINTSTRUCT", ["BeginPaint"], (args) => [["fErase"], ["fIncUpdate"], ["fRestore"], ["hdc"], ["rcPaint", vscode.CompletionItemKind.Class], ["ps"]], {});
 registerOARFAS("RequireObject", ["require"], (args) => {
@@ -1350,6 +1357,8 @@ const macros = [
     "MB_RTLREADING",
     "MB_SETFOREGROUND",
     "MB_TOPMOST",
+    "WM_APP",
+    "WM_USER",
     "WM_NULL",
     "WM_CREATE",
     "WM_DESTROY",
@@ -4490,5 +4499,29 @@ const macros = [
     "FILE_FLAG_OPEN_NO_RECALL",
     "FILE_FLAG_FIRST_PIPE_INSTANCE",
     "MAX_PATH",
+    "NIF_MESSAGE",
+    "NIF_ICON",
+    "NIF_TIP",
+    "NIF_STATE",
+    "NIF_INFO",
+    "NIF_GUID",
+    "NIF_REALTIME",
+    "NIF_SHOWTIP",
+    "NIS_HIDDEN",
+    "NIS_SHAREDICON",
+    "NIIF_NONE",
+    "NIIF_INFO",
+    "NIIF_WARNING",
+    "NIIF_ERROR",
+    "NIIF_USER",
+    "NIIF_ICON_MASK",
+    "NIIF_NOSOUND",
+    "NIIF_LARGE_ICON",
+    "NIIF_RESPECT_QUIET_TIME",
+    "NIM_ADD",
+    "NIM_MODIFY",
+    "NIM_DELETE",
+    "NIM_SETFOCUS",
+    "NIM_SETVERSION",
 ];
 //# sourceMappingURL=extension.js.map
