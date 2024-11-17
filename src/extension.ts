@@ -640,6 +640,8 @@ registerFunc("NOTIFYICONIDENTIFIER", "function NOTIFYICONIDENTIFIER(hWnd : numbe
 
 registerFunc("RtlGetLastNtStatus", "function RtlGetLastNtStatus(void) : NTSTATUS | number", "exported function from *ntdll.dll*  \ni think this is like an old `GetLastError`  \nnot sure what you'd do with this function lowkey...");
 
+registerFunc("GetCursorInfo", "function GetCursorInfo(void) : CURSORINFO | {flags, hCursor, ptScreenPos}", "returns stuff like the current icon of the mouse and its position (in the `hCursor` and `ptScreenPos` properties respectively)");
+
 import * as vscode from 'vscode';
 
 function emptyCOMObject() : SignatureInfo {
@@ -663,7 +665,7 @@ function d2dCanvasObjectDC() : SignatureInfo {
 }
 
 function d2dCanvasObject11() : SignatureInfo {
-    return [...d2dCanvasObject(), ["CreateEffect", vscode.CompletionItemKind.Method], ["AcquireNextFrame", vscode.CompletionItemKind.Method], ["CreateBitmap1", vscode.CompletionItemKind.Method], ["Present", vscode.CompletionItemKind.Method], ["SetTarget", vscode.CompletionItemKind.Method], ["CreateBitmapFromDxgiSurface", vscode.CompletionItemKind.Method], ["DrawImage", vscode.CompletionItemKind.Method], ["CreateImageBrush", vscode.CompletionItemKind.Method], ["CLSID_D2D12DAffineTransform"], ["CLSID_D2D13DPerspectiveTransform"], ["CLSID_D2D13DTransform"], ["CLSID_D2D1ArithmeticComposite"], ["CLSID_D2D1Atlas"], ["CLSID_D2D1BitmapSource"], ["CLSID_D2D1Blend"], ["CLSID_D2D1Border"], ["CLSID_D2D1Brightness"], ["CLSID_D2D1ColorManagement"], ["CLSID_D2D1ColorMatrix"], ["CLSID_D2D1Composite"], ["CLSID_D2D1ConvolveMatrix"], ["CLSID_D2D1Crop"], ["CLSID_D2D1DirectionalBlur"], ["CLSID_D2D1DiscreteTransfer"], ["CLSID_D2D1DisplacementMap"], ["CLSID_D2D1DistantDiffuse"], ["CLSID_D2D1DistantSpecular"], ["CLSID_D2D1DpiCompensation"], ["CLSID_D2D1Flood"], ["CLSID_D2D1GammaTransfer"], ["CLSID_D2D1GaussianBlur"], ["CLSID_D2D1Scale"], ["CLSID_D2D1Histogram"], ["CLSID_D2D1HueRotation"], ["CLSID_D2D1LinearTransfer"], ["CLSID_D2D1LuminanceToAlpha"], ["CLSID_D2D1Morphology"], ["CLSID_D2D1OpacityMetadata"], ["CLSID_D2D1PointDiffuse"], ["CLSID_D2D1PointSpecular"], ["CLSID_D2D1Premultiply"], ["CLSID_D2D1Saturation"], ["CLSID_D2D1Shadow"], ["CLSID_D2D1SpotDiffuse"], ["CLSID_D2D1SpotSpecular"], ["CLSID_D2D1TableTransfer"], ["CLSID_D2D1Tile"], ["CLSID_D2D1Turbulence"], ["CLSID_D2D1UnPremultiply"], ["CLSID_D2D1Contrast"], ["CLSID_D2D1RgbToHue"], ["CLSID_D2D1HueToRgb"], ["CLSID_D2D1ChromaKey"], ["CLSID_D2D1Emboss"], ["CLSID_D2D1Exposure"], ["CLSID_D2D1Grayscale"], ["CLSID_D2D1Invert"], ["CLSID_D2D1Posterize"], ["CLSID_D2D1Sepia"], ["CLSID_D2D1Sharpen"], ["CLSID_D2D1Straighten"], ["CLSID_D2D1TemperatureTint"], ["CLSID_D2D1Vignette"], ["CLSID_D2D1EdgeDetection"], ["CLSID_D2D1HighlightsShadows"], ["CLSID_D2D1LookupTable3D"], ["CLSID_D2D1Opacity"], ["CLSID_D2D1AlphaMask"], ["CLSID_D2D1CrossFade"], ["CLSID_D2D1Tint"], ["CLSID_D2D1WhiteLevelAdjustment"], ["CLSID_D2D1HdrToneMap"], ];
+    return [...d2dCanvasObject(), ["CreateEffect", vscode.CompletionItemKind.Method], ["AcquireNextFrame", vscode.CompletionItemKind.Method], ["CreateBitmap1", vscode.CompletionItemKind.Method], ["Present", vscode.CompletionItemKind.Method], ["SetTarget", vscode.CompletionItemKind.Method], ["CreateBitmapFromDxgiSurface", vscode.CompletionItemKind.Method], ["DrawImage", vscode.CompletionItemKind.Method], ["CreateImageBrush", vscode.CompletionItemKind.Method], ["DXGIGetDebugInterface1", vscode.CompletionItemKind.Method], ["CLSID_D2D12DAffineTransform"], ["CLSID_D2D13DPerspectiveTransform"], ["CLSID_D2D13DTransform"], ["CLSID_D2D1ArithmeticComposite"], ["CLSID_D2D1Atlas"], ["CLSID_D2D1BitmapSource"], ["CLSID_D2D1Blend"], ["CLSID_D2D1Border"], ["CLSID_D2D1Brightness"], ["CLSID_D2D1ColorManagement"], ["CLSID_D2D1ColorMatrix"], ["CLSID_D2D1Composite"], ["CLSID_D2D1ConvolveMatrix"], ["CLSID_D2D1Crop"], ["CLSID_D2D1DirectionalBlur"], ["CLSID_D2D1DiscreteTransfer"], ["CLSID_D2D1DisplacementMap"], ["CLSID_D2D1DistantDiffuse"], ["CLSID_D2D1DistantSpecular"], ["CLSID_D2D1DpiCompensation"], ["CLSID_D2D1Flood"], ["CLSID_D2D1GammaTransfer"], ["CLSID_D2D1GaussianBlur"], ["CLSID_D2D1Scale"], ["CLSID_D2D1Histogram"], ["CLSID_D2D1HueRotation"], ["CLSID_D2D1LinearTransfer"], ["CLSID_D2D1LuminanceToAlpha"], ["CLSID_D2D1Morphology"], ["CLSID_D2D1OpacityMetadata"], ["CLSID_D2D1PointDiffuse"], ["CLSID_D2D1PointSpecular"], ["CLSID_D2D1Premultiply"], ["CLSID_D2D1Saturation"], ["CLSID_D2D1Shadow"], ["CLSID_D2D1SpotDiffuse"], ["CLSID_D2D1SpotSpecular"], ["CLSID_D2D1TableTransfer"], ["CLSID_D2D1Tile"], ["CLSID_D2D1Turbulence"], ["CLSID_D2D1UnPremultiply"], ["CLSID_D2D1Contrast"], ["CLSID_D2D1RgbToHue"], ["CLSID_D2D1HueToRgb"], ["CLSID_D2D1ChromaKey"], ["CLSID_D2D1Emboss"], ["CLSID_D2D1Exposure"], ["CLSID_D2D1Grayscale"], ["CLSID_D2D1Invert"], ["CLSID_D2D1Posterize"], ["CLSID_D2D1Sepia"], ["CLSID_D2D1Sharpen"], ["CLSID_D2D1Straighten"], ["CLSID_D2D1TemperatureTint"], ["CLSID_D2D1Vignette"], ["CLSID_D2D1EdgeDetection"], ["CLSID_D2D1HighlightsShadows"], ["CLSID_D2D1LookupTable3D"], ["CLSID_D2D1Opacity"], ["CLSID_D2D1AlphaMask"], ["CLSID_D2D1CrossFade"], ["CLSID_D2D1Tint"], ["CLSID_D2D1WhiteLevelAdjustment"], ["CLSID_D2D1HdrToneMap"], ["DXGI_DEBUG_ALL"], ["DXGI_DEBUG_DX"], ["DXGI_DEBUG_DXGI"], ["DXGI_DEBUG_APP"], ];
 }
 
 function d2dCanvasObject11DComp() : SignatureInfo {
@@ -771,6 +773,15 @@ registerOARFAS(
 );
 
 registerOARFAS(
+    "IDXGIDebug1",
+    ["DXGIGetDebugInterface1"],
+    (args) => [["ReportLiveObjects", vscode.CompletionItemKind.Method]],
+    extendMethods("IUnknown", {
+        "ReportLiveObjects" : makeArgs("function ReportLiveObjects(apiID : GUID, flags : DXGI_DEBUG_RLO_FLAGS) : void", "`apiID` can be a d2d.`DXGI_DEBUG_`* const  \n`flags` can be a `DXGI_DEBUG_RLO_`* const  \nlowkey this function won't do anything if you aren't using a canvas created with `ID2D1DeviceContext` or higher ALSO it won't work if `D3D11CreateDevice` wasn't called with the `D3D11_CREATE_DEVICE_DEBUG` (unfortunately i handle a lot of this part internally so there's no way to do this yourself yet...)  \nall in all this function won't do anything right now"),
+    }),
+);
+
+registerOARFAS(
     "Canvas",
     ["createCanvas"],
     (args) => {
@@ -801,7 +812,7 @@ registerOARFAS(
         return arr;
     },
     {
-        "CreatePathGeometry": makeArgs("function CreatePathGeometry(void) : ID2D1PathGeometry1", "Creates an empty Path Geometry object (don't forget to release this thing probably)  \nTo retrieve a `ID2D1GeometrySink` call `this.Open()`"),
+        "CreatePathGeometry": makeArgs("function CreatePathGeometry(void) : ID2D1PathGeometry1", "Creates an empty Path Geometry object (don't forget to release this thing probably)  \nTo retrieve an `ID2D1GeometrySink` call `this.Open()`"),
         "BeginDraw" : makeArgs("function BeginDraw(void) : void", "calls the native `BeginDraw` function on the direct2d renderTarget"),
         "EndDraw" : makeArgs("function EndDraw(donotpresent? : boolean) : void", "calls the native `EndDraw` function on the direct2d renderTarget  \nthe `donopresent` bool only does anything if this canvas was created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
         "Resize" : makeArgs("function Resize(width : number, height : number) : HRESULT", "resizes the internal RenderTarget  \nIf you're using a D2D11 canvas (`ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`) then you MUST release any bitmaps created with `CreateBitmapFromDxgiSurface` (see )"),
@@ -841,7 +852,7 @@ registerOARFAS(
 
         "DrawLine" : makeArgs("function DrawLine(fromX : number, fromY : number, toX : number, toY : number, brush : Brush, strokeWidth? : number, strokeStyle? : number) : void", "draws a line starting from (`fromX`, `fromY`) to (`toX`, `toY`)"),
         "DrawGradientLine" : makeArgs("function DrawGradientLine(fromX : number, fromY : number, toX : number, toY : number, brush : GradientBrush, gradientRotation? : float, strokeWidth? : number, strokeStyle? : number) : void", ""),
-        "DrawGeometry" : makeArgs("function DrawGeometry(geometry : ID2D1Geometry, brush : ID2D1Brush, strokeWidth? : number, strokeStyle? : ID2D1StrokeStyle) : void", "Draws the outline of the specified geometry using the specified stroke style.  \n`geometry` can be an object obtained from `d2d.CreatePathGeometry()`  \n`strokeStyle` is an object obtained from `d2d.CreateStrokeStyle`"),
+        "DrawGeometry" : makeArgs("function DrawGeometry(geometry : ID2D1Geometry, brush : ID2D1Brush, strokeWidth? : number, strokeStyle? : ID2D1StrokeStyle) : void", "Draws the outline of the specified geometry using the specified stroke style.  \n`geometry` can be an object obtained from `d2d.CreatePathGeometry()`  \n`strokeStyle` can be an object obtained from `d2d.CreateStrokeStyle`"),
         "FillGeometry" : makeArgs("function FillGeometry(geometry : ID2D1Geometry, brush : ID2D1Brush, opacityBrush? : ID2D1Brush) : void", "Paints the interior of the specified geometry.  \n`geometry` can be an object obtained from `d2d.CreatePathGeometry()`  \n`brush` can be obtained from the `CreateSolidColorBrush` and `CreateBitmapBrush` (just to name a few)  \n`opacityBrush` is the opacity mask to apply to the geometry, or NULL for no opacity mask. If an opacity mask (the opacityBrush parameter) is specified, brush must be an `ID2D1BitmapBrush` that has its x- and y-extend modes set to `D2D1_EXTEND_MODE_CLAMP`."),
         "Clear" : makeArgs("function Clear(r : float, g : float, b : float, alphah? : float) : void", "Clears the render target screen with the set color  \ni had to make alpha work in some cases behind the scenes"),
         "Release" : makeArgs("function Release(void) : void", "calls `Release` on this direct2d object and \"deletes\" it"),
@@ -871,6 +882,7 @@ registerOARFAS(
         "CreateImageBrush" : makeArgs("function CreateImageBrush() : ", ""),
         "CreateBitmapFromDxgiSurface" : makeArgs("function CreateBitmapFromDxgiSurface(bitmapOptions : D2D1_BITMAP_OPTIONS, format? : DXGI_FORMAT, alphaMode? : D2D1_ALPHA_MODE) : Bitmap", "creates a bitmap the size of the render target or something like that  \n`bitmapOptions` are any `D2D1_BITMAP_OPTIONS`... const  \n`format` is any `DXGI_FORMAT`... const (but usually `DXGI_FORMAT_B8G8R8A8_UNORM`)  \n`alphaMode` is any `D2D1_ALPHA_MODE`... const (usually `D2D1_ALPHA_MODE_PREMULTIPLIED`)"), //did i forgot to keep writing this one bruh 😭
         "CreateBitmap1" : makeArgs("function CreateBitmap1(width : number, height : number, bitmapOptions : D2D1_BITMAP_OPTIONS, format? : DXGI_FORMAT, alphaMode? : D2D1_ALPHA_MODE, bits? : Uint8Array, pitch? : number) : Bitmap", "creates a special bitmap with the specified `width` and `height`  \n`bitmapOptions` are any `D2D1_BITMAP_OPTIONS`... const  \n`format` is any `DXGI_FORMAT`... const (but usually `DXGI_FORMAT_B8G8R8A8_UNORM`)  \n`alphaMode` is any `D2D1_ALPHA_MODE`... const (usually `D2D1_ALPHA_MODE_PREMULTIPLIED`)  \n(`pitch`)[https://learn.microsoft.com/en-us/windows/win32/medfound/image-stride] is the amount of bytes in a row of pixel data (including padding)"), //oops you can't actually use the bits parameter yet...
+        "DXGIGetDebugInterface1" : makeArgs("function DXGIGetDebugInterface1(void) : IDXGIDebug1", "this function will fail if you don't have the windows software development kit with `E_NOINTERFACE`"),
 
         //DComposition
         "Commit" : makeArgs("function Commit(void) : void", "Commits all DirectComposition commands pending on this device.  \ncall this shit when you add an effect and stuff like that yk"),
@@ -1091,6 +1103,13 @@ registerOARFAS(
         "AddQuadraticBeziers" : makeArgs("function AddQuadraticBeziers(beziers : Array<[[x, y], [x2, y2]]>) : void", "Adds a sequence of quadratic Bezier segments as an array in a single call.  \nThis function can actually be called in the following ways:  \nAddQuadraticBeziers([[[x1, y1], [x2, y2]], [[x3, y3], [x4, y4]]])  \nAddQuadraticBeziers([[x1, y1], [x2, y2]], [[x3, y3], [x4, y4]])"),
         "AddArc" : makeArgs("function AddArc(x : number, y : number, width : number, height : number, rotationAngle : number, sweepDirection : D2D1_SWEEP_DIRECTION | number, arcSize : D2D1_ARC_SIZE | number) : void", "Creates a single arc and adds it to the path geometry.  \n`sweepDirection` is a `D2D1_SWEEP_DIRECTION_`... const  \n`arcSize` is a `D2D1_ARC_SIZE_`... const"),
     }),
+);
+
+registerOARFAS(
+    "CURSORINFO",
+    ["GetCursorInfo"],
+    (args) => [["flags"], ["hCursor"], ["ptScreenPos"]],
+    {},
 );
 
 /*
@@ -4881,6 +4900,10 @@ const macros:string[] = [
     "GUI_SYSTEMMENUMODE",
     "GUI_POPUPMENUMODE",
     "GUI_16BITTASK",
+    "DXGI_DEBUG_RLO_SUMMARY",
+    "DXGI_DEBUG_RLO_DETAIL",
+    "DXGI_DEBUG_RLO_IGNORE_INTERNAL",
+    "DXGI_DEBUG_RLO_ALL",
     "D2D1_CAP_STYLE_FLAT",
     "D2D1_CAP_STYLE_SQUARE",
     "D2D1_CAP_STYLE_ROUND",
@@ -5062,4 +5085,6 @@ const macros:string[] = [
     "NIM_DELETE",
     "NIM_SETFOCUS",
     "NIM_SETVERSION",
+    "CURSOR_SHOWING",
+    "CURSOR_SUPPRESSED",
 ];
