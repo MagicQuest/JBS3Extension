@@ -642,6 +642,17 @@ registerFunc("RtlGetLastNtStatus", "function RtlGetLastNtStatus(void) : NTSTATUS
 
 registerFunc("GetCursorInfo", "function GetCursorInfo(void) : CURSORINFO | {flags, hCursor, ptScreenPos}", "returns stuff like the current icon of the mouse and its position (in the `hCursor` and `ptScreenPos` properties respectively)");
 
+registerFunc("RegQueryInfoKey", "function RegQueryInfoKey(key : HKEY, maxLength? : number) : {class, subKeysCount, maxSubKeyLen, maxClassLen, valuesCount, maxValueNameLen, maxValueLen, fileTime : {dwLowDateTime, dwHighDateTime}}", "`key` can be a predefined key like one `HKEY_`* const OR it can be obtained from `RegOpenKeyEx` or `RegCreateKeyEx`  \n`maxLength` is 256 by default and it denotes the max length of the strings returned  \nif this function succeeds it returns an object with properties related to the values and their names in `key` (if not it returns an error code for use with `_com_error`)");
+registerFunc("RegOpenKeyEx", "function RegOpenKeyEx(key : HKEY, subKey? : wstring, ulOptions? : REG_OPTION_OPEN_LINK | number, samDesired : number) : HKEY | LSTATUS", "`key` can be a predefined key like one `HKEY_`* const  \n`subKey` is the name of the registry subkey to be opened.  \n`ulOptions` can be 0 or `REG_OPTION_OPEN_LINK`  \n`samDesired` is a  mask that specifies the desired access rights to the key to be opened. (any `KEY_`* const)  \nreturns a valid key on success but if not it returns an error code for use with `_com_error`"); //pre-cut quilt material (say that 5x fast)
+registerFunc("RegGetValue", "function RegGetValue(key : HKEY, subKey? : wstring, valueName? : wstring, dwFlags : number, size : number) : string | number | ArrayBufferView | LSTATUS", "`key` can be obtained from `RegOpenKeyEx` or `RegCreateKeyEx`  \n`subKey` is the path of a registry key relative to the key specified by the `key` parameter. The registry value will be retrieved from this subkey.  \n`valueName` is the name of the value to be get.  \n`dwType` can be any `REG_`* const (NOT any `REG_OPTION_`* consts tho lmao)  \n`size` can be the maxValueLen property of the object obtained from `RegQueryInfoKey` (or it can just be a big enough number lol)  \nif this function succeeds it returns the data obtained (if not it returns an error code for use with `_com_error`)");
+registerFunc("RegSetValueEx", "function RegSetValueEx(key : HKEY, valueName? : wstring, dwType : number, data : string | number, | ArrayBufferView) : LSTATUS", "`key` can be obtained from `RegOpenKeyEx` or `RegCreateKeyEx`  \n`valueName` is the name of the value to be set. If a value with this name is not already present in the key, the function adds it to the key.  \n`dwType` can be any `REG_`* const (NOT any `REG_OPTION_`* consts tho lmao)  \n`data` is interpreted based on what you specify for `dwType`  \nwatch out i got rid of the reserved parameter lol");
+registerFunc("RegCloseKey", "function RegCloseKey(key : HKEY) : LSTATUS", "Closes a handle to the specified registry key.  The handle must've been opened by the `RegOpenKeyEx` or `RegCreateKeyEx`  \nreturns (0 for sucess) a code similar to what `GetLastError` gives you (so you can use `_com_error` to see the error in text)");
+registerFunc("RegCreateKeyEx", "function RegCreateKeyEx(key : HKEY , subKey : wstring, class? : wstring, dwOptions : number, samDesired : number, dispositionOut? : {}) : HKEY | LSTATUS", "`key` can be a predefined key like one `HKEY_`* const  \n`subKey` is the name of the registry subkey to be created/opened.  \nwatch out i rid of the reserved parameter lmao  \n`class` is a user-defined class type of this key. (you can just put NULL lol)  \n`dwOptions` can be any `REG_OPTION_`* const  \n`samDesired` is a  mask that specifies the desired access rights to the key to be opened. (any `KEY_`* const)  \npass an object as `dispositionOut` and this function will fill it (set the 'disposition' property) with the disposition value given by `RegCreateKeyEx`  \nreturns a valid key on success but if not it returns an error code for use with `_com_error`");
+registerFunc("RegEnumKeyEx", "function RegEnumKeyEx(key : HKEY, dwIndex : number, maxLength? : number) : {name, class, fileTime : {dwLowDateTime, dwHighDateTime}} | LSTATUS", "`key` can be a predefined key like one `HKEY_`* const OR it can be obtained from `RegOpenKeyEx` or `RegCreateKeyEx`  \n`dwIndex` is The index of the subkey to retrieve. This parameter should be zero for the first call to the RegEnumKeyEx function and then incremented for subsequent calls.  \n`maxLength` is 256 by default and it denotes the max length of the strings returned  \nif this function succeeds it returns an object with properties related to the sub key at `dwIndex` (if not it returns an error code for use with `_com_error`)");
+registerFunc("RegEnumValue", "function RegEnumValue(key : HKEY, dwIndex : number, maxValueLength? : number, maxStringLength? : number) : {name, type} | LSTATUS", "`key` can be a predefined key like one `HKEY_`* const OR it can be obtained from `RegOpenKeyEx` or `RegCreateKeyEx`  \n`dwIndex` is The index of the value to retrieve. This parameter should be zero for the first call to the RegEnumValue function and then incremented for subsequent calls.  \nif `maxValueLength` is not null or undefined it allocates `maxValueLength` amount of space for the data in the value at `dwIndex` (otherwise the data and dataLength properties are undefined/0)  \n`maxStringLength` is 256 by default and it denotes the max length of the strings returned  \nif this function succeeds it returns an object with properties related to the value at `dwIndex` (if not it returns an error code for use with `_com_error`)");
+
+registerFunc("memcpy", "function memcpy(dst : void* | number, src : void* | number, size : number) : void", "lowkey im not sure what you'd need this for because there isn't much need for regular c++ functions in jbs");
+
 import * as vscode from 'vscode';
 
 function emptyCOMObject() : SignatureInfo {
@@ -5087,4 +5098,64 @@ const macros:string[] = [
     "NIM_SETVERSION",
     "CURSOR_SHOWING",
     "CURSOR_SUPPRESSED",
+    "HKEY_CLASSES_ROOT",
+    "HKEY_CURRENT_USER",
+    "HKEY_LOCAL_MACHINE",
+    "HKEY_USERS",
+    "HKEY_PERFORMANCE_DATA",
+    "HKEY_PERFORMANCE_TEXT",
+    "HKEY_PERFORMANCE_NLSTEXT",
+    "HKEY_CURRENT_CONFIG",
+    "HKEY_DYN_DATA",
+    "HKEY_CURRENT_USER_LOCAL_SETTINGS",
+    "REG_OPTION_RESERVED",
+    "REG_OPTION_NON_VOLATILE",
+    "REG_OPTION_VOLATILE",
+    "REG_OPTION_CREATE_LINK",
+    "REG_OPTION_BACKUP_RESTORE",
+    "REG_OPTION_OPEN_LINK",
+    "REG_OPTION_DONT_VIRTUALIZE",
+    "KEY_QUERY_VALUE",
+    "KEY_SET_VALUE",
+    "KEY_CREATE_SUB_KEY",
+    "KEY_ENUMERATE_SUB_KEYS",
+    "KEY_NOTIFY",
+    "KEY_CREATE_LINK",
+    "KEY_WOW64_32KEY",
+    "KEY_WOW64_64KEY",
+    "KEY_WOW64_RES",
+    "KEY_READ",
+    "KEY_WRITE",
+    "KEY_EXECUTE",
+    "KEY_ALL_ACCESS",
+    "REG_NONE",
+    "REG_SZ",
+    "REG_EXPAND_SZ",
+    "REG_BINARY",
+    "REG_DWORD",
+    "REG_DWORD_LITTLE_ENDIAN",
+    "REG_DWORD_BIG_ENDIAN",
+    "REG_LINK",
+    "REG_MULTI_SZ",
+    "REG_RESOURCE_LIST",
+    "REG_FULL_RESOURCE_DESCRIPTOR",
+    "REG_RESOURCE_REQUIREMENTS_LIST",
+    "REG_QWORD",
+    "REG_QWORD_LITTLE_ENDIAN",
+    "RRF_RT_REG_NONE",
+    "RRF_RT_REG_SZ",
+    "RRF_RT_REG_EXPAND_SZ",
+    "RRF_RT_REG_BINARY",
+    "RRF_RT_REG_DWORD",
+    "RRF_RT_REG_MULTI_SZ",
+    "RRF_RT_REG_QWORD",
+    "RRF_RT_DWORD",
+    "RRF_RT_QWORD",
+    "RRF_RT_ANY",
+    "RRF_SUBKEY_WOW6464KEY",
+    "RRF_SUBKEY_WOW6432KEY",
+    "RRF_WOW64_MASK",
+    "RRF_NOEXPAND",
+    "RRF_ZEROONFAILURE",
+
 ];
