@@ -400,6 +400,7 @@ registerFunc("SetClassLongPtr", "function SetClassLongPtr(hwnd : HWND | number, 
 registerFunc("SetWindowLongPtr", "function SetWindowLongPtr(hwnd : HWND | number, nIndex : number, dwNewLong : number) : number", "can set some data in a window  \n`nIndex` is any `GWLP_` or `DWLP_` or `GWL_` const (if hwnd is a dialogbox)  \nreturns the previous value (can be 0) or 0 if failed");
 registerFunc("GetClassLongPtr", "function GetClassLongPtr(hwnd : HWND | number, nIndex : number) : number", "can be used to get a window's icon AMONG other thangs (look it up)  \n`nIndex` is any `GCL_` or `GCLP_` const");
 registerFunc("GetWindowLongPtr", "function GetWindowLongPtr(hwnd : HWND | number, nIndex : number) : number", "can get some data from a window (like its `HINSTANCE` with `GWLP_HINSTANCE`)  \n`nIndex` is any `GWL_`, `GWLP_`, or `DWLP_` const (if hwnd is a dialogbox)");
+registerFunc("GetClassName", "function GetClassName(hwnd : HWND | number) : wstring", "returns the classname of the specified HWND");
 
 registerFunc("GetIconDimensions", "function GetIconDimensions(hIcon : HICON | number) : {width : number, height : number}", "msn example function on how to get the size from an HICON lol  \nreturns an object with `width` and `height` properties"); //\nreturns an object with `cx` and `cy` properties");
 registerFunc("GetBitmapDimensions", "function GetBitmapDimensions(hBitmap : HBITMAP | number) : {width : number, height : number}", "helper function to get the size of a loaded bitmap  \nyou don't have to use this anymore because `GetObjectHBITMAP(hBitmap).bmWidth/bmHeight` is now a thing  \nreturns an object with `width` and `height` properties");
@@ -652,6 +653,10 @@ registerFunc("RegEnumKeyEx", "function RegEnumKeyEx(key : HKEY, dwIndex : number
 registerFunc("RegEnumValue", "function RegEnumValue(key : HKEY, dwIndex : number, maxValueLength? : number, maxStringLength? : number) : {name, type} | LSTATUS", "`key` can be a predefined key like one `HKEY_`* const OR it can be obtained from `RegOpenKeyEx` or `RegCreateKeyEx`  \n`dwIndex` is The index of the value to retrieve. This parameter should be zero for the first call to the RegEnumValue function and then incremented for subsequent calls.  \nif `maxValueLength` is not null or undefined it allocates `maxValueLength` amount of space for the data in the value at `dwIndex` (otherwise the data and dataLength properties are undefined/0)  \n`maxStringLength` is 256 by default and it denotes the max length of the strings returned  \nif this function succeeds it returns an object with properties related to the value at `dwIndex` (if not it returns an error code for use with `_com_error`)");
 
 registerFunc("memcpy", "function memcpy(dst : void* | number, src : void* | number, size : number) : void", "lowkey im not sure what you'd need this for because there isn't much need for regular c++ functions in jbs");
+
+registerFunc("GetRegisteredRawInputDevices", "function GetRegisteredRawInputDevices(void) : Array<{usUsagePage, usUsage, dwFlags, hwndTarget}>", "if successful this function returns an array of registered devices"); //somehow forgot to include this one
+
+registerFunc("fetch", "function fetch(url : string, options : Object) : Promise", "just like the regular [browser fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) but my promises aren't async yet because im not using libuv lol  \nright now unfortunately this function can only work with HTTP only!");
 
 import * as vscode from 'vscode';
 
@@ -5158,5 +5163,12 @@ const macros:string[] = [
     "RRF_WOW64_MASK",
     "RRF_NOEXPAND",
     "RRF_ZEROONFAILURE",
+    "DWRITE_TRIMMING_GRANULARITY_NONE",
+    "DWRITE_TRIMMING_GRANULARITY_CHARACTER",
+    "DWRITE_TRIMMING_GRANULARITY_WORD",
+    "INPUT_MOUSE",
+    "INPUT_KEYBOARD",
+    "INPUT_HARDWARE",
+    "RID_INPUT",
 
 ];
