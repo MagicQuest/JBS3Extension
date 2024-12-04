@@ -165,11 +165,12 @@ registerFunc("printNoHighlight", "function printNoHighlight(...args : any) : voi
 registerFunc("wprint", "function wprint(...args : any) : void", "print but for Utf16 (wchar_t)  \nbasically can sorta print emojis i guess");
 registerFunc("version", "function version(void) : string", "returns the version of v8 in string form");
 registerFunc("require", "function require(type : string) : Object", "returns a special object  \nusing `fs` gives you an object with `read` and `write` methods");
-registerFunc("nigg", "function nigg(void) : string", "returns `\"er\"`");
+//registerFunc("nigg", "function nigg(void) : string", "returns `\"er\"`"); //yeah idk why i had it like this for so long but nigg isn't a function lmao
+registerGlobalObject("nigg", "er", "er");
 registerFunc("system", "function system(command : wstring, textType? : wstring) : wstring", "runs the specified `command` in command prompt  \nreturns the stdout (output) of the command  \ntextType can be rt (read text) or rb (read binary)");
 registerFunc("setBackground", "function setBackground(filename : string) : BOOL", "sets the desktop background to the specified file  \nreturns true if it worked");
 
-registerGlobalObject("file", "an object with convenience methods related to its file", "the only property is `file` which returns the file name");
+//registerGlobalObject("file", "an object with convenience methods related to its file", "the only property is `file` which returns the file name"); //moved down to registerGlobalObjectSignature
 registerGlobalObject("hInstance", "the hInstance associated with this process", "i mean yeah this is JBS3's HINSTANCE");
 registerGlobalObject("screenWidth", "the screen's width", "obtained with `GetSystemMetrics(SM_CXSCREEN)`");
 registerGlobalObject("screenHeight", "the screen's height", "obtained with `GetSystemMetrics(SM_CYSCREEN)`");
@@ -673,7 +674,7 @@ function defaultTextFormatObject() : SignatureInfo {
 }
 
 function d2dCanvasObject() : SignatureInfo {
-    return [["internalDXPtr"], ["renderTarget"], ["CreateBitmapFromFilename", vscode.CompletionItemKind.Method], ["BeginDraw", vscode.CompletionItemKind.Method], ["EndDraw", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method], ["CreateSolidColorBrush", vscode.CompletionItemKind.Method], ["CreatePathGeometry", vscode.CompletionItemKind.Method], ["CreateStrokeStyle", vscode.CompletionItemKind.Method], ["DrawRectangle", vscode.CompletionItemKind.Method], ["DrawGradientRectangle", vscode.CompletionItemKind.Method], ["FillRectangle", vscode.CompletionItemKind.Method], ["FillGradientRectangle", vscode.CompletionItemKind.Method], ["DrawGradientEllipse", vscode.CompletionItemKind.Method], ["DrawEllipse", vscode.CompletionItemKind.Method], ["FillEllipse", vscode.CompletionItemKind.Method], ["FillGradientEllipse", vscode.CompletionItemKind.Method], ["CreateFont", vscode.CompletionItemKind.Method], ["CreateTextLayout", vscode.CompletionItemKind.Method], ["EnumFonts", vscode.CompletionItemKind.Method], ["DrawText", vscode.CompletionItemKind.Method], ["DrawTextLayout", vscode.CompletionItemKind.Method], ["DrawGradientText", vscode.CompletionItemKind.Method], ["CreateBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapFromWicBitmap", vscode.CompletionItemKind.Method], ["DrawBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapBrush", vscode.CompletionItemKind.Method], ["CreateGradientStopCollection", vscode.CompletionItemKind.Method], ["CreateLinearGradientBrush", vscode.CompletionItemKind.Method], ["CreateRadialGradientBrush", vscode.CompletionItemKind.Method], ["RestoreDrawingState", vscode.CompletionItemKind.Method], /*["CreateDrawingStateBlock", vscode.CompletionItemKind.Method],*/ ["GetTransform", vscode.CompletionItemKind.Method], ["SetTransform", vscode.CompletionItemKind.Method], ["SaveDrawingState", vscode.CompletionItemKind.Method], ["DrawGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["DrawRoundedRectangle", vscode.CompletionItemKind.Method], ["FillRoundedRectangle", vscode.CompletionItemKind.Method], ["Flush", vscode.CompletionItemKind.Method], ["GetAntialiasMode", vscode.CompletionItemKind.Method], ["SetAntialiasMode", vscode.CompletionItemKind.Method], ["SetDpi", vscode.CompletionItemKind.Method], ["GetDpi", vscode.CompletionItemKind.Method], ["GetMaximumBitmapSize", vscode.CompletionItemKind.Method], ["FillGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["DrawLine", vscode.CompletionItemKind.Method], ["DrawGradientLine", vscode.CompletionItemKind.Method], ["DrawGeometry", vscode.CompletionItemKind.Method], ["FillGeometry", vscode.CompletionItemKind.Method], ["Clear", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]];
+    return [["internalDXPtr"], ["renderTarget"], ["CreateBitmapFromFilename", vscode.CompletionItemKind.Method], ["BeginDraw", vscode.CompletionItemKind.Method], ["EndDraw", vscode.CompletionItemKind.Method], ["Resize", vscode.CompletionItemKind.Method], ["GetMetricsForText", vscode.CompletionItemKind.Method], ["CreateTransformedGeometry", vscode.CompletionItemKind.Method], ["CreateRectangleGeometry", vscode.CompletionItemKind.Method], ["CreateRoundedRectangleGeometry", vscode.CompletionItemKind.Method], ["CreateEllipseGeometry", vscode.CompletionItemKind.Method], ["CreateLayer", vscode.CompletionItemKind.Method], ["PushLayer", vscode.CompletionItemKind.Method], ["PopLayer", vscode.CompletionItemKind.Method], ["CreateSolidColorBrush", vscode.CompletionItemKind.Method], ["CreatePathGeometry", vscode.CompletionItemKind.Method], ["CreateStrokeStyle", vscode.CompletionItemKind.Method], ["DrawRectangle", vscode.CompletionItemKind.Method], ["DrawGradientRectangle", vscode.CompletionItemKind.Method], ["FillRectangle", vscode.CompletionItemKind.Method], ["FillGradientRectangle", vscode.CompletionItemKind.Method], ["DrawGradientEllipse", vscode.CompletionItemKind.Method], ["DrawEllipse", vscode.CompletionItemKind.Method], ["FillEllipse", vscode.CompletionItemKind.Method], ["FillGradientEllipse", vscode.CompletionItemKind.Method], ["CreateFont", vscode.CompletionItemKind.Method], ["CreateTextLayout", vscode.CompletionItemKind.Method], ["EnumFonts", vscode.CompletionItemKind.Method], ["DrawText", vscode.CompletionItemKind.Method], ["DrawTextLayout", vscode.CompletionItemKind.Method], ["DrawGradientText", vscode.CompletionItemKind.Method], ["CreateBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapFromWicBitmap", vscode.CompletionItemKind.Method], ["DrawBitmap", vscode.CompletionItemKind.Method], ["CreateBitmapBrush", vscode.CompletionItemKind.Method], ["CreateGradientStopCollection", vscode.CompletionItemKind.Method], ["CreateLinearGradientBrush", vscode.CompletionItemKind.Method], ["CreateRadialGradientBrush", vscode.CompletionItemKind.Method], ["RestoreDrawingState", vscode.CompletionItemKind.Method], /*["CreateDrawingStateBlock", vscode.CompletionItemKind.Method],*/ ["GetTransform", vscode.CompletionItemKind.Method], ["SetTransform", vscode.CompletionItemKind.Method], ["SaveDrawingState", vscode.CompletionItemKind.Method], ["DrawGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["DrawRoundedRectangle", vscode.CompletionItemKind.Method], ["FillRoundedRectangle", vscode.CompletionItemKind.Method], ["Flush", vscode.CompletionItemKind.Method], ["GetAntialiasMode", vscode.CompletionItemKind.Method], ["SetAntialiasMode", vscode.CompletionItemKind.Method], ["SetDpi", vscode.CompletionItemKind.Method], ["GetDpi", vscode.CompletionItemKind.Method], ["GetMaximumBitmapSize", vscode.CompletionItemKind.Method], ["FillGradientRoundedRectangle", vscode.CompletionItemKind.Method], ["GetSize", vscode.CompletionItemKind.Method], ["GetPixelSize", vscode.CompletionItemKind.Method], ["DrawLine", vscode.CompletionItemKind.Method], ["DrawGradientLine", vscode.CompletionItemKind.Method], ["DrawGeometry", vscode.CompletionItemKind.Method], ["FillGeometry", vscode.CompletionItemKind.Method], ["Clear", vscode.CompletionItemKind.Method], ["Release", vscode.CompletionItemKind.Method]];
 }
 
 function d2dCanvasObjectDC() : SignatureInfo {
@@ -746,7 +747,7 @@ registerOARFAS(
 
 registerOARFAS(
     "RECT",
-    ["GetWindowRect", "GetClientRect", "GetBounds", "GetWidenedBounds", "Shell_NotifyIconGetRect"],
+    ["GetWindowRect", "GetClientRect", "GetBounds", "GetWidenedBounds", "Shell_NotifyIconGetRect", "InfiniteRect", "GetRect"], //infinite rect listed here because although it returns an object with floats as left,top,right,bottom i don't specify allat with the extension
     (args) => [["left"], ["top"], ["right"], ["bottom"]],
     {},
 );
@@ -832,6 +833,14 @@ registerOARFAS(
         "BeginDraw" : makeArgs("function BeginDraw(void) : void", "calls the native `BeginDraw` function on the direct2d renderTarget"),
         "EndDraw" : makeArgs("function EndDraw(donotpresent? : boolean) : void", "calls the native `EndDraw` function on the direct2d renderTarget  \nthe `donopresent` bool only does anything if this canvas was created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
         "Resize" : makeArgs("function Resize(width : number, height : number) : HRESULT", "resizes the internal RenderTarget  \nIf you're using a D2D11 canvas (`ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`) then you MUST release any bitmaps created with `CreateBitmapFromDxgiSurface` (see )"),
+        "GetMetricsForText" : makeArgs("function GetMetricsForText(text : string, font : TextFormat | Font, maxWidth : float, maxHeight : float) : TextMetrics | {left, top, width, widthIncludingTrailingWhitespace, height, layoutWidth, layoutHeight, maxBidiReorderingDepth, lineCount}", "helper function that creates a text layout, gets the metrics, and releases it"),
+        "CreateTransformedGeometry" : makeArgs("function CreateTransformedGeometry(sourceGeometry : ID2D1Geometry, transform : D2D1_MATRIX_3X2_F) : ID2D1TransformedGeometry", "returns a new transformed geometry"),
+        "CreateRectangleGeometry" : makeArgs("function CreateRectangleGeometry(left : float, top : float, right : float, bottom : float) : ID2D1RectangleGeometry", "returns a new rectangle geometry  \ninstead of passing each property you could pass a single object with {left, top, right, bottom} properties (you can create one using `D2D1.RectF`)!"),
+        "CreateRoundedRectangleGeometry" : makeArgs("function CreateRoundedRectangleGeometry(left : float, top : float, right : float, bottom : float, radiusX : float, radiusY : float) : ID2D1RoundedRectangleGeometry", "returns a new rounded rectangle geometry  \ninstead of passing each property you could pass a single object with `{rect : {left, top, right, bottom}, radiusX, radiusY}` properties (you can create one using `D2D1.RoundedRect`)!"),
+        "CreateEllipseGeometry" : makeArgs("function CreateEllipseGeometry(x : float, y : float, radiusX : float, radiusY : float) : ID2D1EllipseGeometry", "returns a new ellipse geometry  \ninstead of passing each property you could pass a single object with `{point : {x, y}, radiusX, radiusY}` properties (you can create one using `D2D1.Ellipse`)!"),
+        "CreateLayer" : makeArgs("function CreateLayer(width? : float, height? : float) : ID2D1Layer", "nowadays with windows 8 you no longer have to create your own layer (just call `d2d.PushLayer(layerParameters)`)  \n`width` and `height` are optional and can be 0  \nan `ID2D1Layer` object can be used with `d2d.PushLayer`"),
+        "PushLayer" : makeArgs("function PushLayer(layerParameters : LayerParameters, layer? : ID2D1Layer) : void", "`layerParameters` is an object created from `D2D1.LayerParameters(...)`  \n`layer` is optional and if not specified d2d will handle allat for you"),
+        "PopLayer" : makeArgs("function PopLayer(void) : void", "pops the last layer that was pushed with d2d.`PushLayer`"),
         "CreateSolidColorBrush" : makeArgs("function CreateSolidColorBrush(r : float, g : float, b : float, alpha? : number) : SolidColorBrush", "returns a `Brush` object with 2 unique methods  \n`SetColor` and `GetColor`"),
         "CreateStrokeStyle" : makeArgs("function CreateStrokeStyle(startCap : D2D1_CAP_STYLE | number, endCap : D2D1_CAP_STYLE | number, dashCap : D2D1_CAP_STYLE | number, lineJoin : D2D1_LINE_JOIN | number, miterLimit : number, dashStyle : D2D1_DASH_STYLE | number, dashOffset : number, transformType : D2D1_STROKE_TRANSFORM_TYPE | number, customDashes? : Array<number>) : ID2D1StrokeStyle1", "`startCap`, `endCap`, and `dashCap` are all `DASH_CAP_STYLE_`... consts  \n`lineJoin` is one `DASH_LINE_JOIN_`... const  \n`miterLimit` is just a float but its value is always treated as though it is greater than or equal to 1.0f.  \n`dashStyle` is one `D2D1_DASH_STYLE_`... const  \n`dashOffset` is just a float  \n`transformType` is one `D2D1_STROKE_TRANSFORM_TYPE_`... const  \nif `dashStyle` is `D2D1_DASH_STYLE_CUSTOM` then you must pass an array of floats for `customDashes` (otherwise you can just pass null/undefined)  \n  \nalthough this isn't the EXACT same object the [D2D1_STROKE_STYLE_PROPERTIES page](https://learn.microsoft.com/en-us/windows/win32/api/d2d1/ns-d2d1-d2d1_stroke_style_properties) describes these parameters better (on d2d1_stroke_style_properties1 they say that `transformType` is the rule that determines what render target properties affect the nib of the stroke.)"),
         "DrawRectangle" : makeArgs("function DrawRectangle(left : number, top : number, right : number, bottom : number, brush : Brush, strokeWidth? : number, strokeStyle? : number) : void", "tells direct2d to draw a rectangle's outline using the arguments"),
@@ -1090,6 +1099,43 @@ registerOARFAS(
         "Stream" : makeArgs("function Stream(geoSink : ID2D1GeometrySink)", "Retrieves the contents of this geometry."),
         "GetSegmentCount" : makeArgs("function GetSegmentCount(void) : number", "Retrieves the number of segments in the path geometry."),
         "GetFigureCount" : makeArgs("function GetFigureCount(void) : number", "Retrieves the number of figures in the path geometry."),
+    }),
+);
+
+registerOARFAS(
+    "ID2D1TransformedGeometry",
+    ["CreateTransformedGeometry"],
+    (args) => [...d2dGeometryObject(), ["GetTransform", vscode.CompletionItemKind.Method], ["GetSourceGeometry", vscode.CompletionItemKind.Method]],
+    extendMethods("ID2D1Geometry", {
+        "GetTransform" : makeArgs("function GetTransform(void) : D2D1_MATRIX_3X2_F", "gets the matrix object"),
+        "GetSourceGeometry" : makeArgs("function GetSourceGeometry(void) : ID2D1Geometry", "lowkey no point for this function because wouldn't you already have access to the source idk but i included it anyways"),
+    }),
+);
+
+registerOARFAS(
+    "ID2D1RectangleGeometry",
+    ["CreateRectangleGeometry"],
+    (args) => [...d2dGeometryObject(), ["GetRect", vscode.CompletionItemKind.Method]],
+    extendMethods("ID2D1Geometry", {
+        "GetRect" : makeArgs("function GetRect(void) : D2D1_RECT_F", "returns an object with {left, top, right, bottom} properties"),
+    }),
+);
+
+registerOARFAS(
+    "ID2D1RoundedRectangleGeometry",
+    ["CreateRoundedRectangleGeometry"],
+    (args) => [...d2dGeometryObject(), ["GetRoundedRect", vscode.CompletionItemKind.Method]],
+    extendMethods("ID2D1Geometry", {
+        "GetRoundedRect" : makeArgs("function GetRoundedRect(void) : D2D1_ROUNDED_RECT", "returns an object with {rect, radiusX, radiusY} properties"),
+    }),
+);
+
+registerOARFAS(
+    "ID2D1EllipseGeometry",
+    ["CreateEllipseGeometry"],
+    (args) => [...d2dGeometryObject(), ["GetEllipse", vscode.CompletionItemKind.Method]],
+    extendMethods("ID2D1Geometry", {
+        "GetEllipse" : makeArgs("function GetEllipse(void) : D2D1_ELLIPSE", "returns an object with {point, radiusX, radiusY} properties"),
     }),
 );
 
@@ -1394,6 +1440,8 @@ registerOARFAS(
 registerOARFAS("MemInfo", ["GetProcessMemoryInfo"], (args) => [["cb"],["PageFaultCount"],["PeakWorkingSetSize"],["WorkingSetSize"],["QuotaPeakPagedPoolUsage"],["QuotaPagedPoolUsage"],["QuotaPeakNonPagedPoolUsage"],["QuotaNonPagedPoolUsage"],["PagefileUsage"],["PeakPagefileUsage"],["PrivateUsage"],], {});
 registerOARFAS("TPID", ["GetWindowThreadProcessId"], (args) => [["processID"], ["thread"]], {});
 registerOARFAS("MSEX", ["GlobalMemoryStatusEx"], (args) => [["dwLength"], ["dwMemoryLoad"], ["ullTotalPhys"], ["ullAvailPhys"], ["ullTotalPageFile"], ["ullAvailPageFile"], ["ullTotalVirtual"], ["ullAvailVirtual"], ["ullAvailExtendedVirtual"], ], {});
+registerOARFAS("D2D1_ROUNDED_RECT", ["GetRoundedRect"], (args) => [["rect", vscode.CompletionItemKind.Class], ["radiusX"], ["radiusY"]], {});
+registerOARFAS("D2D1_ELLIPSE", ["GetEllipse"], (args) => [["point", vscode.CompletionItemKind.Class], ["radiusX"], ["radiusY"]], {});
 /*const RectObject : JBSObjects = {props: [["left"], ["top"], ["right"] ,["bottom"]], testArgs: defaultTestArgs};
 const [PointObject] : JBSObjects = {props: [["x"], ["y"]]};
 const PaintStruct : JBSObjects = {props: [["fErase"], ["fIncUpdate"], ["fRestore"], ["hdc"], ["rcPaint", vscode.CompletionItemKind.Class], ["ps"]]};
@@ -1569,9 +1617,29 @@ registerOARFAS(
 );
 
 registerOARFAS(
-    "ColorF",
+    "D2D1",
+    [],
+    (args) => [["ColorF", vscode.CompletionItemKind.Class], ["InfiniteRect", vscode.CompletionItemKind.Method], ["RectF", vscode.CompletionItemKind.Method], ["RoundedRect", vscode.CompletionItemKind.Method], ["Ellipse", vscode.CompletionItemKind.Method], ["LayerParameters", vscode.CompletionItemKind.Method]],
+    {
+        "InfiniteRect" : makeArgs("function InfiniteRect(void) : D2D1_RECT_F | {left : float, top : float, right : float, bottom : float}", "returns an object with {left, top, right, bottom} properties all set to the max float value (`3.402823466e+38F`) (the left and top properties are negative)"),
+        "RectF" : makeArgs("function RectF(left : float, top : float, right : float, bottom : float) : D2D1_RECT_F", "creates an object with {left, top, right, bottom} properties"),
+        "RoundedRect" : makeArgs("function RoundedRect(left : float, top : float, right : float, bottom : float, radiusX : float, radiusY : float) : D2D1_ROUNDED_RECT", "creates an object with {rect : {left, top, right, bottom}, radiusX, radiusY} properties"),
+        "Ellipse" : makeArgs("function Ellipse(x : float, y : float, radiusX : float, radiusY : float) : D2D1_ELLIPSE", "creates an object with {point : {x, y}, radiusX, radiusY} properties"),
+        "LayerParameters" : makeArgs("function/class LayerParameters(contentBounds : D2D1_RECT_F, geometricMask : ID2D1Geometry, maskAntialiasMode : D2D1_ANTIALIAS_MODE, maskTransform : D2D1_MATRIX_3X2_F, opacity : float, opacityBrush : ID2D1Brush, layerOptions : D2D1_LAYER_OPTIONS) : LayerParameters", "returns a new object with these exact parameters lmao (for d2d.`PushLayer`)"),
+    },
+);
+
+registerOARFAS(
+    "D2D1.ColorF",
     [],
     (args) => [["AliceBlue"], ["AntiqueWhite"], ["Aqua"], ["Aquamarine"], ["Azure"], ["Beige"], ["Bisque"], ["Black"], ["BlanchedAlmond"], ["Blue"], ["BlueViolet"], ["Brown"], ["BurlyWood"], ["CadetBlue"], ["Chartreuse"], ["Chocolate"], ["Coral"], ["CornflowerBlue"], ["Cornsilk"], ["Crimson"], ["Cyan"], ["DarkBlue"], ["DarkCyan"], ["DarkGoldenrod"], ["DarkGray"], ["DarkGreen"], ["DarkKhaki"], ["DarkMagenta"], ["DarkOliveGreen"], ["DarkOrange"], ["DarkOrchid"], ["DarkRed"], ["DarkSalmon"], ["DarkSeaGreen"], ["DarkSlateBlue"], ["DarkSlateGray"], ["DarkTurquoise"], ["DarkViolet"], ["DeepPink"], ["DeepSkyBlue"], ["DimGray"], ["DodgerBlue"], ["Firebrick"], ["FloralWhite"], ["ForestGreen"], ["Fuchsia"], ["Gainsboro"], ["GhostWhite"], ["Gold"], ["Goldenrod"], ["Gray"], ["Green"], ["GreenYellow"], ["Honeydew"], ["HotPink"], ["IndianRed"], ["Indigo"], ["Ivory"], ["Khaki"], ["Lavender"], ["LavenderBlush"], ["LawnGreen"], ["LemonChiffon"], ["LightBlue"], ["LightCoral"], ["LightCyan"], ["LightGoldenrodYellow"], ["LightGreen"], ["LightGray"], ["LightPink"], ["LightSalmon"], ["LightSeaGreen"], ["LightSkyBlue"], ["LightSlateGray"], ["LightSteelBlue"], ["LightYellow"], ["Lime"], ["LimeGreen"], ["Linen"], ["Magenta"], ["Maroon"], ["MediumAquamarine"], ["MediumBlue"], ["MediumOrchid"], ["MediumPurple"], ["MediumSeaGreen"], ["MediumSlateBlue"], ["MediumSpringGreen"], ["MediumTurquoise"], ["MediumVioletRed"], ["MidnightBlue"], ["MintCream"], ["MistyRose"], ["Moccasin"], ["NavajoWhite"], ["Navy"], ["OldLace"], ["Olive"], ["OliveDrab"], ["Orange"], ["OrangeRed"], ["Orchid"], ["PaleGoldenrod"], ["PaleGreen"], ["PaleTurquoise"], ["PaleVioletRed"], ["PapayaWhip"], ["PeachPuff"], ["Peru"], ["Pink"], ["Plum"], ["PowderBlue"], ["Purple"], ["Red"], ["RosyBrown"], ["RoyalBlue"], ["SaddleBrown"], ["Salmon"], ["SandyBrown"], ["SeaGreen"], ["SeaShell"], ["Sienna"], ["Silver"], ["SkyBlue"], ["SlateBlue"], ["SlateGray"], ["Snow"], ["SpringGreen"], ["SteelBlue"], ["Tan"], ["Teal"], ["Thistle"], ["Tomato"], ["Turquoise"], ["Violet"], ["Wheat"], ["White"], ["WhiteSmoke"], ["Yellow"], ["YellowGreen"], ],
+    {},
+);
+
+registerOARFAS(
+    "file",
+    [],
+    (args) => [["file"]],
     {},
 );
 
@@ -1579,10 +1647,12 @@ function registerGlobalObjectSignature(globalName: string, objectName : string) 
     globalObjects.push({varName: globalName, props: objectMethodList[objectName].get(""), name: objectName});
 }
 
+registerGlobalObjectSignature("file", "file");
 registerGlobalObjectSignature("Matrix3x2F", "Matrix3x2F"); //back in the day you couldn't do this!
 registerGlobalObjectSignature("Matrix4x4F", "Matrix4x4F");
 registerGlobalObjectSignature("Matrix5x4F", "Matrix5x4F");
-registerGlobalObjectSignature("ColorF", "ColorF");
+registerGlobalObjectSignature("D2D1", "D2D1");
+registerGlobalObjectSignature("D2D1.ColorF", "D2D1.ColorF"); //oh yeah?
 
 //const functionRegex = /([A-z0-9_]+)\s*=\s*(?:\w*\.)?([A-z0-9_]+)\(/; //you lowkey could just replace [A-z0-9_] with \w
 const functionRegex = /([A-z0-9_$]+)\s*=\s*(?:[A-z0-9_$]*\.)?([A-z0-9_$]+)\(/; //nevermind lol i just remembered js variables can have '$' in them
@@ -3288,6 +3358,8 @@ const macros:string[] = [
     "D2D1_ANTIALIAS_MODE_PER_PRIMITIVE",
     "D2D1_ANTIALIAS_MODE_ALIASED",
     "D2D1_ANTIALIAS_MODE_FORCE_DWORD",
+    "D2D1_LAYER_OPTIONS_NONE",
+    "D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE",
     "GUID_WICPixelFormatDontCare",
     "GUID_WICPixelFormat1bppIndexed",
     "GUID_WICPixelFormat2bppIndexed",
