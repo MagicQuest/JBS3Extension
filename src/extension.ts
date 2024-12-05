@@ -25,6 +25,8 @@ type SpecialArray = {
 	[index: string]: {info: string, desc: string, args: Array<string>}
 }
 
+const b : {name: string} = {name: "sf"};
+
 const objectFunctions : SpecialArray = {
 //	"BeginDraw" : makeArgs("function BeginDraw(void) : void", "calls the native `BeginDraw` function on the direct2d renderTarget"),
 //	"EndDraw" : makeArgs("function EndDraw(donotpresent? : boolean) : void", "calls the native `EndDraw` function on the direct2d renderTarget  \nthe `donopresent` bool only does anything if this canvas was created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
@@ -853,10 +855,10 @@ registerOARFAS(
         "FillGradientEllipse" : makeArgs("function FillGradientEllipse(x : number, y : number, radiusX : number, radiusY : number, brush : GradientBrush, gradientRotation? : number | float) : void", "convenience method to fill an ellipse with a gradient"),
         //"CreateFont" : makeArgs("function CreateFont(fontFamily : string, size : number | float) : TextFormat | Font | {internalPtr : number, family : string, Release : function}", "used in the `DrawText` and `DrawGradientText` methods  \nreturns an object for calling the internal `TextFormat`'s release method"),
         "CreateFont" : makeArgs("function CreateFont(fontFamily : string, size : number | float) : TextFormat | Font", "used in the `DrawText` and `DrawGradientText` methods"),
-        "CreateTextLayout" : makeArgs("function CreateTextLayout(text : string, font : TextFormat | Font, maxWidth : float, maxHeight : float) : TextLayout", "font is an object created with `d2d.CreateFont`  \na text layout is sorta like rich text!  \nthis function returns an object for use with `d2d.DrawTextLayout` (the object returned has a text property that SHOULD be read only because NOTHING happens when you set it!!!!)"),
+        "CreateTextLayout" : makeArgs("function CreateTextLayout(text : string, font : TextFormat | Font, maxWidth : float, maxHeight : float) : IDWriteTextLayout", "font is an object created with `d2d.CreateFont`  \na text layout is sorta like rich text!  \nthis function returns an object for use with `d2d.DrawTextLayout` (the object returned has a text property that SHOULD be read only because NOTHING happens when you set it!!!!)"),
     
         "DrawText" : makeArgs("function DrawText(text : string, textFormat : TextFormat | Font, left : number, top : number, right : number, bottom : number, brush : Brush) : void", "draws the string `text` with the specified size and brush"),
-        "DrawTextLayout" : makeArgs("function DrawTextLayout(x : float, y : float, layout : TextLayout, brush : Brush) : void", "draws the text layout with the specified brush  \n`layout` can be any object created with `d2d.CreateTextLayout`  \naccording to MSDN `DrawTextLayout` is more efficient than DrawText (probably because you can't change the text once you create the layout)"),
+        "DrawTextLayout" : makeArgs("function DrawTextLayout(x : float, y : float, layout : IDWriteTextLayout, brush : Brush) : void", "draws the text layout with the specified brush  \n`layout` can be any object created with `d2d.CreateTextLayout`  \naccording to MSDN `DrawTextLayout` is more efficient than DrawText (probably because you can't change the text once you create the layout)"),
         "DrawGradientText" : makeArgs("function DrawGradientText(text : string, textFormat : TextFormat | Font, left : number, top : number, right : number, bottom : number, brush : GradientBrush, gradientRotation? : number | float) : void", "convenience method for drawing text with a gradient brush (don't work as good)"),
         "CreateBitmap" : makeArgs("function CreateBitmap(width : number, height : number) : Bitmap", "creates an empty bitmap with the specified `width` and `height`  \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
         "CreateBitmapFromFilename" : makeArgs("function CreateBitmapFromFilename(filename : string, frame : number) : Bitmap", "**ONLY WORKS IF YOU CREATED `D2D` AND PASSED A `WIC` OBJECT AS THE LAST PARAMETER**  \ncreates a bitmap with the specified image inside (can be .png/.jpg/.bmp/.whatever)  \nif the file specified with filename is a gif `frame` lets you choose which frame of the gif to load   \nreturns a custom object with all ID2D1Brush properties besides (`Get`/`Set`)`Transform`"),
@@ -926,6 +928,17 @@ registerOARFAS(
         "CreateArithmeticCompositeEffect" : makeArgs("function CreateArithmeticCompositeEffect(void) : void", ""),
         "CreateAffineTransform2DEffect" : makeArgs("function CreateAffineTransform2DEffect(void) : void", ""),
     }
+);
+
+registerOARFAS(
+    "ID2D1Effect",
+    ["CreateEffect"],
+    (args) => [...emptyCOMObject(), ["SetValue", vscode.CompletionItemKind.Method], ["SetInput", vscode.CompletionItemKind.Method], ["SetInputEffect", vscode.CompletionItemKind.Method]],
+    extendMethods("IUnknown", {
+        "SetValue" : makeArgs("function SetValue(index : string, value : any) : void", "`index` must be the property you want to set (for example `D2D1_GAUSSIANBLUR_PROP_BORDER_MODE`) but as a string (for example `gaussianEffect.SetValue('D2D1_GAUSSIANBLUR_PROP_BORDER_MODE', D2D1_BORDER_MODE_HARD)`)  \n`value` can be whatever value it's supposed to be like google it  \nsee `COMmunism.js` for help"),
+        "SetInput" : makeArgs("function SetInput(index : number, image : ID2D1Image) : void", "`image` can be a d2d bitmap  \nsee `COMmunism.js` for help"),
+        "SetInputEffect" : makeArgs("function SetInputEffect(index : number, effect : ID2D1Effect) : void", "`index` index  \n`effect` can be an effect created with `d2d.CreateEffect` but only if you created d2d with `ID2D1DeviceContext` or above!  \nsee `COMmunism.js` for help"),
+    }),
 );
 
 registerOARFAS(
@@ -1283,7 +1296,7 @@ registerOARFAS(
 );
 
 registerOARFAS(
-    "TextLayout",
+    "IDWriteTextLayout",
     ["CreateTextLayout"],
     (args) => [...defaultTextFormatObject(), ["text"], ["DetermineMinWidth", vscode.CompletionItemKind.Method],["GetDrawingEffect", vscode.CompletionItemKind.Method],["GetLineMetrics", vscode.CompletionItemKind.Method],["GetMaxHeight", vscode.CompletionItemKind.Method],["GetMaxWidth", vscode.CompletionItemKind.Method],["GetMetrics", vscode.CompletionItemKind.Method],["GetOverhangMetrics", vscode.CompletionItemKind.Method],["GetStrikethrough", vscode.CompletionItemKind.Method],["GetUnderline", vscode.CompletionItemKind.Method],["HitTestPoint", vscode.CompletionItemKind.Method],["HitTestTextPosition", vscode.CompletionItemKind.Method],["HitTestTextRange", vscode.CompletionItemKind.Method],["SetDrawingEffect", vscode.CompletionItemKind.Method],["SetFontFamilyName", vscode.CompletionItemKind.Method],["SetFontStretch", vscode.CompletionItemKind.Method],["SetFontStyle", vscode.CompletionItemKind.Method],["SetFontWeight", vscode.CompletionItemKind.Method],["SetMaxHeight", vscode.CompletionItemKind.Method],["SetMaxWidth", vscode.CompletionItemKind.Method],["SetStrikethrough", vscode.CompletionItemKind.Method],["SetUnderline", vscode.CompletionItemKind.Method]],
     extendMethods("TextFormat", {
