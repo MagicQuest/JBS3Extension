@@ -12,7 +12,7 @@ const objects = [];
 function makeArgs(info, desc) {
     return { info, desc, args: info.substring(info.indexOf("(") + 1, info.indexOf(")")).split(", ") };
 }
-const b = { name: "sf" };
+//const b : {name: string} = {name: "sf"};
 const objectFunctions = {
     //	"BeginDraw" : makeArgs("function BeginDraw(void) : void", "calls the native `BeginDraw` function on the direct2d renderTarget"),
     //	"EndDraw" : makeArgs("function EndDraw(donotpresent? : boolean) : void", "calls the native `EndDraw` function on the direct2d renderTarget  \nthe `donopresent` bool only does anything if this canvas was created with `ID2D1DeviceContext` or `ID2D1DeviceContextDComposition`"),
@@ -276,8 +276,8 @@ registerFunc("GetBkMode", "function GetBkMode(dc : HDC | number) : number", "cal
 registerFunc("GetTextColor", "function GetTextColor(dc : HDC | number) : RGB", "calls the native `GetTextColor()` which gets the text color for the `TextOut` or `DrawText` gdi drawing functions");
 registerFunc("SetTextColor", "function SetTextColor(dc : HDC | number, rgb : RGB | number) : RGB", "calls the native `SetTextColor()` which sets the text color for the `TextOut` or `DrawText` gdi drawing functions  \nreturns the previous color");
 registerFunc("GetPixel", "function GetPixel(dc : HDC | number, x : number, y : number) : RGB | {r : number, g : number, b : number}", "gets the color of the pixel in the `dc` at the points (`x`,`y`)");
-registerFunc("SetPixel", "function SetPixel(dc : HDC | number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
-registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
+registerFunc("SetPixel", "function SetPixel(dc : HDC | number, x : number, y : number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
+registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, x : number, y : number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
 registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values (r | g << 8 | b << 16)  \nused for GDI functions like `SetDCPenColor` or `SetTextColor` and sometimes `DwmSetWindowAttribute`");
 registerFunc("GetRValue", "function GetRValue(color : RGB | number) : number", "gets the r value back from a color created with `RGB`");
 registerFunc("GetGValue", "function GetGValue(color : RGB | number) : number", "gets the g value back from a color created with `RGB`");
@@ -951,9 +951,9 @@ registerOARFAS("IDWriteTextLayout", ["CreateTextLayout"], (args) => [...defaultT
     "DetermineMinWidth": makeArgs("function DetermineMinWidth(void) : float", "returns the minimum width of the text layout"),
     "GetDrawingEffect": makeArgs("function GetDrawingEffect(currentTextPosition : number, startTextPosition? : number, length? : number) : IUnknown | number", "returns the pointer to the drawing effect or 0 if none exists (i think?)"),
     "GetLineMetrics": makeArgs("function GetLineMetrics(lines : number) : Array<LineMetrics{}>", ""),
-    "GetMaxHeight": makeArgs("function GetMaxHeight() : float", "Get layout maximum height."),
-    "GetMaxWidth": makeArgs("function GetMaxWidth() : float", "Get layout maxmium width."),
-    "GetMetrics": makeArgs("function GetMetrics() : TextMetrics | {left, top, width, widthIncludingTrailingWhitespace, height, layoutWidth, layoutHeight, maxBidiReorderingDepth, lineCount}", "Returns an object containing the metrics associated with text after layout."),
+    "GetMaxHeight": makeArgs("function GetMaxHeight(void) : float", "Get layout maximum height."),
+    "GetMaxWidth": makeArgs("function GetMaxWidth(void) : float", "Get layout maxmium width."),
+    "GetMetrics": makeArgs("function GetMetrics(void) : TextMetrics | {left, top, width, widthIncludingTrailingWhitespace, height, layoutWidth, layoutHeight, maxBidiReorderingDepth, lineCount}", "Returns an object containing the metrics associated with text after layout."),
     "GetOverhangMetrics": makeArgs("function GetOverhangMetrics() : {left : number, right : number, top : number, bottom : number}", ""),
     "GetStrikethrough": makeArgs("function GetStrikethrough(currentTextPosition : number, startPosition? : number, length? : number) : boolean", ""),
     "GetUnderline": makeArgs("function GetUnderline(currentTextPosition : number, startPosition? : number, length? : number) : boolean", ""),

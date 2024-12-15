@@ -302,8 +302,8 @@ registerFunc("GetBkMode", "function GetBkMode(dc : HDC | number) : number", "cal
 registerFunc("GetTextColor", "function GetTextColor(dc : HDC | number) : RGB", "calls the native `GetTextColor()` which gets the text color for the `TextOut` or `DrawText` gdi drawing functions");
 registerFunc("SetTextColor", "function SetTextColor(dc : HDC | number, rgb : RGB | number) : RGB", "calls the native `SetTextColor()` which sets the text color for the `TextOut` or `DrawText` gdi drawing functions  \nreturns the previous color");
 registerFunc("GetPixel", "function GetPixel(dc : HDC | number, x : number, y : number) : RGB | {r : number, g : number, b : number}", "gets the color of the pixel in the `dc` at the points (`x`,`y`)");
-registerFunc("SetPixel", "function SetPixel(dc : HDC | number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
-registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
+registerFunc("SetPixel", "function SetPixel(dc : HDC | number, x : number, y : number, RGB : number) : {r : number, g : number, b : number} | number", "sets the color of the pixel in the `dc` at the points (`x`,`y`)  \nreturns the set color or -1 if failed");
+registerFunc("SetPixelV", "function SetPixelV(dc : HDC | number, x : number, y : number, RGB : number) : number", "`SetPixelV` is faster than `SetPixel` because it does not need to return the color value of the point actually painted. (MSDN)  \nreturns 0 if failed");
 registerFunc("RGB", "function RGB(r : number, g : number, b : number) : number", "creates a single number for the `r`,`g`,`b` values (r | g << 8 | b << 16)  \nused for GDI functions like `SetDCPenColor` or `SetTextColor` and sometimes `DwmSetWindowAttribute`");
 registerFunc("GetRValue", "function GetRValue(color : RGB | number) : number", "gets the r value back from a color created with `RGB`");
 registerFunc("GetGValue", "function GetGValue(color : RGB | number) : number", "gets the g value back from a color created with `RGB`");
@@ -1303,9 +1303,9 @@ registerOARFAS(
         "DetermineMinWidth" : makeArgs("function DetermineMinWidth(void) : float", "returns the minimum width of the text layout"),
         "GetDrawingEffect" : makeArgs("function GetDrawingEffect(currentTextPosition : number, startTextPosition? : number, length? : number) : IUnknown | number", "returns the pointer to the drawing effect or 0 if none exists (i think?)"),
         "GetLineMetrics" : makeArgs("function GetLineMetrics(lines : number) : Array<LineMetrics{}>", ""),
-        "GetMaxHeight" : makeArgs("function GetMaxHeight() : float", "Get layout maximum height."),
-        "GetMaxWidth" : makeArgs("function GetMaxWidth() : float", "Get layout maxmium width."),
-        "GetMetrics" : makeArgs("function GetMetrics() : TextMetrics | {left, top, width, widthIncludingTrailingWhitespace, height, layoutWidth, layoutHeight, maxBidiReorderingDepth, lineCount}", "Returns an object containing the metrics associated with text after layout."),
+        "GetMaxHeight" : makeArgs("function GetMaxHeight(void) : float", "Get layout maximum height."),
+        "GetMaxWidth" : makeArgs("function GetMaxWidth(void) : float", "Get layout maxmium width."),
+        "GetMetrics" : makeArgs("function GetMetrics(void) : TextMetrics | {left, top, width, widthIncludingTrailingWhitespace, height, layoutWidth, layoutHeight, maxBidiReorderingDepth, lineCount}", "Returns an object containing the metrics associated with text after layout."),
         "GetOverhangMetrics" : makeArgs("function GetOverhangMetrics() : {left : number, right : number, top : number, bottom : number}", ""),
         "GetStrikethrough" : makeArgs("function GetStrikethrough(currentTextPosition : number, startPosition? : number, length? : number) : boolean", ""),
         "GetUnderline" : makeArgs("function GetUnderline(currentTextPosition : number, startPosition? : number, length? : number) : boolean", ""),
@@ -1979,7 +1979,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 //at some point i should run a loop through jbs to find the values of all of these and use some string stuff to convert it all to a list and just add it to macros so i can do macros[i] for the name and macros[i+1] for the value like
 //"IDOK", 2 (or whatever)
-const macros:string[] = [
+const macros:string[] = [ //macrosforjbsblueprints
     "IDOK",
     "IDCANCEL",
     "IDABORT",
@@ -2404,35 +2404,35 @@ const macros:string[] = [
     "PS_DASHDOTDOT",
     "PS_NULL",
     "PS_INSIDEFRAME",
-	"D2D1_EXTEND_MODE_CLAMP",
-	"D2D1_EXTEND_MODE_WRAP",
-	"D2D1_EXTEND_MODE_MIRROR",
-	"D2D1_EXTEND_MODE_FORCE_DWORD",
-	"D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR",
-	"D2D1_BITMAP_INTERPOLATION_MODE_LINEAR",
-	"D2D1_BITMAP_INTERPOLATION_MODE_FORCE_DWORD",
-	"BLACK_BRUSH",
-	"DKGRAY_BRUSH",
-	"DC_BRUSH",
-	"GRAY_BRUSH",
-	"HOLLOW_BRUSH",
-	"LTGRAY_BRUSH",
-	"NULL_BRUSH",
-	"WHITE_BRUSH",
-	"BLACK_PEN",
-	"DC_PEN",
-	"NULL_PEN",
-	"WHITE_PEN",
-	"ANSI_FIXED_FONT",
-	"ANSI_VAR_FONT",
-	"DEVICE_DEFAULT_FONT",
-	"DEFAULT_GUI_FONT",
-	"OEM_FIXED_FONT",
-	"SYSTEM_FONT",
-	"SYSTEM_FIXED_FONT",
-	"DEFAULT_PALETTE",
-	"ID2D1RenderTarget",
-	"ID2D1DCRenderTarget",
+    "D2D1_EXTEND_MODE_CLAMP",
+    "D2D1_EXTEND_MODE_WRAP",
+    "D2D1_EXTEND_MODE_MIRROR",
+    "D2D1_EXTEND_MODE_FORCE_DWORD",
+    "D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR",
+    "D2D1_BITMAP_INTERPOLATION_MODE_LINEAR",
+    "D2D1_BITMAP_INTERPOLATION_MODE_FORCE_DWORD",
+    "BLACK_BRUSH",
+    "DKGRAY_BRUSH",
+    "DC_BRUSH",
+    "GRAY_BRUSH",
+    "HOLLOW_BRUSH",
+    "LTGRAY_BRUSH",
+    "NULL_BRUSH",
+    "WHITE_BRUSH",
+    "BLACK_PEN",
+    "DC_PEN",
+    "NULL_PEN",
+    "WHITE_PEN",
+    "ANSI_FIXED_FONT",
+    "ANSI_VAR_FONT",
+    "DEVICE_DEFAULT_FONT",
+    "DEFAULT_GUI_FONT",
+    "OEM_FIXED_FONT",
+    "SYSTEM_FONT",
+    "SYSTEM_FIXED_FONT",
+    "DEFAULT_PALETTE",
+    "ID2D1RenderTarget",
+    "ID2D1DCRenderTarget",
     "ID2D1DeviceContext",
     "ID2D1DeviceContextDComposition",
     "MK_CONTROL",
