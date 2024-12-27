@@ -661,6 +661,8 @@ registerFunc("GetRegisteredRawInputDevices", "function GetRegisteredRawInputDevi
 
 registerFunc("fetch", "function fetch(url : string, options : Object) : Promise", "just like the regular [browser fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) but my promises aren't async yet because im not using libuv lol  \nright now unfortunately this function can only work with HTTP only!");
 
+registerFunc("OutputDebugString", "function OutputDebugString(str : wstring) : void", "Sends a string to the debugger for display.  \nbasically if you are connected to jbs with WinDbg or visual studio it will show up in the command/debug window (NOT the console)");
+
 import * as vscode from 'vscode';
 
 function emptyCOMObject() : SignatureInfo {
