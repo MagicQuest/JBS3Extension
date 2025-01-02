@@ -234,11 +234,24 @@ registerFunc("GetWindowDC", "function GetWindowDC(window : HWND | number) : HDC 
 registerFunc("SaveDC", "function SaveDC(dc : HDC | number) : number", "calls the `windows.h` `SaveDC` function  \nreturns saved state's position for use with `RestoreDC`");
 registerFunc("RestoreDC", "function RestoreDC(dc : HDC | number, savedState : number) : number", "calls the `windows.h` `RestoreDC` function  \nreturns 0 if failed");
 registerFunc("DeleteDC", "function DeleteDC(dc : HDC | number) : number", "calls the `windows.h` `usually used on compatible DCs  \nDeleteDC` function  \nreturns 0 if failed");
+registerFunc("CreateDC", "function CreateDC(driver : wstring | NULL, device : wstring | NULL, pszPort? : wstring | NULL, devMode? : number | NULL) : number", "`driver` can be \"DISPLAY\" or the name of a specific display device  \nif `driver` is \"DISPLAY\" then `device` and `devMode` must be `NULL`  \n`pszPort` should be `NULL` and is provided for 16-bit windows compatibility  \nif there are multiple monitors calling `CreateDC(\"DISPLAY\",NULL,NULL,NULL)` will create a DC covering all the monitors  \n`devMode` doesn't work in JBS yet because it has TONS of properties  \nWhen you no longer need the DC, call the `DeleteDC` function.");
+registerFunc("EnumDisplayDevices", "function EnumDisplayDevices(deviceName? : wstring | NULL, deviceNumber : number, flags : number) : DISPLAY_DEVICE | {DeviceName, DeviceString, StateFlags, DeviceID, DeviceKey} | undefined", "if `deviceName` is NULL this function returns information for the display adapters on the machine based on `deviceNumber`  \nif `deviceName` is the DeviceName of a display device this function returns information about the associated monitor device  \n`flags` can be `NULL` or `EDD_GET_DEVICE_INTERFACE_NAME`  \nif `flags` is `EDD_GET_DEVICE_INTERFACE_NAME`, DeviceID will hold the device interface name for GUID_DEVINTERFACE_MONITOR  \nif this function fails the return value is undefined");
+registerFunc("OpenPrinter", "function OpenPrinter(printerName : wstring | NULL) : HANDLE", "`printerName` specifies the name of the printer (printer names can be enumerated with `EnumPrinters` as seen in `gdiprinting.js`) or print server (if `NULL` it indicates the local printer server)  \nreturns the handle to a printer (that you must close with `ClosePrinter` when done)");
+registerFunc("ClosePrinter", "function ClosePrinter(hPrinter : HANDLE) : BOOL", "closes the specified printer object");
+registerFunc("EnumPrintProcessors", "function EnumPrintProcessors(name : wstring | NULL, environment : wstring, level : number) : Array<PRINTPROCESSOR_INFO_1>", "`name` specifies the name of the server which the print processor resides (if this parameter is `NULL` the data types for the local print processor are enumerator)  \n`environment` specifies the environment (for example, Windows x86, Windows IA64, or Windows x64). If this parameter is `NULL`, the current environment of the calling application is used yk.  \n`level` must be 1!");
+registerFunc("EnumPrintProcessorDatatypes", "function EnumPrintProcessorDatatypes(name : wstring | NULL, printProcessorName : wstring, level : number) : Array<DATATYPES_INFO_1>", "`name` specifies the name of the server which the print processor resides (if this parameter is `NULL` the data types for the local print processor are enumerator)  \n`printProcessorName` specifies the name of the print processor whose data types are enumerated.  \n`level` must be 1!");
+registerFunc("EnumPrinters", "function EnumPrinters(flags : number, name? : wstring | NULL, level : number) : Array<PRINTER_INFO_*>", "this function is kind of complicated so see [MSDN](https://learn.microsoft.com/en-us/windows/win32/printdocs/enumprinters) and `gdiprinting.js`  \n`flags` can be any `PRINTER_`* const (they can be OR'd together)  \n`name` is lowkey complicated but can usually be `NULL`  \n`level` can only be 1, 2, 4, or 5 (but must be the right number for the situation (read the docs bruh im sorry))");
+registerFunc("DOCINFO", "function DOCINFO(lpszDocName? : wstring | NULL, lpszOutput? : wstring | NULL, lpszDatatype? : wstring | NULL, fwType : number) : DOCINFO", "`DOCINFO` is an object used with GDI's `StartDoc`  \n`lpszDocName` specifies the name of the document  \n`lpszOutput` specifies the name of an output file. (if this parameter is `NULL` the output will be sent to the device identified by the device context handle that was passed to the `StartDoc` function)  \n`lpszDatatype` specifies the type of data used to record the print job. The legal/proper values for this member can be found by calling `EnumPrintProcessorDatatypes`. This parameter can be `NULL`.  \n`fwType` can be `DI_APPBANDING` or `DI_ROPS_READ_DESTINATION` (or `NULL`)");
+registerFunc("StartPage", "function StartPage(dc : HDC) : number", "call this function after `StartDoc`  \n`dc` should be a printer DC returned from `CreateDC` (see `gdiprinting.js`)");
+registerFunc("EndPage", "function EndPage(dc : HDC) : number", "`dc` should be a printer DC returned from `CreateDC` (see `gdiprinting.js`)");
+registerFunc("StartDoc", "function StartDoc(dc : HDC, docinfo : DOCINFO) : number", "this function should be called before `StartPage`  \n`dc` should be a printer DC returned from `CreateDC` (see `gdiprinting.js`)  \n`docinfo` is an object returned from the `DOCINFO` constructor/function");
+registerFunc("EndDoc", "function EndDoc(dc : HDC) : number", "`dc` should be a printer DC returned from `CreateDC` (see `gdiprinting.js`)");
 registerFunc("CreateCompatibleDC", "function CreateCompatibleDC(dc : HDC | number) : HDC | number", "calls the `windows.h` `CreateCompatibleDC` function  \nusually used to draw/manipulate a bitmap (but you can draw TO a bitmap as well)  \napparently faster to draw to according to [this answer](https://stackoverflow.com/questions/53958727/performance-efficient-way-of-setting-pixels-in-gdi)  \nreturns the pointer to the HDC in c++");
 registerFunc("CreateCompatibleBitmap", "function CreateCompatibleBitmap(dc : HDC | number, width : number, height : number) : HBITMAP | number", "calls the `windows.h` `CreateCompatibleBitmap` function (apparently draws faster than bitmaps created with `CreateBitmap`)  \nreturns the pointer to the HBITMAP in c++");
 registerFunc("ReleaseDC", "function ReleaseDC(window? : HWND | number, dc : HDC | number) : number", "calls the `windows.h` `ReleaseDC` function  \nreturns what ever the native c++ function returns idk probably 0");
 registerFunc("TextOut", "function TextOut(dc : HDC | number, x : number, y : number, text : string) : BOOL", "calls the `windows.h` `TextOutW` function  \nreturns what ever the native c++ function returns");
 registerFunc("DrawText", "function DrawText(dc : HDC | number, text : string, left : number, top : number, right : number, bottom : number, format : number) : number", "the format can be any `DT_` const (can be OR'd together)  \nreturns 0 if failed");
+registerFunc("PlayEnhMetaFile", "function PlayEnhMetaFile(dc : HDC | number, enhMetaFile : HENHMETAFILE | number, left : number, top : number, right : number, bottom : number) : BOOL", "The `PlayEnhMetaFile` function displays the picture stored in the specified enhanced-format metafile.  \nif this function succeeds it returns a positive number");
 registerFunc("DrawFrameControl", "function DrawFrameControl(dc : HDC | number, left : number, top : number, right : number, bottom : number, type : number, state : number) : BOOL", "The `DrawFrameControl` function draws a frame control of the specified type and style.  \n`dc` can be a number obtained from `GetDC`, `GetWindowDC`, `GetDCEx` and probably others lol  \nthe `left, top, right, bottom` parameters specify the bounding rectangle for the frame control  \n`type` can be one `DFC_`... const  \n`state` can be any `DFCS_`... const (some can be OR'd together!)");
 registerFunc("DrawCaption", "function DrawCaption(hwnd : HWND | number, dc : HDC | number, left : number, top : number, right : number, bottom : number, flags : number) : BOOL", "The `DrawCaption` function draws a window caption.  \n`dc` can be a number obtained from `GetDC`, `GetWindowDC`, `GetDCEx` and probably others lol  \nthe `left, top, right, bottom` parameters specify the bounding rectangle for the window caption  \n`flags` are the drawing options and can be any `DC_`... const (BESIDE `DC_BRUSH` AND `DC_PEN` LOL!) (can be OR'd together)  \nIf `DC_SMALLCAP` is specified, the function draws a normal window caption.");
 registerFunc("CreateFont", "function CreateFont(cHeight : number, cWidth : number, cEscapement : number, cOrientation : number, cWeight : number, bItalic : boolean, bUnderline : boolean, bStrikeOut : boolean, iCharSet : number, iOutPrecision : number, iClipPrecision : number, iQuality : number, iPitchAndFamily : number, pszFaceName? : string) : number", "`cWeight` can be any `FW_` const  \n`iCharSet` can be any ...`_CHARSET` const  \niOutPrecision can be any `OUT_` const  \niClipPrecision can be any `CLIP_` const  \niQuality can be any ...`_QUALITY` const  \niPitchAndFamily can be any ...`_PITCH` | `FF_` consts");
@@ -267,7 +280,7 @@ registerFunc("PolyPolygon", "function PolyPolygon(dc : HDC | number, polygons : 
 registerFunc("PolyPolyline", "function PolyPolyline(dc : HDC | number, polylines : Array<...>, points : Array<number>) : BOOL", "The `PolyPolyline` function draws multiple series of connected line segments.  \n`polylines` can be an array like this: `[[10, 20], [20, 30]]` or like this: `[{x: 10, y: 20}, {x: 20, y: 30}]`  \n`points` is an array of variables specifying the number of points in the `polylines` array for the corresponding polyline. Each entry must be greater than or equal to two.  \ndrawn using the current pen and filled with the current brush  \nreturns 1 if success");
 registerFunc("Polygon", "function Polygon(dc : HDC | number, points : Array<...>) : BOOL", "`points` can be an array like this: `[[10, 20], [20, 30]]` or like this: `[{x: 10, y: 20}, {x: 20, y: 30}]`  \nthere must be 2 points or more in the array  \ndrawn using the current pen and filled with the current brush  \nreturns 1 if success");
 registerFunc("ExtFloodFill", "function ExtFloodFill(dc : HDC | number, x : number, y : number, color : RGB | number, type : number) : BOOL", "fills an area specified with the color of the current brush  \ndepending on what `type` you specify...  \n`FLOODFILLBORDER` is bounded by the `color` you specify while  \n`FLOODFILLSURFACE` fills the `color` you specify with the color of the selected brush  \nreturns 1 if success");
-registerFunc("BitBlt", "function BitBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, rop : number) : BOOL", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \nreturns 0 if failed");
+registerFunc("BitBlt", "function BitBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, rop : number) : BOOL", "calls the `window.h` `BitBlt` function  \nthe rop parameter is just flags starting with `SRC...`  \naccording to [MSDN](https://learn.microsoft.com/en-us/windows/win32/direct2d/comparing-direct2d-and-gdi) `BitBlt` is one of the few hardware accelerated GDI functions.  \nreturns 0 if failed");
 registerFunc("StretchBlt", "function StretchBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, cx1 : number, cy1 : number, rop : number) : BOOL", "calls the `window.h` `StretchBlt` function  \nthe rop parameter is just flags starting with `SRC`...  \nreturns 0 if failed");
 registerFunc("MaskBlt", "function MaskBlt(hdcDest : HDC | number, x : number, y : number, cx : number, cy : number, hdcSrc : HDC | number, x1 : number, y1 : number, bmpMask : HBITMAP, maskX : number, maskY : number, rop : number) : BOOL", "calls the `window.h` `MaskBlt` function  \nthe `bmpMask` must be a monochrome bitmap -> (`CreateBitmap(width, height, 1);`)  \nrop can be made by using `MAKEROP4(foregroundrop : number, backgroundrop : number)`  \nthis function will fail if `bmpMask` is not a monochromic bitmap  \nreturns 0 if failed");
 registerFunc("TransparentBlt", "function TransparentBlt(hdcDest : HDC | number, xoriginDest : number, yoriginDest : number, wDest : number, hDest : number, hdcSrc : HDC | number, xoriginSrc : number, yoriginSrc : number, wSrc : number, hSrc : number, crTransparent : number) : BOOL", "calls the `window.h` `TransparentBlt` function  \nthe `crTransparent` parameter is the color to set as transparent `RGB(...)` color  \nreturns 1 if success");
@@ -421,7 +434,7 @@ registerFunc("MAKEPOINTS", "function MAKEPOINTS(lParam : LPARAM : number) : {x :
 registerFunc("GET_WHEEL_DELTA_WPARAM", "function GET_WHEEL_DELTA_WPARAM(wp : WPARAM) : number", "used with the WM_MOUSEWHEEL event to get the distance the mouse wheel was scrolled");
 
 registerFunc("GetGUIThreadInfo", "function GetGUIThreadInfo(idThread : number) : GUITHREADINFO | {flags, hwndActive, hwndFocus, hwndCapture, hwndMenuOwner, hwndMoveSize, hwndCaret, rcCaret}", "idThread can be a value obtained from `GetWindowThreadProcessId` but if this parameter is `NULL`, the function returns information for the foreground thread.  \nreturns an object with info about the gui thread idk lol  \nthe returned object's `flags` property can be any `GUI_`... const");
-registerFunc("GetGuiResources", "function GetGuiResources(hProcess : HANDLE | number, uiFlags : number) : number", "Retrieves the count of handles to graphical user interface (GUI) objects in use by the specified process. (i think chrome's task manager will show info like this!)  \n`hProcess` can be a handle to a process or `GR_GLOBAL` (which will return the data for all processes in the current session)  \n`uiFlags` can be any `GR_`... const");
+registerFunc("GetGuiResources", "function GetGuiResources(hProcess : HANDLE | number, uiFlags : number) : number", "Retrieves the count of handles to graphical user interface (GUI) objects in use by the specified process. (i think chrome's task manager will show info like this!)  \n`hProcess` can be a handle to a process or `GR_GLOBAL` (which will return the data for all processes in the current session)  \n`uiFlags` can be any `GR_`... const  \nthis very old [MSDN](https://learn.microsoft.com/en-us/previous-versions/ms810501(v=msdn.10)?redirectedfrom=MSDN) link mentions GDI and USER objects");
 
 registerFunc("DisableProcessWindowsGhosting", "function DisableProcessWindowsGhosting(void) : void", "Disables the window ghosting feature for the calling GUI process. Window ghosting is a Windows Manager feature that lets the user minimize, move, or close the main window of an application that is not responding.  \nbasically stops the window from going white if your window is unresponsive (really stops the window from doing anything while unresponsive lmao)  \nfor some reason there is no matching function to enable process window ghosting so you're stuck with this for the lifetime of the process...");
 
@@ -629,6 +642,12 @@ registerFunc("__debugbreak", "function __debugbreak(void) : void", "**this funct
 
 registerFunc("TrackMouseEvent", "function TrackMouseEvent(dwFlags : number, hwndTrack : HWND | number, dwHoverTime : number) : BOOL | {dwFlags, hwndTrack, dwHoverTime}", "  \n`dwFlags` can be any `TME_`... const (some can be OR'd together)  \n`dwHoverTime` can be the hover time-out in milliseconds (use the `HOVER_DEFAULT` const to use the system default hover time-out)  \n**TME_HOVER and TME_LEAVE will not work if the mouse is not already over the window!**  \n**After you receive an event from `TrackMouseEvent` you must call it again to receive further events!**  \nIf you specify `TME_QUERY` this function will return an object containing the current tracking settings");
 
+registerFunc("GetPriorityClass", "function GetPriorityClass(hProcess : HANDLE) : number", "Retrieves the priority class for the specified process. This value, together with the priority value of each thread of the process, determines each thread's base priority level.  \n`hProcess` must have the PROCESS_QUERY_INFORMATION or PROCESS_QUERY_LIMITED_INFORMATION access right.  \nreturns a *`_PRIORITY_CLASS` const");
+registerFunc("GetCommandLine", "function GetCommandLine(void) : wstring", "returns the command-line string for the current process");
+registerFunc("CommandLineToArgv", "function CommandLineToArgv(commandLine? : wstring | NULL) : Array<wstring>", "if `commandLine` is an empty string, the function returns the path to the current executable file.  \nif this function returns undefined, use GetLastError to see what went wrong!");
+registerFunc("STARTUPINFO", "function STARTUPINFO(lpDesktop? : wstring | NULL, lpTitle? : wstring | NULL, dwX? : number, dwY? : number, dwXSize? : number, dwYSize? : number, dwXCountChars? : number, dwYCountChar? : number, dwFillAttribute? : number, dwFlags? : number, wShowWindow? : number, hStdInput? : HANDLE | number, hStdOutput? : HANDLE | number, hStdError? : HANDLE | number) : STARTUPINFO", "you lowkey probably not gonna need this object (just put undefined for startupinfo in `CreateProcess` and you'll be good) and these parameters are so complicated that i can't be bothered to write down their purpose here so go to [MSDN](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/ns-processthreadsapi-startupinfow) for allat  \nreturns an object with the these properties for use with `CreateProcess`");
+registerFunc("CreateProcess", "function CreateProcess(applicationPathname? : wstring | NULL, commandLine? : wstring | NULL, inheritHandles : BOOL, creationFlags : number, environment : Array<wstring>, currentDirectory? : wstring | NULL, startupinfo? : STARTUPINFO) : PROCESS_INFORMATION | {hProcess, hThread, dwProcessId, dwThreadId}", "");
+
 registerFunc("CreateMailslot", "function CreateMailslot(name : wstring, maxMessageSize : number, readTimeout : number) : HANDLE | number", "`name` MUST have the following form!: \\\\.\\mailslot\\[path]name  \n`maxMessageSize` can be `NULL` for no limit  \n`readTimeout` is the time, in milliseconds, a read operation can wait before a time-out occurs (can be `MAILSLOT_WAIT_FOREVER` for no timeout, `0` instantly returns if no message is present)  \nyou must call `CloseHandle` when done with the mailslot (or, when the process closes, the system destroys it anyways)  \ninternally using the default (NULL) security attributes for this function because idk how all that works");
 registerFunc("GetMailslotInfo", "function GetMailslotInfo(mailslot : HANDLE | number) : BOOL | {maxMessageSize, nextSize, messageCount, readTimeout}", "`mailslot` is a value returned from `CreateMailslot` my boy  \nif this function succeeds it returns an object with info about the mailslot but if not this function returns 0");
 registerFunc("WriteFile", "function WriteFile(hFile : HANDLE | number, data : number | string | ArrayBufferView, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL", "`hFile` can be a value returned from `CreateMailslot` or `CreateFile`  \n`data` can be a string, bool, number, OR any ArrayBuffer type object like a `Uint8Array` and shit");
@@ -664,6 +683,20 @@ registerFunc("GetRegisteredRawInputDevices", "function GetRegisteredRawInputDevi
 registerFunc("fetch", "function fetch(url : string, options : Object) : Promise", "just like the regular [browser fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) but my promises aren't async yet because im not using libuv lol  \nright now unfortunately this function can only work with HTTP only!");
 
 registerFunc("OutputDebugString", "function OutputDebugString(str : wstring) : void", "Sends a string to the debugger for display.  \nbasically if you are connected to jbs with WinDbg or visual studio it will show up in the command/debug window (NOT the console)");
+
+registerFunc("OpenClipboard", "function OpenClipboard(newOwner? : HWND | number) : BOOL", "Opens the clipboard for examination and prevents other applications from modifying the clipboard content.  \n`newOwner` is a window to be associated with the open clipboard.  If this parameter is `NULL`, the open clipboard is associated with the current task (BUT if you call `EmptyClipboard` after `OpenClipboard(NULL)`, `SetClipboardData` will fail!)");
+registerFunc("GetClipboardOwner", "function GetClipboardOwner(void) : HWND | number", "returns the window handle of the current owner of the clipboard  \nIn general, the clipboard owner is the window that last placed data in clipboard. The `EmptyClipboard` function assigns clipboard ownership.");
+registerFunc("CloseClipboard", "function CloseClipboard(void) : BOOL", "closes the clipboard.  \nIf this function succeeds it returns a nonzero value  \nWhen the window has finished examining or changing the clipboard, close the clipboard by calling `CloseClipboard`. This enables other windows to access the clipboard.   \n  \nDo not place an object on the clipboard after calling `CloseClipboard`.");
+registerFunc("EnumClipboardFormats", "function EnumClipboardFormats(format : number) : number", "you must call `OpenClipboard` before calling this function.  \nto start an enumeration of clipboard formats, call `EnumClipboardFormats(NULL)` to retrieve the first available format, then call EnumClipboardFormats with the last returned value until this function returns undefined (as seen in `clipboard.js`)  \n`format` can be one `CF_`* const (or `NULL`)");
+registerFunc("IsClipboardFormatAvailable", "function IsClipboardFormatAvailable(format : number) : BOOL", "Determines whether the clipboard contains data in the specified format.  \n`format` can be one `CF_`* const  \nfor some reason this is one of the few clipboard functions that doesn't require the clipboard to have been opened previously");
+registerFunc("GetClipboardData", "function GetClipboardData(format : number) : HANDLE | string", "Retrieves data from the clipboard in a specified format. The clipboard must have been opened previously. (like with `OpenClipboard`)  \n`format` can be one `CF_`* const  \nif `format` is `CF_TEXT`, `CF_OEMTEXT`, or `CF_UNICODETEXT` this function returns a string (if it succeeds lol)  \nif this function does not succeed it returns undefined (use `GetLastError` to see why)");
+registerFunc("EmptyClipboard", "function EmptyClipboard(void) : BOOL", "Empties the clipboard and frees handles to data in the clipboard. The function then assigns ownership of the clipboard to the window that currently has the clipboard open.");
+registerFunc("SetClipboardData", "function SetClipboardData(format : number, data : HANDLE | string) : HANDLE | string", "`data` can be `NULL`, indicating that the window provides data in the specified clipboard format (renders the format) upon request (the window must process the `WM_RENDERFORMAT` and `WM_RENDERALLFORMATS` messages)");
+registerFunc("AddClipboardFormatListener", "function AddClipboardFormatListener(window : HWND | number) : BOOL", "Places the given window in the system-maintained clipboard format listener list.  \nthe specified `window` will now receive the `WM_CLIPBOARDUPDATE` message  \nreturns 1 if succeeded");
+registerFunc("RemoveClipboardFormatListener", "function RemoveClipboardFormatListener(window : HWND | number) : BOOL", "Removes the given window from the system-maintained clipboard format listener list.  \nreturns 1 if succeeded");
+registerFunc("GetClipboardFormatName", "function GetClipboardFormatName(format : number) : wstring | undefined", "Retrieves from the clipboard the name of the specified registered format.  \n`format` can be one `CF_`* const  \nif this function fails, it returns undefined");
+registerFunc("GetPriorityClipboardFormat", "function GetPriorityClipboardFormat(formatList : Array<number>) : number", "Retrieves the first available clipboard format in the specified list.  \nIf the function succeeds, the return value is the first clipboard format in the list for which data is available. If the clipboard is empty, the return value is `NULL`. If the clipboard contains data, but not in any of the specified formats, the return value is -1. To get extended error information, call `GetLastError`.");
+registerFunc("CountClipboardFormats", "function CountClipboardFormats(void) : number", "Retrieves the number of different data formats currently on the clipboard.");
 
 import * as vscode from 'vscode';
 
@@ -759,6 +792,13 @@ registerOARFAS(
 );
 
 registerOARFAS(
+    "DISPLAY_DEVICE",
+    ["EnumDisplayDevices"],
+    (args) => [["DeviceName"], ["DeviceString"], ["StateFlags"], ["DeviceID"], ["DeviceKey"]],
+    {},
+);
+
+registerOARFAS(
     "POINT",
     ["MAKEPOINTS", "GetMousePos", "GetCursorPos", "GetRadius", "GetStartPoint", "GetEndPoint", "GetCenter", "GetGradientOriginOffset", "GetDpi"],
     (args) => [["x"], ["y"]],
@@ -800,6 +840,27 @@ registerOARFAS(
     "WNDCLASSEXW",
     ["CreateWindowClass"],
     (args) => [["loop", vscode.CompletionItemKind.Method], ["windowProc", vscode.CompletionItemKind.Method], ["init", vscode.CompletionItemKind.Method], ["hbrBackground"],["hCursor"],["hIcon"],["hIconSm"],["hInstance"], ["lpszClassName"], ["lpszMenuName"], ["style"], ["DefWindowProc"]],
+    {},
+);
+
+registerOARFAS(
+    "DOCINFO",
+    ["DOCINFO"],
+    (args) => [["lpszDocName"], ["lpszOutput"], ["lpszDatatype"], ["fwType"]],
+    {},
+);
+
+registerOARFAS(
+    "STARTUPINFO",
+    ["STARTUPINFO"],
+    (args) => [["lpDesktop"], ["lpTitle"], ["dwX"], ["dwY"], ["dwXSize"], ["dwYSize"], ["dwXCountChars"], ["dwYCountChars"], ["dwFillAttribute"], ["dwFlags"], ["wShowWindow"], ["hStdInput"], ["hStdOutput"], ["hStdError"], ],
+    {},
+);
+
+registerOARFAS(
+    "PROCESS_INFORMATION",
+    ["CreateProcess"],
+    (args) => [["hProcess"], ["hThread"], ["dwProcessId"], ["dwThreadId"]],
     {},
 );
 
@@ -947,7 +1008,7 @@ registerOARFAS(
     ["CreateEffect"],
     (args) => [...emptyCOMObject(), ["SetValue", vscode.CompletionItemKind.Method], ["SetInput", vscode.CompletionItemKind.Method], ["SetInputEffect", vscode.CompletionItemKind.Method]],
     extendMethods("IUnknown", {
-        "SetValue" : makeArgs("function SetValue(index : string, value : any) : void", "`index` must be the property you want to set (for example `D2D1_GAUSSIANBLUR_PROP_BORDER_MODE`) but as a string (for example `gaussianEffect.SetValue('D2D1_GAUSSIANBLUR_PROP_BORDER_MODE', D2D1_BORDER_MODE_HARD)`)  \n`value` can be whatever value it's supposed to be like google it  \nsee `COMmunism.js` for help"),
+        "SetValue" : makeArgs("function SetValue(index : string, ...value : any) : void", "`index` must be the property you want to set (for example `D2D1_GAUSSIANBLUR_PROP_BORDER_MODE`) but as a string (for example `gaussianEffect.SetValue('D2D1_GAUSSIANBLUR_PROP_BORDER_MODE', D2D1_BORDER_MODE_HARD)`)  \n`value` can be whatever value it's supposed to be like google it  \nsee `COMmunism.js` for help"),
         "SetInput" : makeArgs("function SetInput(index : number, image : ID2D1Image) : void", "`image` can be a d2d bitmap  \nsee `COMmunism.js` for help"),
         "SetInputEffect" : makeArgs("function SetInputEffect(index : number, effect : ID2D1Effect) : void", "`index` index  \n`effect` can be an effect created with `d2d.CreateEffect` but only if you created d2d with `ID2D1DeviceContext` or above!  \nsee `COMmunism.js` for help"),
     }),
@@ -2558,6 +2619,31 @@ const macros:string[] = [ //macrosforjbsblueprints
     "MOUSEEVENTF_XUP",
     "MOUSEEVENTF_WHEEL",
     "MOUSEEVENTF_HWHEEL",
+    "PRINTER_ENUM_DEFAULT",
+    "PRINTER_ENUM_LOCAL",
+    "PRINTER_ENUM_CONNECTIONS",
+    "PRINTER_ENUM_FAVORITE",
+    "PRINTER_ENUM_NAME",
+    "PRINTER_ENUM_REMOTE",
+    "PRINTER_ENUM_SHARED",
+    "PRINTER_ENUM_NETWORK",
+    "PRINTER_ENUM_EXPAND",
+    "PRINTER_ENUM_CONTAINER",
+    "PRINTER_ENUM_ICONMASK",
+    "PRINTER_ENUM_ICON1",
+    "PRINTER_ENUM_ICON2",
+    "PRINTER_ENUM_ICON3",
+    "PRINTER_ENUM_ICON4",
+    "PRINTER_ENUM_ICON5",
+    "PRINTER_ENUM_ICON6",
+    "PRINTER_ENUM_ICON7",
+    "PRINTER_ENUM_ICON8",
+    "PRINTER_ENUM_HIDE",
+    "PRINTER_ENUM_CATEGORY_ALL",
+    "PRINTER_ENUM_CATEGORY_3D",
+    "SPOOL_FILE_PERSISTENT",
+    "SPOOL_FILE_TEMPORARY",
+    "EDD_GET_DEVICE_INTERFACE_NAME",
     "IDC_ARROW",
     "IDC_IBEAM",
     "IDC_WAIT",
@@ -5182,6 +5268,37 @@ const macros:string[] = [ //macrosforjbsblueprints
     "FILE_FLAG_OPEN_NO_RECALL",
     "FILE_FLAG_FIRST_PIPE_INSTANCE",
     "MAX_PATH",
+    "DEBUG_PROCESS",
+    "DEBUG_ONLY_THIS_PROCESS",
+    "CREATE_SUSPENDED",
+    "DETACHED_PROCESS",
+    "CREATE_NEW_CONSOLE",
+    "NORMAL_PRIORITY_CLASS",
+    "IDLE_PRIORITY_CLASS",
+    "HIGH_PRIORITY_CLASS",
+    "REALTIME_PRIORITY_CLASS",
+    "CREATE_NEW_PROCESS_GROUP",
+    "CREATE_UNICODE_ENVIRONMENT",
+    "CREATE_SEPARATE_WOW_VDM",
+    "CREATE_SHARED_WOW_VDM",
+    "CREATE_FORCEDOS",
+    "BELOW_NORMAL_PRIORITY_CLASS",
+    "ABOVE_NORMAL_PRIORITY_CLASS",
+    "INHERIT_PARENT_AFFINITY",
+    "INHERIT_CALLER_PRIORITY",
+    "CREATE_PROTECTED_PROCESS",
+    "EXTENDED_STARTUPINFO_PRESENT",
+    "PROCESS_MODE_BACKGROUND_BEGIN",
+    "PROCESS_MODE_BACKGROUND_END",
+    "CREATE_SECURE_PROCESS",
+    "CREATE_BREAKAWAY_FROM_JOB",
+    "CREATE_PRESERVE_CODE_AUTHZ_LEVEL",
+    "CREATE_DEFAULT_ERROR_MODE",
+    "CREATE_NO_WINDOW",
+    "PROFILE_USER",
+    "PROFILE_KERNEL",
+    "PROFILE_SERVER",
+    "CREATE_IGNORE_SYSTEM_DEFAULT",
     "NIF_MESSAGE",
     "NIF_ICON",
     "NIF_TIP",
@@ -5274,5 +5391,33 @@ const macros:string[] = [ //macrosforjbsblueprints
     "INPUT_KEYBOARD",
     "INPUT_HARDWARE",
     "RID_INPUT",
-
+    "DI_APPBANDING",           
+    "DI_ROPS_READ_DESTINATION",
+    "CF_TEXT",
+    "CF_BITMAP",
+    "CF_METAFILEPICT",
+    "CF_SYLK",
+    "CF_DIF",
+    "CF_TIFF",
+    "CF_OEMTEXT",
+    "CF_DIB",
+    "CF_PALETTE",
+    "CF_PENDATA",
+    "CF_RIFF",
+    "CF_WAVE",
+    "CF_UNICODETEXT",
+    "CF_ENHMETAFILE",
+    "CF_HDROP",
+    "CF_LOCALE",
+    "CF_DIBV5",
+    "CF_MAX",
+    "CF_OWNERDISPLAY",
+    "CF_DSPTEXT",
+    "CF_DSPBITMAP",
+    "CF_DSPMETAFILEPICT",
+    "CF_DSPENHMETAFILE",
+    "CF_PRIVATEFIRST",
+    "CF_PRIVATELAST",
+    "CF_GDIOBJFIRST",
+    "CF_GDIOBJLAST",
 ];
