@@ -497,7 +497,7 @@ registerFunc("UnhookWinEvent", "function UnhookWinEvent(hook : HWINEVENTHOOK | n
 registerFunc("GetWindowThreadProcessId", "function GetWindowThreadProcessId(hwnd : HWND | number) : {processID, thread}", "returns an object with `processID` and `thread` properties");
 registerFunc("GetProcessMemoryInfo", "function GetProcessMemoryInfo(hProcess : HANDLE) : {cb, PageFaultCount, PeakWorkingSetSize, WorkingSetSize, QuotaPeakPagedPoolUsage, QuotaPagedPoolUsage, QuotaPeakNonPagedPoolUsage, QuotaNonPagedPoolUsage, PagefileUsage, PeakPagefileUsage, PrivateUsage}", "");
 registerFunc("EnumProcesses", "function EnumProcesses(func : Function(pid)) : void", "gives the process ids of all running processes probably i thuink");
-registerFunc("OpenProcess", "function OpenProcess(dwFlags : number, bInheritHandle : boolean, dwProcessId : number) : HANDLE", "`dwFlags` can be any `PROCESS_`... const (and can be OR'd together)  \n`bInheritHandle` can probably just be `false`  \nuse EnumProcesses to iterate through a list of process ids for `dwProcessId`");
+registerFunc("OpenProcess", "function OpenProcess(dwFlags : number, bInheritHandle : boolean, dwProcessId : number) : HANDLE", "`dwFlags` can be any `PROCESS_`... const (and can be OR'd together)  \n`bInheritHandle` can probably just be `false`  \nuse EnumProcesses to iterate through a list of process ids for `dwProcessId`  \nwhen you are done with the handle don't forget to `CloseHandle` it");
 registerFunc("GetCurrentProcess", "function GetCurrentProcess(void) : HANDLE", "Retrieves a pseudo handle for the current process.  \nA pseudo handle is a special constant, currently (**HANDLE**)-1, that is interpreted as the current process handle.  \nFor compatibility with future operating systems, it is best to call `GetCurrentProcess` instead of hard-coding this constant value.");
 registerFunc("EnumProcessModules", "function EnumProcessModules(hProcess : HANDLE) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
 registerFunc("EnumProcessModulesEx", "function EnumProcessModulesEx(hProcess : HANDLE, dwFlags : number) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \ndwFlags can be any `LIST_MODULES_`... const   \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
@@ -538,6 +538,8 @@ registerFunc("NewWCharStrPtr", "function NewWCharStrPtr(wstr : string) : number"
 registerFunc("DeletePtr", "function DeletePtr(ptr : number) : void", "Deletes a scalar pointer");
 registerFunc("DeleteArrayPtr", "function DeleteArrayPtr(ptr : number) : void", "Deletes a vector pointer  \nuse this function on the value returned by `NewCharStrPtr` when you're done!");
 registerFunc("VirtualProtect", "function VirtualProtect(address : LPVOID | number, size : number, newProtect : number) : number", "Changes the protection on a region of committed pages in the virtual address space of the calling process.  \n`size` is the size of the region whose access protection attributes are to be changed, **in bytes**.  \nnewProtect can be any `PAGE_`... const  \nif success, returns the old access protection value");
+registerFunc("VirtualQueryEx", "function VirtualQueryEx(hProcess : HANDLE | number, address : number) : MEMORY_BASIC_INFORMATION", "Retrieves information about a range of pages within the virtual address space of a specified process.  \n`hProcess` must be a handle to a process opened with (at least) the `PROCESS_QUERY_INFORMATION` flag    \nto use this function like `VirtualQuery` you can just use the handle returned from `GetCurrentProcess` as the first argument");
+registerFunc("ReadProcessMemory", "function ReadProcessMemory(hProcess : HANDLE | number, address : number, numBytesToRead : number) : Uint8Array | undefined", "`hProcess` must be a handle to a process opened with (at least) the `PROCESS_VM_READ` flag  \nif this function succeeds it returns a Uint8Array but if it fails this function returns undefined (use `GetLastError` and `_com_error` to figure out why)");
 registerFunc("FlushInstructionCache", "function FlushInstructionCache(process : HANDLE : number, baseAddress? : number, size? : number) : BOOL", "idk if you *have* to call it but  \nApplications should call `FlushInstructionCache` if they generate or modify code in memory (like in `scripts/dllstuffs/CALLASM.js`). The CPU cannot detect the change, and may execute the old code it cached.  \n`baseAddress` and `size` can both be **NULL**  \n`baseAddress` is the pointer of the base of the region to be flushed. This parameter can be NULL.  \n`size` is the size of the region to be flushed if `baseAddress` isn't NULL, **in bytes**.");
 registerFunc("GetDlgItem", "function GetDlgItem(hDlg : HWND | number, id : number) : HWND", "Retrieves a handle to a control in the specified dialog box.  \n`id` is the identifier of the control to be retrieved.  \nYou can use the `GetDlgItem` function with any parent-child window pair, not just with dialog boxes. As long as the `hDlg` parameter specifies a parent window and the child window has a unique identifier. (as specified by the `hMenu` parameter of `CreateWindow`)");
 registerFunc("FindFirstChangeNotification", "function FindFirstChangeNotification(pathName : wstring, watchSubtree : BOOL, notifyFilter : number) : HANDLE | number", "Creates a change notification handle and sets up initial change notification filter conditions.  \nWhen the returned handle is no longer needed, close it by using the `FindCloseChangeNotification` function.  \nThis function does not return when a change occurs. You must call `WaitForSingleObject`!  \nBy default, the `pathName` is limited to MAX_PATH (usually 260) characters. To extend this limit to 32,767 wide characters, prepend \"\\?\\\" to the path. For more information, see [Naming Files, Paths, and Namespaces](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).  \n`notifyFilter` is any `FILE_NOTIFY_CHANGE_`... const (can be OR'd together)");
@@ -592,6 +594,8 @@ registerFunc("GetClipboardFormatName", "function GetClipboardFormatName(format :
 registerFunc("GetPriorityClipboardFormat", "function GetPriorityClipboardFormat(formatList : Array<number>) : number", "Retrieves the first available clipboard format in the specified list.  \nIf the function succeeds, the return value is the first clipboard format in the list for which data is available. If the clipboard is empty, the return value is `NULL`. If the clipboard contains data, but not in any of the specified formats, the return value is -1. To get extended error information, call `GetLastError`.");
 registerFunc("CountClipboardFormats", "function CountClipboardFormats(void) : number", "Retrieves the number of different data formats currently on the clipboard.");
 registerFunc("RegisterClipboardFormat", "function RegisterClipboardFormat(formatName : wstring) : number", "Registers a new clipboard format. This format can then be used as a valid clipboard format.  \nif a format already has this name (case-insensitive) then it returns that format  \nregistered clipboard formats are identified in the range 0xC000 through 0xFFFF  \nthis function returns the registered format");
+registerFunc("SHGetStockIconInfo", "function SHGetStockIconInfo(iconId : number, flags : number) : SHSTOCKICONINFO", "`iconId` can be any `SIID_`* const  \n`flags` can be more than one `SHGSI_`* const  \nyou are responsible for using `DestroyIcon` to free the icon (SHSTOCKICONFINO.hIcon) returned from this function (if you specified `SHGSI_ICON` through the flags parameter)");
+registerFunc("GetModuleHandle", "function GetModuleHandle(moduleName : wstring | NULL) : HMODULE | number", "`moduleName` must be the name of a loaded module (either a .dll or .exe file)  \nif `moduleName` is `NULL`, this function returns the handle to the file used to create the calling process (JBS3.exe)  \nThe `GetModuleHandle` function does not retrieve handles for modules that were loaded using the `LOAD_LIBRARY_AS_DATAFILE` flag.");
 const vscode = require("vscode");
 function emptyCOMObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
@@ -657,6 +661,8 @@ registerOARFAS("RECT", ["GetWindowRect", "GetClientRect", "GetBounds", "GetWiden
 registerOARFAS("DISPLAY_DEVICE", ["EnumDisplayDevices"], (args) => [["DeviceName"], ["DeviceString"], ["StateFlags"], ["DeviceID"], ["DeviceKey"]], {});
 registerOARFAS("POINT", ["MAKEPOINTS", "GetMousePos", "GetCursorPos", "GetRadius", "GetStartPoint", "GetEndPoint", "GetCenter", "GetGradientOriginOffset", "GetDpi"], (args) => [["x"], ["y"]], {});
 registerOARFAS("PAINTSTRUCT", ["BeginPaint"], (args) => [["fErase"], ["fIncUpdate"], ["fRestore"], ["hdc"], ["rcPaint", vscode.CompletionItemKind.Class], ["ps"]], {});
+registerOARFAS("SHSTOCKICONINFO", ["SHGetStockIconInfo"], (args) => [["cbSize"], ["hIcon"], ["iSysImageIndex"], ["iIcon"], ["szPath"]], {});
+registerOARFAS("MEMORY_BASIC_INFORMATION", ["VirtualQuery", "VirtualQueryEx"], (args) => [["BaseAddress"], ["AllocationBase"], ["AllocationProtect"], ["PartitionId"], ["RegionSize"], ["State"], ["Protect"], ["Type"],], {});
 registerOARFAS("RequireObject", ["require"], (args) => {
     const [type] = args.split(",");
     if (type[0].includes("fs")) {
@@ -4391,6 +4397,13 @@ const macros = [
     "MEM_EXTENDED_PARAMETER_SOFT_FAULT_PAGES",
     "MEM_EXTENDED_PARAMETER_EC_CODE",
     "MEM_EXTENDED_PARAMETER_NUMA_NODE_MANDATORY",
+    "MEM_PRIVATE",
+    "MEM_MAPPED",
+    "MEM_IMAGE",
+    "WRITE_WATCH_FLAG_RESET",
+    "VM_PREFETCH_TO_WORKING_SET",
+    "ENCLAVE_TYPE_SGX",
+    "ENCLAVE_TYPE_SGX2",
     "TME_CANCEL",
     "TME_HOVER",
     "TME_LEAVE",
@@ -4794,5 +4807,125 @@ const macros = [
     "CF_PRIVATELAST",
     "CF_GDIOBJFIRST",
     "CF_GDIOBJLAST",
+    "SIID_DOCNOASSOC",
+    "SIID_DOCASSOC",
+    "SIID_APPLICATION",
+    "SIID_FOLDER",
+    "SIID_FOLDEROPEN",
+    "SIID_DRIVE",
+    "SIID_DRIVE",
+    "SIID_DRIVEREMOVE",
+    "SIID_DRIVEFIXED",
+    "SIID_DRIVENET",
+    "SIID_DRIVENETDISABLED",
+    "SIID_DRIVECD",
+    "SIID_DRIVERAM",
+    "SIID_WORLD",
+    "SIID_SERVER",
+    "SIID_PRINTER",
+    "SIID_MYNETWORK",
+    "SIID_FIND",
+    "SIID_HELP",
+    "SIID_SHARE",
+    "SIID_LINK",
+    "SIID_SLOWFILE",
+    "SIID_RECYCLER",
+    "SIID_RECYCLERFULL",
+    "SIID_MEDIACDAUDIO",
+    "SIID_LOCK",
+    "SIID_AUTOLIST",
+    "SIID_PRINTERNET",
+    "SIID_SERVERSHARE",
+    "SIID_PRINTERFAX",
+    "SIID_PRINTERFAXNET",
+    "SIID_PRINTERFILE",
+    "SIID_STACK",
+    "SIID_MEDIASVCD",
+    "SIID_STUFFEDFOLDER",
+    "SIID_DRIVEUNKNOWN",
+    "SIID_DRIVEDVD",
+    "SIID_MEDIADVD",
+    "SIID_MEDIADVDRAM",
+    "SIID_MEDIADVDRW",
+    "SIID_MEDIADVDR",
+    "SIID_MEDIADVDROM",
+    "SIID_MEDIACDAUDIOPLUS",
+    "SIID_MEDIACDRW",
+    "SIID_MEDIACDR",
+    "SIID_MEDIACDBURN",
+    "SIID_MEDIABLANKCD",
+    "SIID_MEDIACDROM",
+    "SIID_AUDIOFILES",
+    "SIID_IMAGEFILES",
+    "SIID_VIDEOFILES",
+    "SIID_MIXEDFILES",
+    "SIID_FOLDERBACK",
+    "SIID_FOLDERFRONT",
+    "SIID_SHIELD",
+    "SIID_WARNING",
+    "SIID_INFO",
+    "SIID_ERROR",
+    "SIID_KEY",
+    "SIID_SOFTWARE",
+    "SIID_RENAME",
+    "SIID_DELETE",
+    "SIID_MEDIAAUDIODVD",
+    "SIID_MEDIAMOVIEDVD",
+    "SIID_MEDIAENHANCEDCD",
+    "SIID_MEDIAENHANCEDDVD",
+    "SIID_MEDIAHDDVD",
+    "SIID_MEDIABLURAY",
+    "SIID_MEDIAVCD",
+    "SIID_MEDIADVDPLUSR",
+    "SIID_MEDIADVDPLUSRW",
+    "SIID_DESKTOPPC",
+    "SIID_MOBILEPC",
+    "SIID_USERS",
+    "SIID_MEDIASMARTMEDIA",
+    "SIID_MEDIACOMPACTFLASH",
+    "SIID_DEVICECELLPHONE",
+    "SIID_DEVICECAMERA",
+    "SIID_DEVICEVIDEOCAMERA",
+    "SIID_DEVICEAUDIOPLAYER",
+    "SIID_NETWORKCONNECT",
+    "SIID_INTERNET",
+    "SIID_ZIPFILE",
+    "SIID_SETTINGS",
+    "SIID_DRIVEHDDVD",
+    "SIID_DRIVEBD",
+    "SIID_MEDIAHDDVDROM",
+    "SIID_MEDIAHDDVDR",
+    "SIID_MEDIAHDDVDRAM",
+    "SIID_MEDIABDROM",
+    "SIID_MEDIABDR",
+    "SIID_MEDIABDRE",
+    "SIID_CLUSTEREDDRIVE",
+    "SIID_MAX_ICONS",
+    "SHGFI_ICON",
+    "SHGFI_DISPLAYNAME",
+    "SHGFI_TYPENAME",
+    "SHGFI_ATTRIBUTES",
+    "SHGFI_ICONLOCATION",
+    "SHGFI_EXETYPE",
+    "SHGFI_SYSICONINDEX",
+    "SHGFI_LINKOVERLAY",
+    "SHGFI_SELECTED",
+    "SHGFI_ATTR_SPECIFIED",
+    "SHGFI_LARGEICON",
+    "SHGFI_SMALLICON",
+    "SHGFI_OPENICON",
+    "SHGFI_SHELLICONSIZE",
+    "SHGFI_PIDL",
+    "SHGFI_USEFILEATTRIBUTES",
+    "SHGFI_ADDOVERLAYS",
+    "SHGFI_OVERLAYINDEX",
+    "SHGSI_ICONLOCATION",
+    "SHGSI_ICON",
+    "SHGSI_SYSICONINDEX",
+    "SHGSI_LINKOVERLAY",
+    "SHGSI_SELECTED",
+    "SHGSI_LARGEICON",
+    "SHGSI_SMALLICON",
+    "SHGSI_SHELLICONSIZE",
 ];
 //# sourceMappingURL=extension.js.map
