@@ -706,6 +706,8 @@ registerFunc("RegisterClipboardFormat", "function RegisterClipboardFormat(format
 registerFunc("SHGetStockIconInfo", "function SHGetStockIconInfo(iconId : number, flags : number) : SHSTOCKICONINFO", "`iconId` can be any `SIID_`* const  \n`flags` can be more than one `SHGSI_`* const  \nyou are responsible for using `DestroyIcon` to free the icon (SHSTOCKICONFINO.hIcon) returned from this function (if you specified `SHGSI_ICON` through the flags parameter)");
 
 registerFunc("GetModuleHandle", "function GetModuleHandle(moduleName : wstring | NULL) : HMODULE | number", "`moduleName` must be the name of a loaded module (either a .dll or .exe file)  \nif `moduleName` is `NULL`, this function returns the handle to the file used to create the calling process (JBS3.exe)  \nThe `GetModuleHandle` function does not retrieve handles for modules that were loaded using the `LOAD_LIBRARY_AS_DATAFILE` flag.");
+registerFunc("RtlAdjustPrivilege", "function RtlAdjustPrivilege(privilege : number, enable : BOOL, client : BOOL) : BOOL", "[NtDoc](https://ntdoc.m417z.com/rtladjustprivilege)  \nreturns the previous state of the privilege");
+registerFunc("NtRaiseHardError", "function NtRaiseHardError(errorStatus : number, numberOfParameters : number, unicodeStringParameterMask : number, parameters : number, validResponseOptions : number) : number", "[NtDoc](https://ntdoc.m417z.com/ntraiseharderror)  \nundocumented NT function that can bluescreen your computer if you call `RtlAdjustPrivilege` just before with the right parameters...  \nreturns the response code or whatever?");
 
 import * as vscode from 'vscode';
 
