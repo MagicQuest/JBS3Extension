@@ -578,10 +578,12 @@ registerFunc("UnhookWinEvent", "function UnhookWinEvent(hook : HWINEVENTHOOK | n
 registerFunc("GetWindowThreadProcessId", "function GetWindowThreadProcessId(hwnd : HWND | number) : {processID, thread}", "returns an object with `processID` and `thread` properties");
 
 registerFunc("GetProcessMemoryInfo", "function GetProcessMemoryInfo(hProcess : HANDLE) : {cb, PageFaultCount, PeakWorkingSetSize, WorkingSetSize, QuotaPeakPagedPoolUsage, QuotaPagedPoolUsage, QuotaPeakNonPagedPoolUsage, QuotaNonPagedPoolUsage, PagefileUsage, PeakPagefileUsage, PrivateUsage}", "");
+registerFunc("GetProcessId", "function GetProcessId(hProcess : HANDLE) : number", "`hProcess` must have been opened with (at least) `PROCESS_QUERY_INFORMATION ` or `PROCESS_QUERY_LIMITED_INFORMATION`  \nif you want the current process id, use `GetCurrentProcessId`");
 
 registerFunc("EnumProcesses", "function EnumProcesses(func : Function(pid)) : void", "gives the process ids of all running processes probably i thuink");
 registerFunc("OpenProcess", "function OpenProcess(dwFlags : number, bInheritHandle : boolean, dwProcessId : number) : HANDLE", "`dwFlags` can be any `PROCESS_`... const (and can be OR'd together)  \n`bInheritHandle` can probably just be `false`  \nuse EnumProcesses to iterate through a list of process ids for `dwProcessId`  \nwhen you are done with the handle don't forget to `CloseHandle` it");
 registerFunc("GetCurrentProcess", "function GetCurrentProcess(void) : HANDLE", "Retrieves a pseudo handle for the current process.  \nA pseudo handle is a special constant, currently (**HANDLE**)-1, that is interpreted as the current process handle.  \nFor compatibility with future operating systems, it is best to call `GetCurrentProcess` instead of hard-coding this constant value.");
+registerFunc("GetCurrentProcessId", "function GetCurrentProcessId(void) : number", "The return value is the process identifier of the calling process.");
 registerFunc("EnumProcessModules", "function EnumProcessModules(hProcess : HANDLE) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
 registerFunc("EnumProcessModulesEx", "function EnumProcessModulesEx(hProcess : HANDLE, dwFlags : number) : Array<[HMODULE, DWORD, BOOL]>", "`hProcess` can be obtained by calling `OpenProcess(...)`  \ndwFlags can be any `LIST_MODULES_`... const   \nreturns an array with 3 values  \nthis one seems a little confusing so see wintilemanager for use");
 registerFunc("GetModuleBaseName", "function GetModuleBaseName(hProcess : HANDLE, hMod : HMODULE) : wstring", "`hProcess` can be obtained by calling `OpenProcess(...)` and `hMod` can be obtained by calling `EnumProcessModules`  \nreturns the name or undefined (apparently)");
@@ -630,8 +632,12 @@ registerFunc("DeletePtr", "function DeletePtr(ptr : number) : void", "Deletes a 
 registerFunc("DeleteArrayPtr", "function DeleteArrayPtr(ptr : number) : void", "Deletes a vector pointer  \nuse this function on the value returned by `NewCharStrPtr` when you're done!");
 
 registerFunc("VirtualProtect", "function VirtualProtect(address : LPVOID | number, size : number, newProtect : number) : number", "Changes the protection on a region of committed pages in the virtual address space of the calling process.  \n`size` is the size of the region whose access protection attributes are to be changed, **in bytes**.  \nnewProtect can be any `PAGE_`... const  \nif success, returns the old access protection value");
-registerFunc("VirtualQueryEx", "function VirtualQueryEx(hProcess : HANDLE | number, address : number) : MEMORY_BASIC_INFORMATION", "Retrieves information about a range of pages within the virtual address space of a specified process.  \n`hProcess` must be a handle to a process opened with (at least) the `PROCESS_QUERY_INFORMATION` flag    \nto use this function like `VirtualQuery` you can just use the handle returned from `GetCurrentProcess` as the first argument");
+registerFunc("VirtualProtectEx", "function VirtualProtectEx(hProcess : HANDLE, address : LPVOID | number, size : number, newProtect : number) : number", "Changes the protection on a region of committed pages in the virtual address space of the process specified.  \nthe process specified (`hProcess`) must have been opened with (at least) the `PROCESS_VM_OPERATION` flag  \n`size` is the size of the region whose access protection attributes are to be changed, **in bytes**.  \nnewProtect can be any `PAGE_`... const  \nif success, returns the old access protection value");
+registerFunc("VirtualQueryEx", "function VirtualQueryEx(hProcess : HANDLE | number, address : number) : MEMORY_BASIC_INFORMATION", "Retrieves information about a range of pages within the virtual address space of a specified process.  \n`hProcess` must be a handle to a process opened with (at least) the `PROCESS_QUERY_INFORMATION` flag (or a handle returned from `GetCurrentProcess`)  \nto use this function like `VirtualQuery` you can just use the handle returned from `GetCurrentProcess` as the first argument");
+registerFunc("VirtualAllocEx", "function VirtualAllocEx(hProcess : HANDLE | number, address : number, size : number, allocationType : number, protection : number) : LPVOID | number", "`hProcess` must be a handle opened with (at least) `PROCESS_VM_OPERATION` (or `GetCurrentHandle`)  \n`address` can be the desired starting address for the region of pages you want to allocate. `address` can also just be `NULL` and the system will pick for you.  \n`size` is the size of the region of memory to allocate (in bytes)  \n`allocationType` can be one or more of the `MEM_`* consts (usually `MEM_COMMIT` or `MEM_RESERVE` OR even both (see what i did there))  \n`protection` is the memory protection for the region of pages to be allocated. `protection` can be any `PAGE_`* const  \nif this function succeeds it will return a non-zero value (if it doesn't, use the `GetLastError` function!)");
+registerFunc("VirtualFreeEx", "function VirtualFreeEx(hProcess : HANDLE | number, address : number, size : number, freeType : number) : BOOL", "`hProcess` must be a handle opened with (at least) `PROCESS_VM_OPERATION` (or `GetCurrentHandle`)  \n`address` is a pointer to the starting address of the region of memory to be freed.  \n`size` is the size of the region of memory to free (in bytes)  \n`freeType` can be one or more of the `MEM_`* consts (usually `MEM_DECOMMIT` or `MEM_RELEASE` OR even both (see what i did there))  \n`protection` is the memory protection for the region of pages to be allocated. `protection` can be any `PAGE_`* const  \nif this function succeeds it will return a non-zero value (if it doesn't, use the `GetLastError` function!)");
 registerFunc("ReadProcessMemory", "function ReadProcessMemory(hProcess : HANDLE | number, address : number, numBytesToRead : number) : Uint8Array | undefined", "`hProcess` must be a handle to a process opened with (at least) the `PROCESS_VM_READ` flag  \nif this function succeeds it returns a Uint8Array but if it fails this function returns undefined (use `GetLastError` and `_com_error` to figure out why)");
+registerFunc("WriteProcessMemory", "function WriteProcessMemory(hProcess : HANDLE | number, address : number, data : number | wstring | ArrayBufferView, length? : number) : BOOL", "`hProcess` must be a handle to a process opened with (at least) the `PROCESS_VM_WRITE` and `PROCESS_VM_OPERATION` flags  \nthis function fails if the memory at the address is not writable/valid (if it's not writable then you could always VirtualProtectEx it!)  \n`length` is optional as most ways will calculate it for you (if you are passing a pointer it probably won't work the way you expect to so just to be sure you should set a length (in bytes of course))  \nif this function succeeds it returns how many bytes were written but if it fails this function returns 0 (use `GetLastError` and `_com_error` to figure out why)");
 
 registerFunc("FlushInstructionCache", "function FlushInstructionCache(process : HANDLE : number, baseAddress? : number, size? : number) : BOOL", "idk if you *have* to call it but  \nApplications should call `FlushInstructionCache` if they generate or modify code in memory (like in `scripts/dllstuffs/CALLASM.js`). The CPU cannot detect the change, and may execute the old code it cached.  \n`baseAddress` and `size` can both be **NULL**  \n`baseAddress` is the pointer of the base of the region to be flushed. This parameter can be NULL.  \n`size` is the size of the region to be flushed if `baseAddress` isn't NULL, **in bytes**.");
 
@@ -708,6 +714,14 @@ registerFunc("SHGetStockIconInfo", "function SHGetStockIconInfo(iconId : number,
 registerFunc("GetModuleHandle", "function GetModuleHandle(moduleName : wstring | NULL) : HMODULE | number", "`moduleName` must be the name of a loaded module (either a .dll or .exe file)  \nif `moduleName` is `NULL`, this function returns the handle to the file used to create the calling process (JBS3.exe)  \nThe `GetModuleHandle` function does not retrieve handles for modules that were loaded using the `LOAD_LIBRARY_AS_DATAFILE` flag.");
 registerFunc("RtlAdjustPrivilege", "function RtlAdjustPrivilege(privilege : number, enable : BOOL, client : BOOL) : BOOL", "[NtDoc](https://ntdoc.m417z.com/rtladjustprivilege)  \nreturns the previous state of the privilege");
 registerFunc("NtRaiseHardError", "function NtRaiseHardError(errorStatus : number, numberOfParameters : number, unicodeStringParameterMask : number, parameters : number, validResponseOptions : number) : number", "[NtDoc](https://ntdoc.m417z.com/ntraiseharderror)  \nundocumented NT function that can bluescreen your computer if you call `RtlAdjustPrivilege` just before with the right parameters...  \nreturns the response code or whatever?");
+registerFunc("NtCreateThreadEx", "function NtCreateThreadEx(desiredAccess : number, objectAttributes : number, processHandle : HANDLE | number, startRoutine : number, argument : number, createFlags : number, zeroBits : number, stackSize : number, maximumStackSize : number) : HANDLE", "yo this is really barebones and you'll have to pass pointers for most of these because there's not much i can do for you when you have to pass a pointer to a function for the `startRoutine`  \n`desiredAccess` can usually be `THREAD_ALL_ACCESS`  \n`objectAttributes` is an optional pointer to an [OBJECT_ATTRIBUTES](https://ntdoc.m417z.com/object_attributes) structure  \n`processHandle` must be a process opened with (at least) `PROCESS_CREATE_THREAD` (or it could be a handle returned from `GetCurrentHandle`)  \n`startRoutine` is a pointer to a function to execute in the newly created thread (see usage with **./d2dcontrols/pegglescriptinggui.js**)  \n`argument` is a pointer to some data to pass into the `startRoutine` function  \n`createFlags` can be any `THREAD_CREATE_FLAGS_`* const  \n`zeroBits`  \n`stackSize` is the initial size of the stack in bytes. `stackSize` can be `NULL` and will use the default size  \n`maximumStackSize` can also be `NULL` and it'll do the normal amount");
+registerFunc("CreateToolhelp32Snapshot", "function CreateToolhelp32Snapshot(flags : number, pid : number) : HANDLE | number", "`flags` can be any `TH32CS_`* const (and some can be OR'd together)  \n`pid` is the process id (you can specify 0 for the current process)  \nif the calling process is 32 bit and you try using this on a 64 bit application, it will fail (but that shouldn't happen because JBS3 is x64 and all the good libffi stuff would probably wouldn't work)  \nif this function succeeds, it returns a new handle (if it doesn't, it returns `INVALID_HANDLE_VALUE`))");
+registerFunc("Module32First", "function Module32First(snapshot : HANDLE | number) : MODULEENTRY32 | BOOL", "`snapshot` is a handle returned from `CreateToolhelp32Snapshot`  \nit's really important to note that `Module32First` **RETURNS** a new module entry (`Module32Next` **MODIFIES** the entry you pass)  \nthis function returns an object on success or 0 if not (use `GetLastError` to find out why)");
+registerFunc("Module32Next", "function Module32Next(snapshot : HANDLE | number, me32 : MODULEENTRY32) : BOOL", "**this function DOES NOT return a new module entry, it modifies the one passed through `me32`!!!**  \nthis function returns 1 if there are still more to go (see ./d2dcontrols/pegglescriptinggui.js for usage)");
+registerFunc("GetExitCodeThread", "function GetExitCodeThread(thread : HANDLE) : number", "`thread` must be a handle opened with (at least) `THREAD_QUERY_INFORMATION` or `THREAD_QUERY_LIMITED_INFORMATION`  \nif this function succeeds it returns the exit code for the specified thread");
+registerFunc("NtClose", "function NtClose(handle : HANDLE) : NTSTATUS | number", "generic close handle  \nthis function returns 0 on success (if not, it returns the error code)");
+
+registerFunc("PerformMicrotaskCheckpoint", "function PerformMicrotaskCheckpoint(void) : void", "calls `v8::Isolate -> PerformMicrotaskCheckpoint` but honestly im not 100% sure what it does (i mean im pretty sure it just checks the microtask queue and does one right?)");
 
 import * as vscode from 'vscode';
 
@@ -896,6 +910,13 @@ registerOARFAS(
     extendMethods("IUnknown", {
         "ReportLiveObjects" : makeArgs("function ReportLiveObjects(apiID : GUID, flags : DXGI_DEBUG_RLO_FLAGS) : void", "`apiID` can be a d2d.`DXGI_DEBUG_`* const  \n`flags` can be a `DXGI_DEBUG_RLO_`* const  \nlowkey this function won't do anything if you aren't using a canvas created with `ID2D1DeviceContext` or higher ALSO it won't work if `D3D11CreateDevice` wasn't called with the `D3D11_CREATE_DEVICE_DEBUG` (unfortunately i handle a lot of this part internally so there's no way to do this yourself yet...)  \nall in all this function won't do anything right now"),
     }),
+);
+
+registerOARFAS(
+    "MODULEENTRY32",
+    ["Module32First"],
+    (args) => [["th32ModuleID"],["th32ProcessID"],["GlblcntUsage"],["ProccntUsage"],["modBaseAddr"],["modBaseSize"],["hModule"],["szModule"],["szExePath"],],
+    {},
 );
 
 registerOARFAS(
@@ -5465,8 +5486,8 @@ const macros:string[] = [ //macrosforjbsblueprints
     "SIID_APPLICATION",
     "SIID_FOLDER",
     "SIID_FOLDEROPEN",
-    "SIID_DRIVE",
-    "SIID_DRIVE",
+    "SIID_DRIVE525",
+    "SIID_DRIVE35",
     "SIID_DRIVEREMOVE",
     "SIID_DRIVEFIXED",
     "SIID_DRIVENET",
@@ -5580,4 +5601,31 @@ const macros:string[] = [ //macrosforjbsblueprints
     "SHGSI_LARGEICON",
     "SHGSI_SMALLICON",
     "SHGSI_SHELLICONSIZE",
+    "THREAD_TERMINATE",
+    "THREAD_SUSPEND_RESUME",
+    "THREAD_GET_CONTEXT",
+    "THREAD_SET_CONTEXT",
+    "THREAD_QUERY_INFORMATION",
+    "THREAD_SET_INFORMATION",
+    "THREAD_SET_THREAD_TOKEN",
+    "THREAD_IMPERSONATE",
+    "THREAD_DIRECT_IMPERSONATION",
+    "THREAD_SET_LIMITED_INFORMATION",
+    "THREAD_QUERY_LIMITED_INFORMATION",
+    "THREAD_RESUME",
+    "THREAD_ALL_ACCESS",
+    "THREAD_CREATE_FLAGS_NONE",
+    "THREAD_CREATE_FLAGS_CREATE_SUSPENDED",
+    "THREAD_CREATE_FLAGS_SKIP_THREAD_ATTACH",
+    "THREAD_CREATE_FLAGS_HIDE_FROM_DEBUGGER",
+    "THREAD_CREATE_FLAGS_LOADER_WORKER",
+    "THREAD_CREATE_FLAGS_SKIP_LOADER_INIT",
+    "THREAD_CREATE_FLAGS_BYPASS_PROCESS_FREEZE",
+    "TH32CS_SNAPHEAPLIST",
+    "TH32CS_SNAPPROCESS",
+    "TH32CS_SNAPTHREAD",
+    "TH32CS_SNAPMODULE",
+    "TH32CS_SNAPMODULE32",
+    "TH32CS_SNAPALL",
+    "TH32CS_INHERIT",
 ];
