@@ -637,7 +637,7 @@ registerFunc("VirtualQueryEx", "function VirtualQueryEx(hProcess : HANDLE | numb
 registerFunc("VirtualAllocEx", "function VirtualAllocEx(hProcess : HANDLE | number, address : number, size : number, allocationType : number, protection : number) : LPVOID | number", "`hProcess` must be a handle opened with (at least) `PROCESS_VM_OPERATION` (or `GetCurrentHandle`)  \n`address` can be the desired starting address for the region of pages you want to allocate. `address` can also just be `NULL` and the system will pick for you.  \n`size` is the size of the region of memory to allocate (in bytes)  \n`allocationType` can be one or more of the `MEM_`* consts (usually `MEM_COMMIT` or `MEM_RESERVE` OR even both (see what i did there))  \n`protection` is the memory protection for the region of pages to be allocated. `protection` can be any `PAGE_`* const  \nif this function succeeds it will return a non-zero value (if it doesn't, use the `GetLastError` function!)");
 registerFunc("VirtualFreeEx", "function VirtualFreeEx(hProcess : HANDLE | number, address : number, size : number, freeType : number) : BOOL", "`hProcess` must be a handle opened with (at least) `PROCESS_VM_OPERATION` (or `GetCurrentHandle`)  \n`address` is a pointer to the starting address of the region of memory to be freed.  \n`size` is the size of the region of memory to free (in bytes)  \n`freeType` can be one or more of the `MEM_`* consts (usually `MEM_DECOMMIT` or `MEM_RELEASE` OR even both (see what i did there))  \n`protection` is the memory protection for the region of pages to be allocated. `protection` can be any `PAGE_`* const  \nif this function succeeds it will return a non-zero value (if it doesn't, use the `GetLastError` function!)");
 registerFunc("ReadProcessMemory", "function ReadProcessMemory(hProcess : HANDLE | number, address : number, numBytesToRead : number) : Uint8Array | undefined", "`hProcess` must be a handle to a process opened with (at least) the `PROCESS_VM_READ` flag  \nif this function succeeds it returns a Uint8Array but if it fails this function returns undefined (use `GetLastError` and `_com_error` to figure out why)");
-registerFunc("WriteProcessMemory", "function WriteProcessMemory(hProcess : HANDLE | number, address : number, data : number | wstring | ArrayBufferView, length? : number) : BOOL", "`hProcess` must be a handle to a process opened with (at least) the `PROCESS_VM_WRITE` and `PROCESS_VM_OPERATION` flags  \nthis function fails if the memory at the address is not writable/valid (if it's not writable then you could always VirtualProtectEx it!)  \n`length` is optional as most ways will calculate it for you (if you are passing a pointer it probably won't work the way you expect to so just to be sure you should set a length (in bytes of course))  \nif this function succeeds it returns how many bytes were written but if it fails this function returns 0 (use `GetLastError` and `_com_error` to figure out why)");
+registerFunc("WriteProcessMemory", "function WriteProcessMemory(hProcess : HANDLE | number, address : number, data : number | string | ArrayBufferView, cstring? : boolean, length? : number) : BOOL", "`hProcess` must be a handle to a process opened with (at least) the `PROCESS_VM_WRITE` and `PROCESS_VM_OPERATION` flags  \nthis function fails if the memory at the address is not writable/valid (if it's not writable then you could always VirtualProtectEx it!)  \n`length` is optional as most ways will calculate it for you (if you are passing a pointer it probably won't work the way you expect to so just to be sure you should set a length (in bytes of course))  \nif this function succeeds it returns how many bytes were written but if it fails this function returns 0 (use `GetLastError` and `_com_error` to figure out why)");
 
 registerFunc("FlushInstructionCache", "function FlushInstructionCache(process : HANDLE : number, baseAddress? : number, size? : number) : BOOL", "idk if you *have* to call it but  \nApplications should call `FlushInstructionCache` if they generate or modify code in memory (like in `scripts/dllstuffs/CALLASM.js`). The CPU cannot detect the change, and may execute the old code it cached.  \n`baseAddress` and `size` can both be **NULL**  \n`baseAddress` is the pointer of the base of the region to be flushed. This parameter can be NULL.  \n`size` is the size of the region to be flushed if `baseAddress` isn't NULL, **in bytes**.");
 
@@ -660,7 +660,7 @@ registerFunc("CreateProcess", "function CreateProcess(applicationPathname? : wst
 
 registerFunc("CreateMailslot", "function CreateMailslot(name : wstring, maxMessageSize : number, readTimeout : number) : HANDLE | number", "`name` MUST have the following form!: \\\\.\\mailslot\\[path]name  \n`maxMessageSize` can be `NULL` for no limit  \n`readTimeout` is the time, in milliseconds, a read operation can wait before a time-out occurs (can be `MAILSLOT_WAIT_FOREVER` for no timeout, `0` instantly returns if no message is present)  \nyou must call `CloseHandle` when done with the mailslot (or, when the process closes, the system destroys it anyways)  \ninternally using the default (NULL) security attributes for this function because idk how all that works");
 registerFunc("GetMailslotInfo", "function GetMailslotInfo(mailslot : HANDLE | number) : BOOL | {maxMessageSize, nextSize, messageCount, readTimeout}", "`mailslot` is a value returned from `CreateMailslot` my boy  \nif this function succeeds it returns an object with info about the mailslot but if not this function returns 0");
-registerFunc("WriteFile", "function WriteFile(hFile : HANDLE | number, data : number | string | ArrayBufferView, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL", "`hFile` can be a value returned from `CreateMailslot` or `CreateFile`  \n`data` can be a string, bool, number, OR any ArrayBuffer type object like a `Uint8Array` and shit");
+registerFunc("WriteFile", "function WriteFile(hFile : HANDLE | number, data : number | string | ArrayBufferView, cstring? : bool, overlapped? : OVERLAPPED | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}, byteLength? : number) : BOOL", "`hFile` can be a value returned from `CreateMailslot` or `CreateFile`  \n`data` can be a string, bool, number, OR any ArrayBuffer type object like a `Uint8Array` and shit  \n`cstring` dictates whether or not the string passed through data will be sent as a c string (one byte) or w string (two byte). If `data` is not a string, this parameter has no effect.");
 registerFunc("CreateFile", "function CreateFile(fileName : wstring, desiredAccess : number, shareMode : number, creationDisposition : number, flagsAndAttributes : number, hTemplateFile? : HANDLE | number) : HANDLE | number", "`desiredAccess` can be `GENERIC_READ`, `GENERIC_WRITE`, or `NULL`  \n`shareMode` can be `FILE_SHARE_DELETE`, `FILE_SHARE_READ`, or `FILE_SHARE_WRITE`  \n`creationDisposition` can be `CREATE_NEW`, `CREATE_ALWAYS`, `OPEN_EXISTING`, `OPEN_ALWAYS`, `TRUNCATE_EXISTING`  \n`flagsAndAttributes` can be any `FILE_ATTRIBUTE_`... const AND any `FILE_FLAG_`... const (`FILE_ATTRIBUTE_NORMAL` is the most common)  \n`hTemplateFile` google it"); //oops i forgot to write one for create file
 registerFunc("CreateEvent", "function CreateEvent(manualReset : BOOL, initialState : BOOL, name : wstring) : HANDLE | number", "if `manualReset` is true the function creates a manual-reset event object, which requires the use of the `ResetEvent` function to set the event state to nonsignaled.  \nif `initialState` is true, the initial state of the event object is signaled; otherwise, it is nonsignaled.  \n`name` is limited to MAX_PATH (260) characters  \ninternally, `lpEventAttributes` is NULL  \nyou gotta call `CloseHandle` on the HANDLE returned from this function when you're done with it");
 registerFunc("ResetEvent", "function ResetEvent(hEvent : HANDLE | number) : BOOL", "Sets the specified event object to the nonsignaled state.  \n`hEvent` can be a HANDLE returned from `CreateEvent`");
@@ -691,6 +691,36 @@ registerFunc("memcpy", "function memcpy(dst : void* | number, src : void* | numb
 registerFunc("GetRegisteredRawInputDevices", "function GetRegisteredRawInputDevices(void) : Array<{usUsagePage, usUsage, dwFlags, hwndTarget}>", "if successful this function returns an array of registered devices"); //somehow forgot to include this one
 
 registerFunc("fetch", "function fetch(url : string, options : Object) : Promise", "just like the regular [browser fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) but my promises aren't async yet because im not using libuv lol  \nright now unfortunately this function can only work with HTTP only!");
+
+//https://beej.us/guide/bgnet/html/
+registerFunc("WSAStartup", "function WSAStartup(version : WORD) : number | WSADATA", "Use the `MAKEWORD` function to supply a valid version  \nif successful, this function returns a struct with details about the version you picked  \nvalid versions are:  \n* 1.0  \n* 1.1  \n* 2.0  \n* 2.1  \n* 2.2");
+registerFunc("WSAGetLastError", "function WSAGetLastError(void) : number", "winsock specific GetLastError  \nUse _com_error for a human readable version of the error code (probably)");
+registerFunc("socket", "function socket(family : number, type : number, protocol : numbler) : SOCKET | number", "`family` can be any `AF_`* const  \n`type` can be any `SOCK_`* const  \n`protocol` can be any `IPPROTO_`* const (or just 0)  \nif this function succeeds, it returns a valid handle to a socket. If not, this function returns `INVALID_SOCKET` (use WSAGetLastError for help in that case)"); //haha numbler
+registerFunc("htond", "function htond(value : number) : number", "Converts `value` to big-endian (the TCP/IP network byte order)");
+registerFunc("htonf", "function htonf(value : number) : number", "Converts `value` to big-endian (the TCP/IP network byte order)");
+registerFunc("htonl", "function htonl(value : LONG) : LONG", "Converts `value` to big-endian (the TCP/IP network byte order)");
+registerFunc("htonll", "function htonll(value : number) : number", "Converts `value` to big-endian (the TCP/IP network byte order)");
+registerFunc("htons", "function htons(value : SHORT) : SHORT", "Converts `value` to big-endian (the TCP/IP network byte order)");
+registerFunc("ntohd", "function ntohd(value : number) : number", "Converts `value` to host byte order (little-endian on intel processors / windows i think)");
+registerFunc("ntohf", "function ntohf(value : number) : number", "Converts `value` to host byte order (little-endian on intel processors / windows i think)");
+registerFunc("ntohl", "function ntohl(value : LONG) : LONG", "Converts `value` to host byte order (little-endian on intel processors / windows i think)");
+registerFunc("ntohll", "function ntohll(value : number) : number", "Converts `value` to host byte order (little-endian on intel processors / windows i think)");
+registerFunc("ntohs", "function ntohs(value : SHORT) : SHORT", "Converts `value` to host byte order (little-endian on intel processors / windows i think)");
+registerFunc("sockaddr_in", "constructor sockaddr_in(family : number, port : number, address? : number, zero? : string[8]) : sockaddr_in", "creates a sockaddr_in object for use with winsock functions");
+registerFunc("sockaddr_in6", "constructor sockaddr_in6(family : number, port : number, flowinfo : number, address? : BigInt, sin6_scope_id? : string[8]) : sockaddr_in6", "creates a sockaddr_in6 object for use with winsock functions that support IPv6  \nit might not work that good though");
+registerFunc("inet_pton", "function inet_pton(family : number, address : string, addressOut : IN_ADDR | sockaddr_in | IN6_ADDR | sockaddr_in6) : number", "Converts the string of an ip address to its numerical form  \n`family` can be `AF_INET` (for IPv4) or `AF_INET6` (for IPv6)  \n`address` can be a string representation of an address (like \"127.0.0.1\")  \n`addressOut` must be a `sockaddr_in` or `sockaddr_in6` object OR it can just be the `sockaddr_in`'s sin_addr property instead!");
+registerFunc("inet_ntop", "function inet_ntop(family : number, addressObject : IN_ADDR | sockaddr_in | IN6_ADDR | sockaddr_in6) : string | undefined", "Converts a numerical ip address (passed through `addressObject`) into its string form  \n`family` can be `AF_INET` (for IPv4) or `AF_INET6` (for IPv6)  \n`addressObject` must be a `sockaddr_in` or `sockaddr_in6` object OR it can just be the `sockaddr_in`'s sin_addr property instead!");
+registerFunc("connect", "function connect(socket : SOCKET | number, addressObject : sockaddr_in | sockaddr_in6) : number", "The `connect` function establishes a connection to a specified socket.  \n`socket` is a handle returned from the similarly named `socket` function (hilarity ensues)  \nif this function fails it will return `SOCKET_ERROR`  \nsince i was lazy the IPv6 version of this function won't work");
+registerFunc("bind", "function bind(socket : SOCKET | number, addressObject : sockaddr_in | sockaddr_in6) : number", "This function assigns a socket to the port and address specified through the `addressObject`  \n`socket` is a handle returned from the similarly named `socket` function (hilarity ensues)  \nif this function fails it will return `SOCKET_ERROR`  \nsince i was lazy the IPv6 version of this function won't work");
+registerFunc("listen", "function listen(socket : SOCKET | number, backlog : number) : number", "The `listen` function places a socket in a state in which it is listening for an incoming connection.  \n`socket` is a handle returned from the similarly named `socket` function  \n`backlog` is the max amount pending connections allowed  \nif this function fails it will return `SOCKET_ERROR`");
+registerFunc("accept", "function accept(socket : SOCKET | number, addressObjectOut : {}) : SOCKET", "The `accept` function permits an incoming connection attempt on a socket.  \nthis function blocks the thread until a connection is made unless the socket is non-blocking  \n`socket` is a handle to a socket that has been placed in a listening state (with the `listen` function)  \n`addressObjectOut` MUST be an empty object, as this function will populate it (c++ by reference style, see `newwinsockfuncs.js` for help.)  \nif this function fails it will return `INVALID_SOCKET`");
+registerFunc("getnameinfo", "function getnameinfo(socket : SOCKET | number) : {host, service} | undefined", "The `getnameinfo` function provides protocol-independent name resolution from an address to a host name and from a port number to the service name.  \nif this function succeeds, it returns an object with 2 string properties. If it fails, it returns undefined.  \nsince i was lazy the IPv6 version of this function does not work");
+registerFunc("recv", "function recv(socket : SOCKET | number, maxLength : number, flags : number) : Int8Array | number", "The `recv` function receives data from a connected socket or a bound connectionless socket.  \n`maxLength` is the amount of bytes that this function attempts to read  \n`flags` can be `MSG_PEEK`, `MSG_OOB`, or `MSG_WAITALL` (or 0)  \nif this function succeeds, it returns an Int8Array filled with le data. If it fails, it returns 0 or SOCKET_ERROR");
+registerFunc("ioctlsocket", "function ioctlsocket(socket : SOCKET | number, cmd : number) : number", "The `ioctlsocket` function controls the I/O mode of a socket.  \n`cmd` can be any `FIO`... const (and maybe some others? i can't find a good list)  \nif this function fails, `SOCKET_ERROR` is returned");
+registerFunc("send", "function send(socket : SOCKET | number, data : number | string | ArrayBufferView, cstring : boolean, flags : number, length? : number) : number", "The `send` function sends data on a connected socket.  \n`data` can be a pointer, string, or any descendent of ArrayBufferView.  \n`cstring` dictates whether or not the string passed through data will be sent as a c string (one byte) or w string (two byte). If `data` is not a string, this parameter has no effect.  \nif this function succeeds, it returns the amount of bytes send. If not, this function returns `SOCKET_ERROR`");
+registerFunc("shutdown", "function shutdown(socket : SOCKET | number, how : number) : number", "The `shutdown` function disables sends or receives on a socket but does not actually close the socket. Use `closesocket` for that.  \n`how` describes what types of operations will no longer be allowed. The types are as follows: `SD_RECEIVE`, `SD_SEND`, or `SD_BOTH`  \nthis function returns 0 on success or `SOCKET_ERROR` if not.  \nThis function does not shutdown the computer, use `InitiateSystemShutdown` for that.");
+registerFunc("closesocket", "function closesocket(socket : SOCKET | number) : number", "The `closesocket` function closes an existing socket.  \nIf no error occurs, this function returns 0. If not, this function returns `SOCKET_ERROR`");
+registerFunc("WSACleanup", "function WSACleanup(void) : number", "The `WSACleanup` function terminates use of the Winsock 2 DLL (Ws2_32.dll).  \nif this function fails it returns `SOCKET_ERROR`");
 
 registerFunc("OutputDebugString", "function OutputDebugString(str : wstring) : void", "Sends a string to the debugger for display.  \nbasically if you are connected to jbs with WinDbg or visual studio it will show up in the command/debug window (NOT the console)");
 
@@ -863,7 +893,7 @@ registerOARFAS(
     },
     {
         "read" : makeArgs("function read(filename : string) : wstring", "reads the entire file at the `filename` path and returns the contents as a string"),
-        "write" : makeArgs("function write(filename : string, contents : string) : void", "writes to the file at the `filename` path"),
+        "write" : makeArgs("function write(filename : string, contents : string, cstring? : bool) : void", "writes to the file at the `filename` path  \n`cstring` dictates whether or not the string passed through `contents` will be sent as a c string (one byte) or w string (two byte). Usually text is one byte (so cstring)."),
         "readBinary" : makeArgs("function readBinary(filename : string) : ArrayBuffer", "returns just an ArrayBuffer containing the shits"),
     },
 );
@@ -1336,7 +1366,7 @@ registerOARFAS(
     ["CreateSolidColorBrush"],
     (args) => [...defaultBrushObject(), ["SetColor", vscode.CompletionItemKind.Method], ["GetColor", vscode.CompletionItemKind.Method]],
     extendMethods("ID2D1Brush", {
-        "SetColor" : makeArgs("function SetColor(r : float, g : float, b : float, a? : float) : void", "sets the color of this brush  \nunlike the GDI drawing function `r`,`g`,`b`,and `a` must be from 0-1 as decimals"),
+        "SetColor" : makeArgs("function SetColor(r : float, g : float, b : float, a? : float) : void", "sets the color of this brush  \nunlike the GDI drawing function `r`,`g`,`b`,and `a` must be from 0-1 as decimals  \nthis function can also be called with only one argument. If that is the case, this function will treat it as a 32 bit rgb color (for example using any `D2D1.ColorF.*`)"),
         "GetColor" : makeArgs("function GetColor(void) : {r : float, g : float, b : float, a : float}", "gets the color of this brush"),
     }),
 );
@@ -1581,6 +1611,25 @@ registerOARFAS("TPID", ["GetWindowThreadProcessId"], (args) => [["processID"], [
 registerOARFAS("MSEX", ["GlobalMemoryStatusEx"], (args) => [["dwLength"], ["dwMemoryLoad"], ["ullTotalPhys"], ["ullAvailPhys"], ["ullTotalPageFile"], ["ullAvailPageFile"], ["ullTotalVirtual"], ["ullAvailVirtual"], ["ullAvailExtendedVirtual"], ], {});
 registerOARFAS("D2D1_ROUNDED_RECT", ["GetRoundedRect"], (args) => [["rect", vscode.CompletionItemKind.Class], ["radiusX"], ["radiusY"]], {});
 registerOARFAS("D2D1_ELLIPSE", ["GetEllipse"], (args) => [["point", vscode.CompletionItemKind.Class], ["radiusX"], ["radiusY"]], {});
+
+registerOARFAS(
+    "WSADATA",
+    ["WSAStartup"],
+    (args) => [["wVersion"], ["wHighVersion"], ["iMaxSockets"], ["iMaxUdpDg"], ["lpVendorInfo"], ["szDescription"], ["szSystemStatus"]],
+    {},
+);
+registerOARFAS(
+    "sockaddr_in",
+    ["sockaddr_in"],
+    (args) => [["sin_family"], ["sin_port"], ["sin_addr", vscode.CompletionItemKind.Class], ["sin_zero"]],
+    {},
+);
+registerOARFAS(
+    "sockaddr_in6",
+    ["sockaddr_in6"],
+    (args) => [["sin6_family"], ["sin6_port"], ["sin6_flowinfo"], ["sin6_addr", vscode.CompletionItemKind.Class], ["sin6_scope_id"]],
+    {},
+);
 /*const RectObject : JBSObjects = {props: [["left"], ["top"], ["right"] ,["bottom"]], testArgs: defaultTestArgs};
 const [PointObject] : JBSObjects = {props: [["x"], ["y"]]};
 const PaintStruct : JBSObjects = {props: [["fErase"], ["fIncUpdate"], ["fRestore"], ["hdc"], ["rcPaint", vscode.CompletionItemKind.Class], ["ps"]]};
@@ -1764,7 +1813,7 @@ registerOARFAS(
         "RectF" : makeArgs("function RectF(left : float, top : float, right : float, bottom : float) : D2D1_RECT_F", "creates an object with {left, top, right, bottom} properties"),
         "RoundedRect" : makeArgs("function RoundedRect(left : float, top : float, right : float, bottom : float, radiusX : float, radiusY : float) : D2D1_ROUNDED_RECT", "creates an object with {rect : {left, top, right, bottom}, radiusX, radiusY} properties"),
         "Ellipse" : makeArgs("function Ellipse(x : float, y : float, radiusX : float, radiusY : float) : D2D1_ELLIPSE", "creates an object with {point : {x, y}, radiusX, radiusY} properties"),
-        "LayerParameters" : makeArgs("function/class LayerParameters(contentBounds : D2D1_RECT_F, geometricMask : ID2D1Geometry, maskAntialiasMode : D2D1_ANTIALIAS_MODE, maskTransform : D2D1_MATRIX_3X2_F, opacity : float, opacityBrush : ID2D1Brush, layerOptions : D2D1_LAYER_OPTIONS) : LayerParameters", "returns a new object with these exact parameters lmao (for d2d.`PushLayer`)"),
+        "LayerParameters" : makeArgs("function/constructor LayerParameters(contentBounds : D2D1_RECT_F, geometricMask : ID2D1Geometry, maskAntialiasMode : D2D1_ANTIALIAS_MODE, maskTransform : D2D1_MATRIX_3X2_F, opacity : float, opacityBrush : ID2D1Brush, layerOptions : D2D1_LAYER_OPTIONS) : LayerParameters", "returns a new object with these exact parameters lmao (for d2d.`PushLayer`)"),
     },
 );
 
@@ -5628,4 +5677,110 @@ const macros:string[] = [ //macrosforjbsblueprints
     "TH32CS_SNAPMODULE32",
     "TH32CS_SNAPALL",
     "TH32CS_INHERIT",
+    "AF_UNSPEC",
+    "AF_UNIX",
+    "AF_INET",
+    "AF_IMPLINK",
+    "AF_PUP",
+    "AF_CHAOS",
+    "AF_NS",
+    "AF_IPX",
+    "AF_ISO",
+    "AF_OSI",
+    "AF_ECMA",
+    "AF_DATAKIT",
+    "AF_CCITT",
+    "AF_SNA",
+    "AF_DECnet",
+    "AF_DLI",
+    "AF_LAT",
+    "AF_HYLINK",
+    "AF_APPLETALK",
+    "AF_NETBIOS",
+    "AF_VOICEVIEW",
+    "AF_FIREFOX",
+    "AF_UNKNOWN1",
+    "AF_BAN",
+    "AF_ATM",
+    "AF_INET6",
+    "AF_CLUSTER",
+    "AF_12844",
+    "AF_IRDA",
+    "AF_NETDES",
+    "AF_TCNPROCESS",
+    "AF_TCNMESSAGE",
+    "AF_ICLFXBM",
+    "AF_BTH",
+    "AF_LINK",
+    "AF_HYPERV",
+    "AF_MAX",
+    "INVALID_SOCKET",
+    "SOCKET_ERROR",
+    "FROM_PROTOCOL_INFO",
+    "SOCK_STREAM",
+    "SOCK_DGRAM",
+    "SOCK_RAW",
+    "SOCK_RDM",
+    "SOCK_SEQPACKET",
+    "IPPROTO_IP",
+    "IPPROTO_HOPOPTS",
+    "IPPROTO_ICMP",
+    "IPPROTO_IGMP",
+    "IPPROTO_GGP",
+    "IPPROTO_IPV4",
+    "IPPROTO_ST",
+    "IPPROTO_TCP",
+    "IPPROTO_CBT",
+    "IPPROTO_EGP",
+    "IPPROTO_IGP",
+    "IPPROTO_PUP",
+    "IPPROTO_UDP",
+    "IPPROTO_IDP",
+    "IPPROTO_RDP",
+    "IPPROTO_IPV6",
+    "IPPROTO_ROUTING",
+    "IPPROTO_FRAGMENT",
+    "IPPROTO_ESP",
+    "IPPROTO_AH",
+    "IPPROTO_ICMPV6",
+    "IPPROTO_NONE",
+    "IPPROTO_DSTOPTS",
+    "IPPROTO_ND",
+    "IPPROTO_ICLFXBM",
+    "IPPROTO_PIM",
+    "IPPROTO_PGM",
+    "IPPROTO_L2TP",
+    "IPPROTO_SCTP",
+    "IPPROTO_RAW",
+    "IPPROTO_MAX",
+    "IPPROTO_RESERVED_RAW",
+    "IPPROTO_RESERVED_IPSEC",
+    "IPPROTO_RESERVED_IPSECOFFLOAD",
+    "IPPROTO_RESERVED_WNV",
+    "IPPROTO_RESERVED_MAX",
+    "SOMAXCONN",
+    "NI_NOFQDN",
+    "NI_NUMERICHOST",
+    "NI_NAMEREQD",
+    "NI_NUMERICSERV",
+    "NI_DGRAM",
+    "NI_MAXHOST",
+    "NI_MAXSERV",
+    "MSG_PEEK",
+    "MSG_OOB",
+    "MSG_WAITALL",
+    "MSG_DONTROUTE",
+    "IOCPARM_MASK",
+    "IOC_VOID",
+    "IOC_OUT",
+    "IOC_IN",
+    "IOC_INOUT",
+    "FIONREAD",
+    "FIONBIO",
+    "FIOASYNC",
+    "SIOCSHIWAT",
+    "SIOCGHIWAT",
+    "SIOCSLOWAT",
+    "SIOCGLOWAT",
+    "SIOCATMARK",
 ];
