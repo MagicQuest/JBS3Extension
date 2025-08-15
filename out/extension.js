@@ -1144,8 +1144,11 @@ registerOARFAS("HBITMAP", ["GetObjectHBITMAP"], (args) => [["bmType"], ["bmWidth
 registerOARFAS("DIBHITMAP", ["GetObjectDIBitmap"], (args) => [["dsBm", vscode.CompletionItemKind.Class], ["dsBmih", vscode.CompletionItemKind.Class], ["dsBitfields"], ["dshSection"], ["dsOffset"]], {});
 registerOARFAS("ExtLPEN", ["GetObjectExtHPEN"], (args) => [["elpPenStyle"], ["elpWidth"], ["elpBrushStyle"], ["elpColor"], ["elpHatch"], ["elpNumEntries"]], {});
 registerOARFAS("LPEN", ["GetObjectHPEN"], (args) => [["lopnStyle"], ["lopnWidth"], ["lopnColor"]], {});
-registerOARFAS("LBRUSH", ["GetObjectExtHBRUSH"], (args) => [["lbStyle"], ["lbColor"], ["lbHatch"]], {});
-registerOARFAS("LFONT", ["GetObjectExtHFONT"], (args) => [["lfHeight"], ["lfWidth"], ["lfEscapement"], ["lfOrientation"], ["lfWeight"], ["lfItalic"], ["lfUnderline"], ["lfStrikeOut"], ["lfCharSet"], ["lfOutPrecision"], ["lfClipPrecision"], ["lfQuality"], ["lfPitchAndFamily"], ["lfFaceName"]], {});
+//uh wtf? these functions don't exist
+// registerOARFAS("LBRUSH", ["GetObjectExtHBRUSH"], (args) => [["lbStyle"], ["lbColor"], ["lbHatch"]], {});
+// registerOARFAS("LFONT", ["GetObjectExtHFONT"], (args) => [["lfHeight"],  ["lfWidth"],  ["lfEscapement"],  ["lfOrientation"],  ["lfWeight"],  ["lfItalic"],  ["lfUnderline"],  ["lfStrikeOut"],  ["lfCharSet"],  ["lfOutPrecision"],  ["lfClipPrecision"],  ["lfQuality"],  ["lfPitchAndFamily"],  ["lfFaceName"]], {});
+registerOARFAS("LOGBRUSH", ["GetObjectHBRUSH"], (args) => [["lbStyle"], ["lbColor"], ["lbHatch"]], {});
+registerOARFAS("LOGFONT", ["GetObjectHFONT"], (args) => [["lfHeight"], ["lfWidth"], ["lfEscapement"], ["lfOrientation"], ["lfWeight"], ["lfItalic"], ["lfUnderline"], ["lfStrikeOut"], ["lfCharSet"], ["lfOutPrecision"], ["lfClipPrecision"], ["lfQuality"], ["lfPitchAndFamily"], ["lfFaceName"]], {});
 registerOARFAS("LayeredWindowAttrib", ["GetLayeredWindowAttributes"], (args) => [["transparencyColor"], ["alpha"], ["dwFlags"]], {});
 registerOARFAS("XFORM", ["GetWorldTransform"], (args) => [["eM11"], ["eM12"], ["eM21"], ["eM22"], ["eDx"], ["eDy"]], {});
 registerOARFAS("DIBSection", ["CreateDIBSection"], (args) => [["bitmap"], ["_bits"], ["SetBit", vscode.CompletionItemKind.Method], ["GetBit", vscode.CompletionItemKind.Method], ["GetBits", vscode.CompletionItemKind.Method], ["SetBits", vscode.CompletionItemKind.Method], ["bitCount"], ["width"], ["height"]], {
