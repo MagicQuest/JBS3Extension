@@ -650,7 +650,7 @@ registerFunc("Module32First", "function Module32First(snapshot : HANDLE | number
 registerFunc("Module32Next", "function Module32Next(snapshot : HANDLE | number, me32 : MODULEENTRY32) : BOOL", "**this function DOES NOT return a new module entry, it modifies the one passed through `me32`!!!**  \nthis function returns 1 if there are still more to go (see ./d2dcontrols/pegglescriptinggui.js for usage)");
 registerFunc("GetExitCodeThread", "function GetExitCodeThread(thread : HANDLE) : number", "`thread` must be a handle opened with (at least) `THREAD_QUERY_INFORMATION` or `THREAD_QUERY_LIMITED_INFORMATION`  \nif this function succeeds it returns the exit code for the specified thread");
 registerFunc("NtClose", "function NtClose(handle : HANDLE) : NTSTATUS | number", "generic close handle  \nthis function returns 0 on success (if not, it returns the error code)");
-registerFunc("PerformMicrotaskCheckpoint", "function PerformMicrotaskCheckpoint(void) : void", "calls `v8::Isolate -> PerformMicrotaskCheckpoint` but honestly im not 100% sure what it does (i mean im pretty sure it just checks the microtask queue and does one right?)");
+registerFunc("PerformMicrotaskCheckpoint", "function PerformMicrotaskCheckpoint(void) : void", "calls `v8::Isolate -> PerformMicrotaskCheckpoint` (pretty sure it just checks the microtask queue and does one)");
 registerFunc("DeviceIoControl", "function DeviceIoControl(hDevice : HANDLE | number, ioControlCode : number, inBuffer? : ArrayBufferView | ArrayBuffer, outBuffer? : ArrayBufferView | ArrayBuffer, overlapped? : OVERLAPPED  | {Internal, InternalHigh, Offset, OffsetHigh, hEvent}) : BOOL", "`hDevice` can be obtained by calling `CreateFile` with an element of the array that `CM_Get_Device_Interface_List` (with the autoAllocate param set to true) returns  \n`ioControlCode` can be any `IOCTL_`* const or it can be vendor defined (use the `CTL_CODE` to easily define a new one)  \n`inBuffer` is optional and its use depends on whether or not the driver expects some input data  \n`outBuffer` is optional and its use depends on whether or not the driver will output some data  \n`overlapped` is optional or it can be an object returned from `OVERLAPPED` (or you could just write the properties yourself)  \n**see `scripts/ignore/customdriverconfigure.js` for more info**");
 registerFunc("CTL_CODE", "function CTL_CODE(DeviceType, Function, Method, Access) : number", "Use this function to define new IOCTLs  \n`DeviceType` can be any `FILE_DEVICE_*` const OR it can be a vendor defined type (vendor defined device types must be between 0x8000 - 0xffff)  \n`Function` can be a value from (0x800 through 0xffff)  \n`Method` can be any `METHOD_*` const  \n`ACCESS` can be `FILE_ANY_ACCESS`, `FILE_READ_DATA`, or `FILE_WRITE_DATA` (some can be OR'd together)");
 registerFunc("DEVICE_TYPE_FROM_CTL_CODE", "function DEVICE_TYPE_FROM_CTL_CODE(ctlCode : number) : number", "gets the device type from a control code");
@@ -658,6 +658,33 @@ registerFunc("METHOD_FROM_CTL_CODE", "function METHOD_FROM_CTL_CODE(ctlCode : nu
 registerFunc("DEFINE_GUID", "function DEFINE_GUID(l : number, w1 : number, w2 : number, b1 : number, b2 : number, b3 : number, b4 : number, b5 : number, b6 : number, b7 : number, b8 : number) : GUID", "Ts function returns a GUID object (mostly for use with `CM_Get_Device_Interface_List_Size` and `CM_Get_Device_Interface_List`)");
 registerFunc("CM_Get_Device_Interface_List_Size", "function CM_Get_Device_Interface_List_Size(interfaceGuid : GUID, deviceID? : wstring, flags : number) : number", "`interfaceGuid` specifies what \"group\" of devices to look for (can be created with `DEFINE_GUID`)  \n`deviceID` is optional and can be the [instance id](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/device-instance-ids) of a device  \n`flags` can `CM_GET_DEVICE_INTERFACE_LIST_PRESENT` or `CM_GET_DEVICE_INTERFACE_LIST_ALL_DEVICES`  \n**see `scripts/ignore/customdriverconfigure.js` for example usage**");
 registerFunc("CM_Get_Device_Interface_List", "function CM_Get_Device_Interface_List(interfaceGuid : GUID, deviceID? : wstring, buffer? : ArrayBufferView | ArrayBuffer, flags : number, autoAllocate : boolean) : number", "`interfaceGuid` specifies what \"group\" of devices to look for (can be created with `DEFINE_GUID`)  \n`deviceID` is optional and can be the [instance id](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/device-instance-ids) of a device  \n`buffer` is only used if `autoAllocate` is false. If this function succeeds, it will write to buffer.  \n`flags` can `CM_GET_DEVICE_INTERFACE_LIST_PRESENT` or `CM_GET_DEVICE_INTERFACE_LIST_ALL_DEVICES`  \n`autoAllocate` will automatically allocate memory for the device interface list meaning you don't need to use the `buffer` parameter (and everything is way easier)  \n**see `scripts/ignore/customdriverconfigure.js` for example usage**");
+registerFunc("QueryPerformanceCounter", "function QueryPerformanceCounter(void) : number", "Retrieves the current value of the performance counter, which is a high resolution (<1us) time stamp that can be used for time-interval measurements.  \nIs this function better than Date.now() ?");
+registerFunc("vigem_alloc", "function vigem_alloc(void) : PVIGEM_CLIENT", "this function initalizes ViGEm and returns pointer to the underlying driver  \nReturns a handle for use with most `vigem_` functions or `NULL` if this function failed  \nsee `scripts/ViGEmBus/ViGEmHelper.js` for use");
+registerFunc("vigem_connect", "function vigem_connect(client : PVIGEM_CLIENT) : VIGEM_ERROR | number", "this function establishes a connection to the ViGEm driver    \n`client` is the handle returned from `vigem_alloc`  \nReturns an error code. For error checking, if this value is equal to `VIGEM_ERROR_NONE`, this function succeeded.  \nsee `scripts/ViGEmBus/ViGEmHelper.js` for use");
+registerFunc("vigem_target_is_waitable_add_supported", "function vigem_target_is_waitable_add_supported(target : PVIGEM_TARGET) : BOOL", "use this function to check if the currently loaded ViGEmBus driver's version is greater than 1.17");
+registerFunc("vigem_target_x360_alloc", "function vigem_target_x360_alloc(void) : PVIGEM_TARGET", "Allocates an object representing an Xbox 360 Controller device.  \nReturns a handle to this \"pad\"/controller or `NULL` if this function failed");
+registerFunc("vigem_target_x360_update", "function vigem_target_x360_update(client : PVIGEM_CLIENT, target : PVIGEM_TARGET, report : XUSB_REPORT) : VIGEM_ERROR | number", "this function \"presses\" or \"releases\" the buttons specified in the `report` for the `target` controller.  \n`client` is the handle returned from `vigem_alloc`  \nReturns an error code. For error checking, if this value is equal to `VIGEM_ERROR_NONE`, this function succeeded.  \nsee `scripts/ViGEmBus/ViGEmHelper.js` for use");
+registerFunc("vigem_target_x360_get_user_index", "function vigem_target_x360_get_user_index(client : PVIGEM_CLIENT, target : PVIGEM_TARGET) : VIGEM_ERROR | number", "\nReturns the user index (0 - 3) or an error code. For error checking, if the return value is smaller than 4, this function succeeded.  \n`client` is the handle returned from `vigem_alloc`");
+registerFunc("vigem_target_x360_register_notification", "function vigem_target_x360_register_notification(client : PVIGEM_CLIENT, target : PVIGEM_TARGET, callback : Function(Client : PVIGEM_CLIENT, Target : PVIGEM_TARGET, LargeMotor : number, SmallMotor : number, LedNumber : number)) : VIGEM_ERROR", "this function invokes the `callback` any time something changes the led index or rumble state on the controller  \n`client` is the handle returned from `vigem_alloc`  \nYou **must** call `PerformMicrotaskCheckpoint` frequently for the `callback` to be invoked. However, if you create a window, you don't have to do this.   \nThis function fails if the `target` isn't fully operational or in an erroneous state  \nDon't forget to call `vigem_target_x360_unregister_notification` when you are done receiving notifications. Failing to do so will cause a memory leak.  \nsee `scripts/ViGEmBus/ViGEmHelper.js` as well as `scripts/ViGEmBus/fortnite_festival.js` for use. Note that i use the `ViGEmBus.dispatchNotifications` function to call `PerformMicrotaskCheckpoint`.");
+registerFunc("vigem_target_x360_unregister_notification", "function vigem_target_x360_unregister_notification(target : PVIGEM_TARGET) : VIGEM_ERROR", "this function unregisters the notification callback associated with this `target`  \nUse this function when you're done receiving notifications for this controller. Failing to do so will cause a memory leak.");
+registerFunc("vigem_target_set_vid", "function vigem_target_set_vid(target : PVIGEM_TARGET, vid : number) : void", "sets the vendor id of the `target`");
+registerFunc("vigem_target_get_vid", "function vigem_target_get_vid(target : PVIGEM_TARGET) : number", "gets the vendor id of the `target`");
+registerFunc("vigem_target_set_pid", "function vigem_target_set_pid(target : PVIGEM_TARGET, pid : number) : void", "sets the product id of the `target`");
+registerFunc("vigem_target_get_pid", "function vigem_target_get_pid(target : PVIGEM_TARGET) : number", "gets the product id of the `target`");
+registerFunc("vigem_target_get_index", "function vigem_target_get_index(target : PVIGEM_TARGET) : number", "this function returns the internal serial number of the `target` that the bus driver assigned to it.  \nnot sure if this function is really helpful for anything but i added it anyway");
+registerFunc("vigem_target_ds4_alloc", "function vigem_target_ds4_alloc(void) : PVIGEM_TARGET", "Allocates an object representing an DualShock 4 Controller device.  \nReturns a handle to this \"pad\"/controller or `NULL` if this function failed");
+registerFunc("vigem_target_ds4_update", "function vigem_target_ds4_update(client : PVIGEM_CLIENT, target : PVIGEM_TARGET, report : DS4_REPORT) : VIGEM_ERROR | number", "this function \"presses\" or \"releases\" the buttons specified in the `report` for the `target` controller.  \n`client` is the handle returned from `vigem_alloc`  \nReturns an error code. For error checking, if this value is equal to `VIGEM_ERROR_NONE`, this function succeeded.  \nsee `scripts/ViGEmBus/ViGEmHelper.js` for use");
+registerFunc("vigem_target_ds4_register_notification", "function vigem_target_ds4_register_notification(client : PVIGEM_CLIENT, target : PVIGEM_TARGET, callback : Function(Client : PVIGEM_CLIENT, Target : PVIGEM_TARGET, LargeMotor : number, SmallMotor : number, LightbarColor : {Red, Green, Blue})) : VIGEM_ERROR", "this function invokes the `callback` any time something changes the light bar color or rumble state on the controller  \n`client` is the handle returned from `vigem_alloc`  \nYou **must** call `PerformMicrotaskCheckpoint` frequently for the `callback` to be invoked. However, if you create a window, you don't have to do this.   \nThis function fails if the `target` isn't fully operational or in an erroneous state  \nDon't forget to call `vigem_target_ds4_unregister_notification` when you are done receiving notifications. Failing to do so will cause a memory leak.  \nsee `scripts/ViGEmBus/ViGEmHelper.js` as well as `scripts/ViGEmBus/fortnite_festival.js` for use. Note that i use the `ViGEmBus.dispatchNotifications` function to call `PerformMicrotaskCheckpoint`.");
+registerFunc("vigem_target_ds4_unregister_notification", "function vigem_target_ds4_unregister_notification(target : PVIGEM_TARGET) : VIGEM_ERROR", "this function unregisters the notification callback associated with this `target`  \nUse this function when you're done receiving notifications for this controller. Failing to do so will cause a memory leak.");
+registerFunc("vigem_target_add", "function vigem_target_add(client : PVIGEM_CLIENT, target : PVIGEM_TARGET) : VIGEM_ERROR", "effectively plugs in the `target` controller, allowing it to receive notifications and reports (probably)  \n`client` is the handle returned from `vigem_alloc`  \nReturns an error code. For error checking, if this value is equal to `VIGEM_ERROR_NONE`, this function succeeded.  \nMake sure to call `vigem_target_remove` and `vigem_target_free` once you are done with the controller.");
+registerFunc("vigem_target_remove", "function vigem_target_remove(client : PVIGEM_CLIENT, target : PVIGEM_TARGET) : VIGEM_ERROR", "unplugs the `target` controller  \n`client` is the handle returned from `vigem_alloc`   \nReturns an error code. For error checking, if this value is equal to `VIGEM_ERROR_NONE`, this function succeeded.");
+registerFunc("vigem_target_free", "function vigem_target_free(target : PVIGEM_TARGET) : void", "frees the memory associated with the `target` but does not automatically remove the `target` from the bus.  \nBe sure to call `vigem_target_remove` before calling this function");
+registerFunc("vigem_disconnect", "function vigem_disconnect(client : PVIGEM_CLIENT) : void", "disconnects from the bus device and resets the driver object state.  \n`client` is the handle returned from `vigem_alloc`");
+registerFunc("vigem_free", "function vigem_free(client : PVIGEM_CLIENT) : void", "Frees up memory used by the driver connection object  \n`client` is the handle returned from `vigem_alloc`");
+registerFunc("XUSB_REPORT", "constructor XUSB_REPORT(wButtons : number, bLeftTrigger : number, bRightTrigger : number, sThumbLX : number, sThumbLY : number, sThumbRX : number, sThumbRY : number)", "creates an `XUSB_REPORT` object for use with `vigem_target_x360_update`  \nThis object is identical to the XINPUT_GAMEPAD struct which can be obtained from `XInputGetState(...).Gamepad`  \n`bLeftTrigger` and `bRightTrigger` must be values between 0 and 255.  \nAll thumbstick coordinates must be values between -32768 and 32767, where 0 is centered");
+registerFunc("DS4_REPORT", "constructor DS4_REPORT(wButtons : number, bTriggerL : number, bTriggerR : number, bThumbLX : number, bThumbLY : number, bThumbRX : number, bThumbRY : number, bSpecial : number)", "creates an `DS4_REPORT` object for use with `vigem_target_ds4_update`  \n`bTriggerL` and `bTriggerR` must be values between 0 and 255.  \nAll thumbstick coordinates must be values between 0 and 255, where 127 or 128 is centered (lowkey im not sure haha)");
+registerFunc("DS4_SET_DPAD", "function DS4_SET_DPAD(report : DS4_REPORT, dpadButtons : number) : void", "this function directly modifies the `report` to set which dpad buttons are pressed.  \n`dpadButtons` can be one `DS4_BUTTON_DPAD_`* const  \nall this function actually does is clear the first four bits of the report, then sets those bits to the value specified by `dpadButtons`");
+registerFunc("XUSB_TO_DS4_REPORT", "function XUSB_TO_DS4_REPORT(report : XUSB_REPORT) : DS4_REPORT", "converts an XUSB_REPORT to a DS4_REPORT by assigning the corresponding buttons and remapping the thumb coordinates");
 const vscode = require("vscode");
 function emptyCOMObject() {
     return [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]; //{props: [["internalPtr"], ["Release", vscode.CompletionItemKind.Method]]};
@@ -1523,6 +1550,7 @@ const macros = [
     "MB_ICONERROR",
     "MB_ICONQUESTION",
     "MB_ICONEXCLAMATION",
+    "MB_ICONWARNING",
     "MB_ICONINFORMATION",
     "MB_DEFBUTTON1",
     "MB_DEFBUTTON2",
@@ -5529,5 +5557,64 @@ const macros = [
     "CM_GET_DEVICE_INTERFACE_LIST_PRESENT",
     "CM_GET_DEVICE_INTERFACE_LIST_ALL_DEVICES",
     "CM_GET_DEVICE_INTERFACE_LIST_BITS",
+    "VIGEM_ERROR_NONE",
+    "VIGEM_ERROR_BUS_NOT_FOUND",
+    "VIGEM_ERROR_NO_FREE_SLOT",
+    "VIGEM_ERROR_INVALID_TARGET",
+    "VIGEM_ERROR_REMOVAL_FAILED",
+    "VIGEM_ERROR_ALREADY_CONNECTED",
+    "VIGEM_ERROR_TARGET_UNINITIALIZED",
+    "VIGEM_ERROR_TARGET_NOT_PLUGGED_IN",
+    "VIGEM_ERROR_BUS_VERSION_MISMATCH",
+    "VIGEM_ERROR_BUS_ACCESS_FAILED",
+    "VIGEM_ERROR_CALLBACK_ALREADY_REGISTERED",
+    "VIGEM_ERROR_CALLBACK_NOT_FOUND",
+    "VIGEM_ERROR_BUS_ALREADY_CONNECTED",
+    "VIGEM_ERROR_BUS_INVALID_HANDLE",
+    "VIGEM_ERROR_XUSB_USERINDEX_OUT_OF_RANGE",
+    "VIGEM_ERROR_INVALID_PARAMETER",
+    "VIGEM_ERROR_NOT_SUPPORTED",
+    "VIGEM_ERROR_WINAPI",
+    "VIGEM_ERROR_TIMED_OUT",
+    "Xbox360Wired",
+    "DualShock4Wired",
+    "XUSB_GAMEPAD_DPAD_UP",
+    "XUSB_GAMEPAD_DPAD_DOWN",
+    "XUSB_GAMEPAD_DPAD_LEFT",
+    "XUSB_GAMEPAD_DPAD_RIGHT",
+    "XUSB_GAMEPAD_START",
+    "XUSB_GAMEPAD_BACK",
+    "XUSB_GAMEPAD_LEFT_THUMB",
+    "XUSB_GAMEPAD_RIGHT_THUMB",
+    "XUSB_GAMEPAD_LEFT_SHOULDER",
+    "XUSB_GAMEPAD_RIGHT_SHOULDER",
+    "XUSB_GAMEPAD_GUIDE",
+    "XUSB_GAMEPAD_A",
+    "XUSB_GAMEPAD_B",
+    "XUSB_GAMEPAD_X",
+    "XUSB_GAMEPAD_Y",
+    "DS4_BUTTON_THUMB_RIGHT",
+    "DS4_BUTTON_THUMB_LEFT",
+    "DS4_BUTTON_OPTIONS",
+    "DS4_BUTTON_SHARE",
+    "DS4_BUTTON_TRIGGER_RIGHT",
+    "DS4_BUTTON_TRIGGER_LEFT",
+    "DS4_BUTTON_SHOULDER_RIGHT",
+    "DS4_BUTTON_SHOULDER_LEFT",
+    "DS4_BUTTON_TRIANGLE",
+    "DS4_BUTTON_CIRCLE",
+    "DS4_BUTTON_CROSS",
+    "DS4_BUTTON_SQUARE",
+    "DS4_SPECIAL_BUTTON_PS",
+    "DS4_SPECIAL_BUTTON_TOUCHPAD",
+    "DS4_BUTTON_DPAD_NONE",
+    "DS4_BUTTON_DPAD_NORTHWEST",
+    "DS4_BUTTON_DPAD_WEST",
+    "DS4_BUTTON_DPAD_SOUTHWEST",
+    "DS4_BUTTON_DPAD_SOUTH",
+    "DS4_BUTTON_DPAD_SOUTHEAST",
+    "DS4_BUTTON_DPAD_EAST",
+    "DS4_BUTTON_DPAD_NORTHEAST",
+    "DS4_BUTTON_DPAD_NORTH",
 ];
 //# sourceMappingURL=extension.js.map
